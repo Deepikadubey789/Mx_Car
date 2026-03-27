@@ -1,0 +1,9 @@
+.form-contact {
+  input[type='text'],
+  input[type='email'] {
+    background-color: var(--bs-background-card);
+  }
+}
+.box-contact-form {
+  padding: 90px 0px;
+}

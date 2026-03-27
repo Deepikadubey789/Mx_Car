@@ -1,0 +1,398 @@
+.neutral-1000 {
+    color: var(--bs-neutral-1000);
+}
+
+.neutral-800 {
+    color: var(--bs-neutral-800);
+}
+
+.neutral-500 {
+    color: var(--bs-neutral-500);
+}
+
+.neutral-400 {
+    color: var(--bs-neutral-400);
+}
+
+.neutral-600 {
+    color: var(--bs-neutral-600);
+}
+
+.neutral-700 {
+    color: var(--bs-neutral-700);
+}
+
+.neutral-900 {
+    color: var(--bs-neutral-900);
+}
+
+:root {
+    --bs-gray-50: #f8f9fa;
+}
+
+[data-bs-theme='dark'] {
+    --bs-gray-50: #2b3035;
+    .shortcode-title {
+        color: var(--bs-neutral-1000) !important;
+    }
+
+    .shortcode-subtitle {
+        color: var(--bs-neutral-500) !important;
+
+        &.color-white {
+            color: var(--bs-color-white) !important
+        }
+    }
+
+    body {
+        background-color: var(--bs-background-body);
+    }
+
+    .shortcode-car-advance-search {
+        background-color: var(--bs-neutral-100) !important
+    }
+
+    .post-comment-wrapper {
+        .fob-comment-title, label {
+            color: var(--bs-neutral-1000) !important;
+        }
+
+        .fob-comment-item-body {
+            p {
+                color: var(--bs-neutral-1000) !important;
+            }
+        }
+    }
+
+    .page-default-content {
+        color: var(--bs-neutral-1000) !important;
+
+        p {
+            color: var(--bs-neutral-1000) !important;
+        }
+    }
+
+    .shortcode-why-us {
+        .card-image {
+            img {
+                filter: brightness(0) invert(1);
+            }
+        }
+    }
+
+    .auth-card {
+        .card-header {
+            background-color: var(--bs-neutral-100) !important;
+        }
+
+        .form-control {
+            background-color: var(--bs-background-card) !important;
+        }
+    }
+
+    .form-check-label, .pricing-summary {
+        color: var(--bs-neutral-1000) !important;
+    }
+
+    .booking-form {
+        background-color: var(--bs-background-card);
+
+        .head-booking-form {
+            background-color: var(--bs-background-3);
+        }
+
+        .content-booking-form {
+            .form-control, .form-select {
+                background-color: var(--bs-background-body);
+                border-color: var(--bs-border-color);
+                color: var(--bs-neutral-1000);
+            }
+
+            .multi-check-list-wrapper .form-check .form-check-input:checked:after {
+                background-color: var(--primary-color);
+                border: 1px solid var(--primary-color);
+            }
+        }
+    }
+
+    .post-detail-page {
+        h2 {
+            color: var(--bs-neutral-1000) !important;
+        }
+    }
+
+    .shortcode-blog-posts-style-3 {
+        .list-videos-small {
+            .item-video-small {
+                .item-info {
+                    p.text-md-medium {
+                        color: #ffffff !important;
+                    }
+                }
+            }
+        }
+    }
+
+    .select2-container--open .select2-dropdown--below,  .select2-container--open .select2-dropdown--above    {
+        background-color: $background-body-dark;
+        border-color: var(--bs-border-color);
+    }
+
+    .select2-results__option {
+        color: $neutral-0;
+    }
+
+    .dropdown-menu {
+        background-color: var(--bs-background-card);
+        border-color: var(--bs-border-color);
+
+        .dropdown-item {
+            color: var(--bs-neutral-1000);
+
+            &:hover, &:focus {
+                background-color: var(--bs-background-3);
+                color: var(--bs-neutral-1000);
+            }
+        }
+    }
+
+    .review-progress {
+        .progress {
+            background-color: var(--bs-background-3);
+        }
+    }
+
+    .empty-reviews-state {
+        h5 {
+            color: var(--bs-neutral-800) !important;
+        }
+
+        p {
+            color: var(--bs-neutral-600) !important;
+        }
+    }
+
+    .group-collapse-expand {
+        .card {
+            background-color: var(--bs-background-card);
+            border-color: var(--bs-border-color);
+        }
+    }
+
+    .sale-info {
+        background-color: var(--bs-background-card);
+
+        .head-sale-info {
+            background-color: var(--bs-background-3);
+            border-bottom-color: var(--bs-border-color);
+        }
+
+        .content-sale-info {
+            .car-taxes {
+                border-top-color: var(--bs-border-color);
+            }
+        }
+    }
+
+    // Additional info component dark mode
+    .group-collapse-expand {
+        .text-sm-bold {
+            color: var(--bs-neutral-800);
+        }
+
+        .text-md-regular {
+            color: var(--bs-neutral-1000);
+        }
+
+        .feature-image {
+            svg, [class*="ti-"] {
+                color: var(--bs-neutral-700);
+            }
+        }
+
+        // Ensure text colors for values in additional info
+        span:not(.text-sm-bold):not(.contact-label) {
+            color: var(--bs-neutral-1000);
+        }
+    }
+
+    // Owner info component dark mode
+    .owner-info-card {
+        background-color: var(--bs-background-card);
+
+        .owner-profile-header {
+            border-bottom-color: var(--bs-border-color);
+        }
+
+        .owner-badge {
+            background-color: var(--bs-background-card);
+            border-color: var(--bs-border-color);
+
+            img {
+                filter: brightness(0) invert(0.8);
+            }
+        }
+
+        .owner-since {
+            img {
+                filter: brightness(0) invert(0.7);
+            }
+        }
+
+        .contact-item {
+            border-color: var(--bs-border-color);
+
+            &:hover {
+                background-color: var(--bs-background-3);
+            }
+        }
+
+        .contact-icon {
+            background-color: var(--bs-background-body);
+
+            img {
+                filter: brightness(0) invert(0.8);
+            }
+
+            svg, [class*="ti-"] {
+                color: var(--bs-neutral-700);
+            }
+        }
+
+        .contact-title {
+            color: var(--bs-neutral-900);
+        }
+
+        .text-muted {
+            color: var(--bs-neutral-600) !important;
+        }
+    }
+
+    // Message form dark mode
+    .form-contact-wrapper {
+        background-color: var(--bs-background-card);
+
+        .h6 {
+            color: var(--bs-neutral-1000) !important;
+        }
+
+        .form-control, .form-select, textarea {
+            background-color: var(--bs-background-body);
+            border-color: var(--bs-border-color);
+            color: var(--bs-neutral-1000);
+
+            &:disabled {
+                background-color: var(--bs-background-2);
+                color: var(--bs-neutral-700);
+            }
+        }
+
+        .form-label {
+            color: var(--bs-neutral-900);
+        }
+    }
+
+    // Calendar input dark mode
+    .input-calendar {
+        svg, [class*="ti-calendar"] {
+            color: var(--bs-neutral-600);
+        }
+
+        .form-control {
+            background-color: var(--bs-background-body);
+            border-color: var(--bs-border-color);
+            color: var(--bs-neutral-1000);
+
+            &:focus {
+                background-color: var(--bs-background-body);
+                border-color: var(--primary-color);
+            }
+        }
+    }
+
+    // Booking date inputs labels
+    .item-line-booking {
+        .text-md-bold {
+            color: var(--bs-neutral-900);
+        }
+    }
+
+    .change-mode {
+        .dark-mode {
+            filter: brightness(0) invert(1);
+        }
+    }
+
+    .item-facilities {
+        p {
+            filter: brightness(0) invert(1);
+        }
+    }
+
+    .newsletter-popup-content {
+        .modal-subtitle, .modal-title, .form-label {
+            color: var(--bs-neutral-1000) !important;
+        }
+    }
+
+    .alphabet-grid {
+        background-color: var(--bs-neutral-100);
+
+        .letter-btn {
+            background: var(--bs-background-body);
+            border: 1px solid var(--bs-neutral-200);
+            color: #ffffff;
+
+            &.active {
+                background: var(--primary-color);
+                border: 1px solid var(--primary-color);
+                color: #000000;
+            }
+        }
+    }
+
+    .brand-style-3 {
+        .col {
+            .brand-item {
+                h6 {
+                    span {
+                        color: #ffffff !important;
+                    }
+                }
+            }
+        }
+    }
+
+    .customer-page {
+        .card {
+            background-color: var(--bs-card-bg) !important;
+
+            .nav-link.text-dark {
+                color: var(--bs-neutral-1000) !important;
+            }
+        }
+    }
+
+    .page-404-content {
+        h1, h5 {
+            color: var(--bs-neutral-1000) !important;
+        }
+    }
+
+    .job-empty {
+        h3 {
+            color: var(--bs-neutral-1000) !important;
+        }
+    }
+
+
+    .mobile-header-content-area {
+        .mobile-menu-wrap {
+            nav {
+                div {
+                    color: var(--bs-neutral-1000) !important;
+                }
+            }
+        }
+    }
+}
