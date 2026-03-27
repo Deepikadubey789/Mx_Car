@@ -441,7 +441,7 @@
         },
         {
             "name": "botble/get-started",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/get-started",
@@ -467,7 +467,7 @@
         },
         {
             "name": "botble/installer",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/installer",
@@ -496,7 +496,7 @@
         },
         {
             "name": "botble/menu",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/menu",
@@ -529,7 +529,7 @@
         },
         {
             "name": "botble/optimize",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/optimize",
@@ -561,7 +561,7 @@
         },
         {
             "name": "botble/page",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/page",
@@ -591,7 +591,7 @@
         },
         {
             "name": "botble/platform",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/core",
@@ -702,7 +702,7 @@
         },
         {
             "name": "botble/plugin-management",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/plugin-management",
@@ -731,7 +731,7 @@
         },
         {
             "name": "botble/revision",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/revision",
@@ -760,7 +760,7 @@
         },
         {
             "name": "botble/seo-helper",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/seo-helper",
@@ -793,7 +793,7 @@
         },
         {
             "name": "botble/shortcode",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/shortcode",
@@ -825,7 +825,7 @@
         },
         {
             "name": "botble/sitemap",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/sitemap",
@@ -854,7 +854,7 @@
         },
         {
             "name": "botble/slug",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/slug",
@@ -886,7 +886,7 @@
         },
         {
             "name": "botble/theme",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/theme",
@@ -927,7 +927,7 @@
         },
         {
             "name": "botble/widget",
-            "version": "dev-develop",
+            "version": "dev-dev",
             "dist": {
                 "type": "path",
                 "url": "./platform/packages/widget",
@@ -2123,16 +2123,16 @@
         },
         {
             "name": "google/analytics-data",
-            "version": "v0.23.2",
+            "version": "v0.23.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/googleapis/php-analytics-data.git",
-                "reference": "e44d0767543112bfe3e92ad4d485afa6ce9f1c1a"
+                "reference": "7c043b2b26ab15bcc579122fe16244d61a48ed93"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/googleapis/php-analytics-data/zipball/e44d0767543112bfe3e92ad4d485afa6ce9f1c1a",
-                "reference": "e44d0767543112bfe3e92ad4d485afa6ce9f1c1a",
+                "url": "https://api.github.com/repos/googleapis/php-analytics-data/zipball/7c043b2b26ab15bcc579122fe16244d61a48ed93",
+                "reference": "7c043b2b26ab15bcc579122fe16244d61a48ed93",
                 "shasum": ""
             },
             "require": {
@@ -2167,9 +2167,9 @@
             ],
             "description": "Google Analytics Data Client for PHP",
             "support": {
-                "source": "https://github.com/googleapis/php-analytics-data/tree/v0.23.2"
+                "source": "https://github.com/googleapis/php-analytics-data/tree/v0.23.3"
             },
-            "time": "2026-01-09T18:56:46+00:00"
+            "time": "2026-03-17T23:07:39+00:00"
         },
         {
             "name": "google/apiclient",
@@ -3726,16 +3726,16 @@
         },
         {
             "name": "laravel/socialite",
-            "version": "v5.24.3",
+            "version": "v5.26.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/socialite.git",
-                "reference": "0feb62267e7b8abc68593ca37639ad302728c129"
+                "reference": "1d26f0c653a5f0e88859f4197830a29fe0cc59d0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/socialite/zipball/0feb62267e7b8abc68593ca37639ad302728c129",
-                "reference": "0feb62267e7b8abc68593ca37639ad302728c129",
+                "url": "https://api.github.com/repos/laravel/socialite/zipball/1d26f0c653a5f0e88859f4197830a29fe0cc59d0",
+                "reference": "1d26f0c653a5f0e88859f4197830a29fe0cc59d0",
                 "shasum": ""
             },
             "require": {
@@ -3794,7 +3794,7 @@
                 "issues": "https://github.com/laravel/socialite/issues",
                 "source": "https://github.com/laravel/socialite"
             },
-            "time": "2026-02-21T13:32:50+00:00"
+            "time": "2026-03-24T18:37:47+00:00"
         },
         {
             "name": "laravel/tinker",
@@ -7687,16 +7687,16 @@
         },
         {
             "name": "symfony/cache",
-            "version": "v7.4.6",
+            "version": "v7.4.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/cache.git",
-                "reference": "1d06192e8f164e2729b0031e6807d72a6195b8bb"
+                "reference": "665522ec357540e66c294c08583b40ee576574f0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/cache/zipball/1d06192e8f164e2729b0031e6807d72a6195b8bb",
-                "reference": "1d06192e8f164e2729b0031e6807d72a6195b8bb",
+                "url": "https://api.github.com/repos/symfony/cache/zipball/665522ec357540e66c294c08583b40ee576574f0",
+                "reference": "665522ec357540e66c294c08583b40ee576574f0",
                 "shasum": ""
             },
             "require": {
@@ -7767,7 +7767,7 @@
                 "psr6"
             ],
             "support": {
-                "source": "https://github.com/symfony/cache/tree/v7.4.6"
+                "source": "https://github.com/symfony/cache/tree/v7.4.7"
             },
             "funding": [
                 {
@@ -7787,7 +7787,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-02-21T23:29:27+00:00"
+            "time": "2026-03-06T08:14:57+00:00"
         },
         {
             "name": "symfony/cache-contracts",
@@ -15002,5 +15002,5 @@
         "ext-zip": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.6.0"
 }
