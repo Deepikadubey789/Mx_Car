@@ -1,14 +1,18 @@
 <style>
-    /* 1. The Wrapper: This creates the "Island" look like Zoomcar */
+    /* =========================================
+       1. LIGHT MODE (DEFAULT) STYLES
+       ========================================= */
+    /* The Wrapper: This creates the "Island" look like Zoomcar */
     .services-zoom-style .zoom-outer-wrapper {
         background-color: #f8f9fa !important; /* The gray card background */
         border-radius: 24px !important;      /* Large rounded corners for the whole block */
         padding: 60px 40px !important;       /* Internal spacing */
         margin: 0 auto;
         max-width: 1240px;                   /* Limits the width so it's not full-screen */
+        transition: background-color 0.3s ease; /* Smooth transition for theme toggle */
     }
 
-    /* 2. The Title Badge - Dark Green block */
+    /* The Title Badge - Dark Green block */
     .services-zoom-style .zoom-badge {
         background-color: #054232; 
         color: #fff !important;
@@ -20,9 +24,10 @@
         margin-left: 5px;
         display: inline-block;
         vertical-align: middle;
+        transition: background-color 0.3s ease;
     }
 
-    /* 3. The Individual Cards - Transparent to match Zoomcar's flat look */
+    /* The Individual Cards */
     .services-zoom-style .card-news {
         background: transparent !important;
         border: none !important;
@@ -30,7 +35,7 @@
         height: 100%;
     }
 
-    /* 4. Image Styling - Precise rounding */
+    /* Image Styling */
     .services-zoom-style .card-image img {
         height: 200px;
         width: 100%;
@@ -40,7 +45,7 @@
         margin-bottom: 15px;
     }
 
-    /* 5. Typography */
+    /* Typography */
     .services-zoom-style .card-title-flex {
         display: flex;
         justify-content: space-between;
@@ -54,6 +59,7 @@
         color: #1a1a1a;
         text-decoration: none;
         line-height: 1.2;
+        transition: color 0.3s ease;
     }
 
     .services-zoom-style .service-description {
@@ -61,15 +67,55 @@
         color: #707070;
         line-height: 1.6;
         margin-bottom: 0;
+        transition: color 0.3s ease;
     }
 
     .services-zoom-style .zoom-arrow {
         color: #1a1a1a;
-        transition: transform 0.2s ease;
+        transition: transform 0.2s ease, color 0.3s ease;
     }
 
     .services-zoom-style .card-news:hover .zoom-arrow {
         transform: translate(2px, -2px);
+    }
+
+    /* =========================================
+       2. DARK MODE OVERRIDES
+       ========================================= */
+    /* Target common dark mode triggers: data-bs-theme, .dark, or .theme-dark */
+    [data-bs-theme="dark"] .services-zoom-style .zoom-outer-wrapper,
+    .dark .services-zoom-style .zoom-outer-wrapper,
+    .theme-dark .services-zoom-style .zoom-outer-wrapper {
+        background-color: #18191a !important; /* Deep dark gray for the island */
+        border: 1px solid rgba(255, 255, 255, 0.05); /* Subtle border for separation */
+    }
+
+    [data-bs-theme="dark"] .services-zoom-style .service-name,
+    .dark .services-zoom-style .service-name,
+    .theme-dark .services-zoom-style .service-name,
+    [data-bs-theme="dark"] .services-zoom-style .zoom-arrow,
+    .dark .services-zoom-style .zoom-arrow,
+    .theme-dark .services-zoom-style .zoom-arrow {
+        color: #f8f9fa !important; /* White/Light gray text & icons */
+    }
+
+    [data-bs-theme="dark"] .services-zoom-style .service-description,
+    .dark .services-zoom-style .service-description,
+    .theme-dark .services-zoom-style .service-description {
+        color: #adb5bd !important; /* Lighter gray for descriptions */
+    }
+
+    [data-bs-theme="dark"] .services-zoom-style .zoom-badge,
+    .dark .services-zoom-style .zoom-badge,
+    .theme-dark .services-zoom-style .zoom-badge {
+        background-color: #0f6c51 !important; /* Slightly brighter green to pop on dark backgrounds */
+    }
+
+    /* Override the main title text color for dark mode */
+    [data-bs-theme="dark"] .services-zoom-style .fw-bold,
+    .dark .services-zoom-style .fw-bold,
+    .theme-dark .services-zoom-style .fw-bold {
+        color: #ffffff !important;
     }
 </style>
 
