@@ -1,0 +1,108 @@
+// Date Range Picker Styles for Carento Theme
+.box-search-advance {
+    // Style the date range input field to match UI
+    .date-range-input {
+        width: 100%;
+        height: 48px;
+        padding: 12px 45px 12px 45px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #0f172a;
+        background: transparent;
+        border: none !important;
+        outline: none !important;
+        cursor: pointer;
+        
+        &::placeholder {
+            color: #94a3b8;
+        }
+        
+        &:focus {
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+        
+        &:hover {
+            background: transparent;
+        }
+    }
+}
+
+// Daterangepicker dropdown positioning and styling
+.daterangepicker {
+    z-index: 1100 !important;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e2e8f0;
+    
+    // Calendar table styling
+    .calendar-table {
+        padding: 10px;
+
+        .table-condensed {
+            th, td {
+                padding: 8px;
+                text-align: center;
+            }
+
+            td.available:hover {
+                background: #f1f5f9;
+                border-radius: 6px;
+            }
+
+            // In-range dates (between start and end) - lighter color, no border-radius for continuous effect
+            td.in-range {
+                background-color: color-mix(in srgb, var(--primary-color) 20%, transparent);
+                color: var(--primary-color);
+                border-radius: 0;
+            }
+
+            // Active/selected dates
+            td.active,
+            td.active:hover {
+                background-color: var(--primary-color);
+                color: white;
+                border-radius: 6px;
+            }
+
+            // Start date - rounded on left side only
+            td.start-date {
+                background-color: var(--primary-color) !important;
+                color: white !important;
+                border-radius: 6px 0 0 6px;
+            }
+
+            // End date - rounded on right side only
+            td.end-date {
+                background-color: var(--primary-color) !important;
+                color: white !important;
+                border-radius: 0 6px 6px 0;
+            }
+
+            // When start and end are the same date
+            td.start-date.end-date {
+                border-radius: 6px;
+            }
+        }
+    }
+    
+    // Hide the default ranges sidebar if not needed
+    .ranges {
+        display: none;
+    }
+}
+
+// Override Bootstrap form control styles for the date range input
+.search-input.date-range-input {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    
+    &:focus,
+    &:active {
+        border: none !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+}

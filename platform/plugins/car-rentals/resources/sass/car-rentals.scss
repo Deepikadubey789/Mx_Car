@@ -1,0 +1,46 @@
+.gap-column-10 {
+    grid-column-gap: 10px !important;
+}
+
+td.block_coupon_code b {
+    padding: 14px 0 !important;
+    border: 1px dashed orange;
+    border-radius: 10px;
+    width: 200px !important;
+    display: block;
+    text-align: center;
+    margin: auto;
+}
+
+.pricing-calendar {
+    min-height: 400px;
+
+    &.loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .fc-event {
+        cursor: pointer;
+        font-size: 0.75rem;
+        padding: 2px 4px;
+        border-radius: 3px;
+        border: none;
+
+        &.base-price {
+            font-style: italic;
+        }
+
+        &.custom-price {
+            font-weight: 500;
+        }
+    }
+
+    .fc-daygrid-day {
+        cursor: pointer;
+
+        &:hover {
+            background-color: rgba(32, 107, 196, 0.1);
+        }
+    }
+}
