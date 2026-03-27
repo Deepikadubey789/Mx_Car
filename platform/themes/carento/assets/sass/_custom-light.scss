@@ -1,4 +1,15 @@
 [data-bs-theme='light'] {
+    .filter-section--desktop {
+        .filter-widget {
+            background-color: #eef2f6;
+            border: 1px solid #d9e0e7;
+        }
+
+        .filter-widget .filter-widget-header {
+            border-bottom-color: #d9e0e7;
+        }
+    }
+
     body {
         color: var(--text-color) !important;
 

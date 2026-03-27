@@ -395,4 +395,26 @@
             }
         }
     }
+
+    // Car list sidebar filter dark mode overrides
+    .filter-section--desktop {
+        .filter-widget {
+            background: var(--bs-background-card);
+            border: 1px solid var(--bs-border-color);
+        }
+
+        .filter-widget .filter-widget-header {
+            border-bottom-color: var(--bs-border-color);
+        }
+
+        .filter-widget .filter-widget-header .filter-title {
+            color: var(--bs-neutral-1000);
+        }
+
+        .filter-widget .filter-widget-content .form-select {
+            background-color: var(--bs-background-body);
+            border-color: var(--bs-border-color);
+            color: var(--bs-neutral-1000);
+        }
+    }
 }
