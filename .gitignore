@@ -1,6 +1,7 @@
 /node_modules
 /public/hot
 /public/storage
+/public/storage_backup_*
 /storage/*.key
 /vendor
 .DS_Store
