@@ -1,6 +1,6 @@
 @if($car->amenities->isNotEmpty())
-    <div class="group-collapse-expand">
-        <button class="btn btn-collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAmenities" aria-expanded="true" aria-controls="collapseAmenities">
+    <div class="group-collapse-expand group-collapse-expand--modern">
+        <button class="btn btn-collapse car-detail-modern__collapse-trigger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAmenities" aria-expanded="true" aria-controls="collapseAmenities">
             <strong class="heading-6">{{ __('Accessories') }}</strong>
             <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M1 1L6 6L11 1" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -8,7 +8,7 @@
         </button>
 
         <div class="collapse show" id="collapseAmenities">
-            <div class="card card-body">
+            <div class="card card-body car-detail-modern__collapse-card">
                 <div class="row">
                     @php
                         $amenitiesByCategory = $car->amenities->groupBy(function($amenity) {
@@ -25,7 +25,7 @@
                             @endphp
                             <div class="mb-4">
                                 <div class="mb-2">
-                                    <h4 class="h5">
+                                    <h4 class="h5 car-detail-modern__amenity-category">
                                         {!! BaseHelper::renderIcon($categoryIcon, attributes: ['class' => 'icon-category']) !!}
                                         <span>{{ $categoryName }}</span>
                                     </h4>
@@ -33,7 +33,7 @@
                                 <div class="box-feature">
                                     <ul>
                                         @foreach($categoryAmenities as $amenity)
-                                            <li>
+                                            <li class="car-detail-modern__amenity-item">
                                                 @if($amenity->icon)
                                                     {!! BaseHelper::renderIcon($amenity->icon) !!}
                                                 @else
@@ -51,7 +51,7 @@
                             <div class="box-feature">
                                 <ul class="p-0">
                                     @foreach($car->amenities as $amenity)
-                                        <li>
+                                        <li class="car-detail-modern__amenity-item">
                                             @if($amenity->icon)
                                                 {!! BaseHelper::renderIcon($amenity->icon) !!}
                                             @else

@@ -1,5 +1,5 @@
 @if (CarRentalsHelper::isRentalBookingEnabled())
-    <div class="booking-form">
+    <div class="booking-form booking-form--modern">
         <div class="head-booking-form">
             <p class="text-xl-bold neutral-1000">{{ __('Rent This Vehicle') }}</p>
         </div>

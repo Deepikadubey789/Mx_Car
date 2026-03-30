@@ -1,5 +1,5 @@
 @if (get_car_rentals_setting('enable_message_form', true))
-    <div @class(['form-contact-wrapper', $class ?? null])>
+    <div @class(['form-contact-wrapper', 'form-contact-wrapper--modern', $class ?? null])>
         <div class="h6 text-xl-bold neutral-1000">{{ __('Send Message') }}</div>
 
         {!! apply_filters('car_rentals_before_message_form', null, $car) !!}

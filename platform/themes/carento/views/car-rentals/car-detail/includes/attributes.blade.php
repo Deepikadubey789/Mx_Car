@@ -1,7 +1,7 @@
-<div class="box-feature-car">
-    <div class="list-feature-car">
+<div class="box-feature-car car-detail-modern__spec-strip">
+    <div class="list-feature-car car-detail-modern__spec-grid">
         <div class="item-feature-car w-md-25">
-            <div class="item-feature-car-inner">
+            <div class="item-feature-car-inner car-detail-modern__spec-pill">
                 <div class="feature-image">
                     {!! BaseHelper::renderIcon($car->mileage_icon, attributes: ['class' => 'icon-mileage']) !!}
                 </div>
@@ -13,7 +13,7 @@
 
         @if($horsepower = $car->horsepower)
             <div class="item-feature-car w-md-25">
-                <div class="item-feature-car-inner">
+                <div class="item-feature-car-inner car-detail-modern__spec-pill">
                     <div class="feature-image">
                         <x-core::icon name="ti ti-engine" class="icon-horsepower" />
                     </div>
@@ -26,7 +26,7 @@
 
         @if ($fuel = $car->fuel)
             <div class="item-feature-car w-md-25">
-                <div class="item-feature-car-inner">
+                <div class="item-feature-car-inner car-detail-modern__spec-pill">
                     <div class="feature-image">
                         {!! BaseHelper::renderIcon($car->fuel_icon, attributes: ['class' => 'icon-fuel']) !!}
                     </div>
@@ -40,7 +40,7 @@
 
         @if ($transmission = $car->transmission)
             <div class="item-feature-car w-md-25">
-                <div class="item-feature-car-inner">
+                <div class="item-feature-car-inner car-detail-modern__spec-pill">
                     <div class="feature-image">
                         {!! BaseHelper::renderIcon($car->transmission_icon, attributes: ['class' => 'icon-transmission']) !!}
                     </div>
@@ -54,7 +54,7 @@
 
         @if ($numberSeats = $car->number_of_seats)
             <div class="item-feature-car w-md-25">
-                <div class="item-feature-car-inner">
+                <div class="item-feature-car-inner car-detail-modern__spec-pill">
                     <div class="feature-image">
                         {!! BaseHelper::renderIcon($car->seats_icon, attributes: ['class' => 'icon-seats']) !!}
                     </div>
@@ -67,7 +67,7 @@
 
         @if($type = $car->type)
             <div class="item-feature-car w-md-25">
-                <div class="item-feature-car-inner">
+                <div class="item-feature-car-inner car-detail-modern__spec-pill">
                     @if($iconType = $type->icon)
                         <div class="feature-image">
                             {!! BaseHelper::renderIcon($iconType) !!}
@@ -83,7 +83,7 @@
 
         @if ($numberDoors = $car->number_of_doors)
             <div class="item-feature-car w-md-25">
-                <div class="item-feature-car-inner">
+                <div class="item-feature-car-inner car-detail-modern__spec-pill">
                     <div class="feature-image">
                         <x-core::icon name="ti ti-door" class="icon-doors" />
                     </div>

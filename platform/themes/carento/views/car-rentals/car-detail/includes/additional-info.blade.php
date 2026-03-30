@@ -1,5 +1,5 @@
-<div class="group-collapse-expand">
-    <button class="btn btn-collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdditionalInfo" aria-expanded="true" aria-controls="collapseAdditionalInfo">
+<div class="group-collapse-expand group-collapse-expand--modern">
+    <button class="btn btn-collapse car-detail-modern__collapse-trigger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAdditionalInfo" aria-expanded="true" aria-controls="collapseAdditionalInfo">
         <strong class="heading-6">{{ __('Additional Information') }}</strong>
         <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1 1L6 6L11 1" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -7,8 +7,8 @@
     </button>
 
     <div class="collapse show" id="collapseAdditionalInfo">
-        <div class="card card-body">
-            <div class="row">
+        <div class="card card-body car-detail-modern__collapse-card">
+            <div class="row car-detail-modern__info-grid">
                 @if($car->categories->isNotEmpty())
                     <div class="col-md-6 mb-3">
                         <div class="d-flex align-items-center">
@@ -19,7 +19,7 @@
                                 <span class="text-sm-bold me-2">{{ __('Categories') }}:</span>
                                 <div>
                                     @foreach($car->categories as $category)
-                                        <span class="me-1 mb-1">{{ $category->name }}</span>
+                                        <span class="me-1 mb-1 car-detail-modern__badge">{{ $category->name }}</span>
                                     @endforeach
                                 </div>
                             </div>
@@ -37,7 +37,7 @@
                                 <span class="text-sm-bold me-2">{{ __('Colors') }}:</span>
                                 <div>
                                     @foreach($car->colors as $color)
-                                        <span class="me-1 mb-1">{{ $color->name }}</span>
+                                        <span class="me-1 mb-1 car-detail-modern__badge">{{ $color->name }}</span>
                                     @endforeach
                                 </div>
                             </div>
@@ -70,7 +70,7 @@
                                 <span class="text-sm-bold me-2">{{ __('Tags') }}:</span>
                                 <div>
                                     @foreach($car->tags as $tag)
-                                        <span class="me-1 mb-1">{{ $tag->name }}</span>
+                                        <span class="me-1 mb-1 car-detail-modern__badge">{{ $tag->name }}</span>
                                     @endforeach
                                 </div>
                             </div>

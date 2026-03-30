@@ -1,10 +1,10 @@
 @if ($socials = \Botble\Theme\Supports\ThemeSupport::getSocialSharingButtons($car->url, SeoHelper::getDescription()))
     <div class="dropdown car-detail-share">
-        <button class="btn btn-share btn btn-outline-secondary dropdown-toggle" type="button" id="shareDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+        <button class="btn btn-share btn btn-outline-secondary dropdown-toggle car-detail-modern__share-trigger" type="button" id="shareDropdown" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
             <x-core::icon name="ti ti-share" size="xs" />
             {{ __('Share') }}
         </button>
-        <ul class="dropdown-menu" aria-labelledby="shareDropdown">
+        <ul class="dropdown-menu car-detail-modern__share-menu" aria-labelledby="shareDropdown">
             @foreach($socials as $social)
                 @php
                     $name = Arr::get($social, 'name');
@@ -18,7 +18,7 @@
                         @style(["background-color: {$backgroundColor}" => $backgroundColor, "color: {$color}" => $color])
                         href="{{ Arr::get($social, 'url') }}"
                         target="_blank"
-                        class="dropdown-item"
+                        class="dropdown-item car-detail-modern__share-item"
                     >
                         {!! Arr::get($social, 'icon') !!}
                         <span>{{ $name }}</span>

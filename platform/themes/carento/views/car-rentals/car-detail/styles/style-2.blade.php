@@ -11,12 +11,12 @@
     $images = $car->getImages();
 @endphp
 
-<div class="car-detail-page">
+<div class="car-detail-page car-detail-page--style-2">
     @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.breadcrumbs'), compact('car'))
 
-    <div class="box-section box-content-tour-detail background-body">
+    <div class="box-section box-content-tour-detail background-body car-detail-modern__content-shell">
         <div class="container">
-            <div class="tour-header">
+            <div class="tour-header car-detail-modern__header">
                 @if($car->reviews_count)
                     <div class="tour-rate">
                         <div class="rate-element">
@@ -27,12 +27,27 @@
 
                 <div class="row">
                     <div class="col-lg-8">
-                        <div class="tour-title-main">
+                        <div class="tour-title-main car-detail-modern__title-wrap">
+                            <p class="car-detail-modern__eyebrow mb-0">{{ __('Featured vehicle') }}</p>
                             <h4 class="neutral-1000">{{ $car->name }}</h4>
+
+                            <div class="car-detail-modern__quick-meta">
+                                @if($car->year)
+                                    <span>{{ $car->year }}</span>
+                                @endif
+
+                                @if($car->transmission)
+                                    <span>{!! BaseHelper::clean($car->transmission->name) !!}</span>
+                                @endif
+
+                                @if($car->fuel)
+                                    <span>{!! BaseHelper::clean($car->fuel->name) !!}</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="tour-metas">
+                <div class="tour-metas car-detail-modern__meta-row">
                     <div class="tour-meta-left">
                         @if($car->current_location)
                             <p class="text-md-medium neutral-1000 mr-20 tour-location">
@@ -50,9 +65,9 @@
             </div>
 
             @if($images)
-                <div class="box-section box-banner-property-detail background-body">
+                <div class="box-section box-banner-property-detail background-body car-detail-modern__gallery-shell">
                     <div class="position-relative">
-                        <div class="block-banner-property-detail container-banner-activities">
+                        <div class="block-banner-property-detail container-banner-activities car-detail-modern__gallery-wrap">
                             <div class="row g-3">
                                 <div @class(['col-lg-7' => count($images) >= 5, 'col-lg-12' => count($images) == 1])>
                                     @php
@@ -97,7 +112,7 @@
                 </div>
             @endif
 
-            <div class="row mt-20">
+            <div class="row mt-20 car-detail-modern__layout">
                 <div class="col-lg-8">
                     @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.attributes'), compact('car'))
 
@@ -115,12 +130,14 @@
                         @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.reviews'), compact('car', 'reviews'))
                     </div>
                 </div>
-                <div class="col-lg-4">
-                    @if($car->is_for_sale && get_car_rentals_setting('enabled_car_sale', true))
-                        @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.sale-info'), compact('car'))
-                    @elseif(!$car->is_for_sale && CarRentalsHelper::isRentalBookingEnabled())
-                        @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.booking-form'), compact('car'))
-                    @endif
+                <div class="col-lg-4 car-detail-modern__sidebar">
+                    <div class="car-detail-modern__sidebar-stack car-detail-modern__sidebar-stack--sticky">
+                        @if($car->is_for_sale && get_car_rentals_setting('enabled_car_sale', true))
+                            @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.sale-info'), compact('car'))
+                        @elseif(!$car->is_for_sale && CarRentalsHelper::isRentalBookingEnabled())
+                            @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.booking-form'), compact('car'))
+                        @endif
+                    </div>
                 </div>
             </div>
         </div>

@@ -2,15 +2,15 @@
     @php
         $overviewReviews = CarRentalsHelper::getReviewsGroupedByCarId($car->id, $car->reviews_count);
     @endphp
-    <div class="group-collapse-expand">
-        <button class="btn btn-collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReviews" aria-expanded="false" aria-controls="collapseReviews">
+    <div class="group-collapse-expand group-collapse-expand--modern">
+        <button class="btn btn-collapse car-detail-modern__collapse-trigger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseReviews" aria-expanded="false" aria-controls="collapseReviews">
             <strong class="heading-6">{{ __('Rate & Reviews') }}</strong>
             <x-core::icon name="ti ti-chevron-down" />
         </button>
         <div class="collapse show" id="collapseReviews">
-            <div class="card card-body">
+            <div class="card card-body car-detail-modern__collapse-card car-detail-modern__reviews-panel">
                 @if($car->reviews_count > 0)
-                    <div class="head-reviews">
+                    <div class="head-reviews car-detail-modern__reviews-summary">
                         <div class="review-left">
                             <div class="review-info-inner">
                                 <strong class="heading-6 neutral-1000">{{ __(':avg_star/5', ['avg_star' => $reviewAvg = round($car->reviews_sum_star / ($car->reviews_count ?: 1), 2)]) }}</strong>
@@ -45,7 +45,9 @@
                     @include(CarRentalsHelper::viewPath('reviews.includes.items'))
 
                     @if ($reviews instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $reviews->total() > 0)
-                        {{ $reviews->withQueryString()->links(Theme::getThemeNamespace('partials.pagination')) }}
+                        <div class="car-detail-modern__reviews-pagination">
+                            {{ $reviews->withQueryString()->links(Theme::getThemeNamespace('partials.pagination')) }}
+                        </div>
                     @endif
                 @else
                     <div class="empty-reviews-state text-center py-5">
@@ -70,13 +72,13 @@
         }
     @endphp
     
-    <div class="group-collapse-expand">
-        <button class="btn btn-collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAddReview" aria-expanded="false" aria-controls="collapseAddReview">
+    <div class="group-collapse-expand group-collapse-expand--modern">
+        <button class="btn btn-collapse car-detail-modern__collapse-trigger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAddReview" aria-expanded="false" aria-controls="collapseAddReview">
             <strong class="heading-6">{{ $customerHasReviewed ? __('Your Review') : __('Add a review') }}</strong>
             <x-core::icon name="ti ti-chevron-down" />
         </button>
         <div class="collapse show" id="collapseAddReview">
-            <div class="card card-body">
+            <div class="card card-body car-detail-modern__collapse-card">
                 @include(CarRentalsHelper::viewPath('reviews.form'))
             </div>
         </div>
