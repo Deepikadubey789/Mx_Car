@@ -21,21 +21,17 @@
         background-size: cover !important;
         background-position: center center !important;
         background-repeat: no-repeat !important;
-        min-height: 500px; /* Reduced from 75vh for a sleeker, Turo-like height */
+        min-height: 500px; 
         display: flex;
         align-items: center;
         justify-content: center;
-        
-        /* The Turo "Contained" Effect */
         border-radius: 1.5rem; 
-        overflow: hidden; /* Keeps the gradient inside the rounded corners */
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); /* Soft floating shadow */
-        
+        overflow: hidden; 
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); 
         padding-top: 40px;
-        padding-bottom: 120px; /* Leaves room for your floating search box below */
+        padding-bottom: 120px; 
     }
 
-    /* Dark gradient overlay to ensure text is always readable over any image */
     .hero-gradient-overlay {
         position: absolute;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -45,7 +41,7 @@
 
     .hero-badge {
         display: inline-block;
-        background-color: #d84a38; /* Your theme's primary red */
+        background-color: #d84a38; 
         color: #ffffff;
         padding: 0.5rem 1.5rem;
         border-radius: 50px;
@@ -57,16 +53,24 @@
         box-shadow: 0 4px 15px rgba(216, 74, 56, 0.3);
     }
 
-    .hero-main-title {
-        font-size: clamp(2.5rem, 5vw, 4rem);
-        font-weight: 800;
-        color: #ffffff;
-        line-height: 1.1;
-        margin-bottom: 2rem;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    /* WHITE TEXT */
+    .custom-hero-v2 h1.hero-main-title,
+    .custom-hero-v2 h1.hero-main-title *,
+    .custom-hero-v2 .hero-main-title p,
+    .custom-hero-v2 .hero-main-title span,
+    .custom-hero-v2 .hero-main-title strong {
+        font-size: clamp(2.5rem, 5vw, 4rem) !important;
+        font-weight: 800 !important;
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important; /* Defeats theme gradient text overrides */
+        line-height: 1.1 !important;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.2) !important;
+    }
+    
+    .custom-hero-v2 h1.hero-main-title {
+        margin-bottom: 2rem !important;
     }
 
-    /* Convert the list into modern Glassmorphism pills */
     .hero-features-wrap {
         display: flex;
         flex-wrap: wrap;
@@ -100,7 +104,7 @@
     }
 
     .hero-feature-pill svg {
-        color: #d84a38; /* Red checkmarks to match the badge */
+        color: #d84a38;
     }
 </style>
 
@@ -117,7 +121,7 @@
             </div>
 
             @if ($title = $shortcode->title)
-                <h1 class="hero-main-title wow fadeInUp" data-wow-delay="0.2s">
+                <h1 class="hero-main-title text-white color-white wow fadeInUp" data-wow-delay="0.2s">
                     {!! BaseHelper::clean($title) !!}
                 </h1>
             @endif
