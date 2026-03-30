@@ -22,45 +22,53 @@
     }
 @endphp
 <div class="col-xl-12 col-lg-12">
-    <div class="card-flight card-hotel card-property background-card border">
-        <div class="card-image">
-            <a href="{{ $carUrl }}">
+    <article class="card-flight card-hotel card-property car-card-list background-card border">
+        <div class="card-image car-card-list__media">
+            <a href="{{ $carUrl }}" class="car-card-list__image-link">
                 {{ RvMedia::image($car->image , $car->name, 'medium-rectangle') }}
-            </a></div>
+            </a>
+        </div>
         <div class="card-info p-md-40 p-3">
-            @if($avgReview = $car->avg_review)
-            <div class="tour-rate">
-                <div class="rate-element">
-                    <span class="rating">
-                       <x-core::icon name="ti ti-star" size="16" class="icon icon-tabler icons-tabler-filled icon-tabler-star" />
+            <div class="car-card-list__main">
+                <div class="car-card-list__meta-row">
+                    <span class="car-card-list__tag">{{ __('Premium choice') }}</span>
 
-                        <span>
-                            {{ $avgReview }}
-                        </span>
-                            @if($reviewsCount = $car->reviews_count ?? 0)
-                                <span class="text-sm-medium neutral-500">
-                                    ({{ $reviewsCount }} {{ $reviewsCount > 1 ? __('reviews') : __('review') }})
+                    @if($avgReview = $car->avg_review)
+                        <div class="tour-rate">
+                            <div class="rate-element">
+                                <span class="rating">
+                                   <x-core::icon name="ti ti-star" size="16" class="icon icon-tabler icons-tabler-filled icon-tabler-star" />
+
+                                    <span>
+                                        {{ $avgReview }}
+                                    </span>
+                                    @if($reviewsCount = $car->reviews_count ?? 0)
+                                        <span class="text-sm-medium neutral-500">
+                                            ({{ $reviewsCount }} {{ $reviewsCount > 1 ? __('reviews') : __('review') }})
+                                        </span>
+                                    @endif
                                 </span>
-                            @endif
-                    </span>
+                            </div>
+                        </div>
+                    @endif
                 </div>
-            </div>
-            @endif
-            <div class="card-title">
-                <a class="heading-6 neutral-1000 text-ellipsis-2-lines" href="{{ $carUrl }}">
-                    {{ $car->name }}
-                </a>
-            </div>
-            <div class="card-program">
-                <div class="card-location mb-25">
-                    @if($car->current_location)
+
+                <div class="card-title">
+                    <a class="heading-6 neutral-1000 text-ellipsis-2-lines" href="{{ $carUrl }}">
+                        {{ $car->name }}
+                    </a>
+                </div>
+
+                @if($car->current_location)
+                    <div class="card-location mb-25">
                         <p class="text-location text-md-medium neutral-500 text-truncate" title="{{ $car->current_location }}">
                             <x-core::icon name="ti ti-map-pin" />
                             {{ BaseHelper::clean($car->current_location) }}
                         </p>
-                    @endif
-                </div>
-                <div class="card-facilities">
+                    </div>
+                @endif
+
+                <div class="card-facilities car-card-list__specs">
                     <div class="item-facilities">
                         <p class="room text-md-medium neutral-1000">{{ $car->mileage_display }}</p>
                     </div>
@@ -86,11 +94,16 @@
                         </div>
                     @endif
                 </div>
-                <div class="endtime">
+
+            </div>
+
+            <div class="car-card-list__action">
+                <p class="car-card-list__action-label mb-0">{{ __('Starting from') }}</p>
+                <div class="endtime car-card-list__endtime">
                     @include(Theme::getThemeNamespace('views.car-rentals.price'), ['car' => $car])
                     @include(Theme::getThemeNamespace('views.car-rentals.book-now-button'), ['car' => $car])
                 </div>
             </div>
         </div>
-    </div>
+    </article>
 </div>

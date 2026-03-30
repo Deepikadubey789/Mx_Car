@@ -1,6 +1,6 @@
-<div class="box-section box-breadcrumb background-body">
+<div class="box-section box-breadcrumb background-body car-detail-modern__breadcrumbs-shell">
     <div class="container">
-        <ul class="breadcrumbs">
+        <ul class="breadcrumbs car-detail-modern__breadcrumbs">
             @foreach (Theme::breadcrumb()->getCrumbs() as $crumb)
                 @if (! $loop->last)
                     <li>

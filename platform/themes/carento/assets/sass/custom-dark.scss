@@ -417,4 +417,998 @@
             color: var(--bs-neutral-1000);
         }
     }
+
+    // Car list modern dark mode color management
+    .car-list-modern {
+        --car-list-surface: #1b2736;
+        --car-list-surface-muted: #132030;
+        --car-list-border: #30455d;
+        --car-list-border-strong: #406081;
+        --car-list-text-muted: #a7bad0;
+        --car-list-pill-bg: #203246;
+        --car-list-pill-text: #e6eef8;
+        --car-list-shadow: 0 12px 26px rgba(2, 7, 13, 0.5);
+        --car-list-shadow-hover: 0 18px 36px rgba(0, 0, 0, 0.62);
+        --car-list-accent-soft: rgba(var(--primary-color-rgb), 0.2);
+        --car-list-accent-border: rgba(var(--primary-color-rgb), 0.45);
+
+        .cars-listing-modern {
+            .box-filters-modern {
+                background: linear-gradient(130deg, #162739 0%, #112235 100%);
+                border-color: var(--car-list-border-strong);
+            }
+
+            .layout-switcher-group {
+                background-color: #0f1c2a;
+                border-color: var(--car-list-border-strong);
+            }
+
+            .display-type {
+                svg {
+                    fill: #8ea8c2;
+                }
+
+                &:hover svg {
+                    fill: var(--primary-color);
+                }
+
+                &.active {
+                    background: var(--car-list-accent-soft);
+                }
+            }
+
+            .btn-mobile-filter-modern {
+                background-color: var(--car-list-surface-muted);
+                border-color: var(--car-list-border-strong);
+                color: #d8e4f0;
+            }
+
+            .number-found {
+                color: #dce6f1 !important;
+            }
+
+            .item-sort-modern {
+                background-color: var(--car-list-surface);
+                border-color: var(--car-list-border-strong);
+
+                .text-xs-medium,
+                .dropdown-toggle,
+                #dropdownSort {
+                    color: #dce7f2 !important;
+                }
+
+                .dropdown-menu {
+                    background-color: #0f1c2a;
+                    border-color: var(--car-list-border-strong);
+
+                    .dropdown-item {
+                        color: #d5e1ee;
+
+                        &:hover,
+                        &:focus,
+                        &.active {
+                            background-color: var(--car-list-accent-soft);
+                            color: var(--primary-color);
+                        }
+                    }
+                }
+            }
+
+            .car-list-cards {
+                .card-journey-small--modern,
+                .car-card-list {
+                    background-color: var(--car-list-surface);
+                    border-color: var(--car-list-border) !important;
+
+                    .card-title a,
+                    .car-price-text {
+                        color: #edf4fc !important;
+                    }
+
+                    .text-location,
+                    .card-facilities p,
+                    .item-facilities p {
+                        color: #d4e1f0 !important;
+                    }
+                }
+
+                .card-journey-small--modern {
+                    .car-card-grid__rating {
+                        .rating {
+                            background-color: rgba(11, 20, 31, 0.92);
+                            border-color: var(--car-list-border-strong);
+
+                            .neutral-500,
+                            .text-xs-medium {
+                                color: #cdd9e7 !important;
+                            }
+                        }
+                    }
+
+                    .card-facilities {
+                        border-color: var(--car-list-border);
+                    }
+
+                    .endtime {
+                        .card-button .btn-gray {
+                            border-color: var(--primary-color);
+                            background-color: var(--primary-color);
+                            color: #06130b;
+                        }
+                    }
+                }
+
+                .car-card-list {
+                    .card-info {
+                        background-color: var(--car-list-surface);
+                    }
+
+                    .rate-element {
+                        background-color: var(--car-list-pill-bg);
+                        border-color: var(--car-list-border-strong);
+                    }
+
+                    .card-facilities,
+                    .endtime {
+                        border-color: var(--car-list-border);
+                    }
+
+                    .item-facilities p {
+                        filter: none;
+                    }
+
+                    .endtime {
+                        .card-button .btn-gray {
+                            border-color: var(--primary-color);
+                            background-color: var(--primary-color);
+                            color: #06130b;
+                        }
+                    }
+                }
+            }
+
+            .car-list-pagination {
+                .page-item {
+                    .page-link {
+                        background-color: var(--car-list-surface);
+                        border-color: var(--car-list-border-strong);
+                        color: #d4e2f1;
+                    }
+
+                    .page-link:hover,
+                    &.active .page-link {
+                        border-color: var(--primary-color);
+                        background-color: var(--car-list-accent-soft);
+                        color: var(--primary-color);
+                    }
+                }
+            }
+        }
+
+        .car-filters-modern,
+        .car-filters-offcanvas {
+            .filter-section--desktop {
+                .filter-widget {
+                    background: var(--car-list-surface);
+                    border-color: var(--car-list-border-strong);
+                }
+
+                .filter-widget .filter-widget-header {
+                    background: linear-gradient(120deg, #1b2d42 0%, #132a40 100%);
+                    border-bottom-color: var(--car-list-border);
+
+                    .filter-title {
+                        color: #e8f0fa;
+                    }
+                }
+
+                .filter-widget .filter-widget-content {
+                    .form-select,
+                    .location-autocomplete {
+                        background-color: #0f1c2a;
+                        border-color: var(--car-list-border);
+                        color: #d8e5f3;
+                    }
+                }
+            }
+
+            .custom-filter-label {
+                background-color: #0f1d2b !important;
+                border-color: var(--car-list-border) !important;
+
+                .filter-option-text {
+                    color: #d5e2f0;
+                }
+
+                .filter-option-count {
+                    background-color: #24374b !important;
+                    color: #c9d8e7 !important;
+                }
+            }
+
+            .custom-filter-check input[type='checkbox']:checked + .custom-filter-label {
+                background-color: var(--car-list-accent-soft) !important;
+                border-color: var(--car-list-accent-border) !important;
+
+                .filter-option-text {
+                    color: var(--primary-color);
+                }
+
+                .filter-option-count {
+                    background-color: var(--primary-color) !important;
+                    color: #06130b !important;
+                }
+            }
+
+            .price-range-display,
+            .horsepower-range-display,
+            .year-range-display,
+            .mileage-range-display {
+                background-color: #102133;
+                border-color: var(--car-list-border);
+
+                .fw-semibold,
+                small {
+                    color: #d6e4f3 !important;
+                }
+            }
+        }
+
+        .car-filters-offcanvas {
+            .offcanvas-header,
+            .offcanvas-footer {
+                background-color: #0e1b2a;
+                border-color: var(--car-list-border-strong);
+            }
+
+            .offcanvas-subtitle {
+                color: var(--car-list-text-muted);
+            }
+
+            .btn-outline-secondary {
+                border-color: var(--car-list-border-strong);
+                color: #d6e4f3;
+
+                &:hover,
+                &:focus {
+                    background-color: #203246;
+                    border-color: #4b6f95;
+                    color: #edf5fc;
+                }
+            }
+
+            .btn-primary {
+                color: #06130b;
+            }
+        }
+    }
+
+    .car-list-modern--bold {
+        --car-bold-shell: #0f1b2a;
+        --car-bold-panel: #152334;
+        --car-bold-panel-alt: #102033;
+        --car-bold-ink: #e5eef8;
+        --car-bold-muted: #9db2c8;
+        --car-bold-border: #2e455e;
+        --car-bold-border-strong: #406487;
+        --car-bold-highlight: rgba(var(--primary-color-rgb), 0.24);
+        --car-bold-highlight-border: rgba(var(--primary-color-rgb), 0.5);
+        --car-bold-shadow: 0 24px 44px rgba(0, 0, 0, 0.58);
+        --car-bold-shadow-soft: 0 12px 28px rgba(0, 0, 0, 0.38);
+
+        .car-list-hero {
+            border-color: var(--car-bold-border-strong);
+            background: linear-gradient(130deg, #17293e 0%, #102033 58%, #0e1f31 100%);
+
+            &::before {
+                background: radial-gradient(circle, rgba(var(--primary-color-rgb), 0.35), rgba(var(--primary-color-rgb), 0));
+            }
+        }
+
+        .car-list-hero__eyebrow {
+            color: #a2b8cf;
+        }
+
+        .car-list-hero__title {
+            color: var(--car-bold-ink) !important;
+        }
+
+        .car-list-hero__subtitle {
+            color: #b6c8dc !important;
+        }
+
+        .car-list-hero__badge {
+            border-color: var(--car-bold-border-strong);
+            background: #102132;
+            color: #d9e7f5;
+        }
+
+        .car-list-hero__panel {
+            border-color: #5781a8;
+            background: linear-gradient(165deg, #133652 0%, #1f547f 100%);
+            box-shadow: inset 0 1px 0 rgba(186, 216, 247, 0.18);
+        }
+
+        .car-list-hero__panel-label {
+            color: #c2def9;
+        }
+
+        .car-list-hero__panel-value {
+            color: #ffffff;
+        }
+
+        .car-list-hero__panel-text {
+            color: #d9e9fa;
+        }
+
+        .car-list-hero__panel-meta span {
+            border-color: rgba(170, 207, 243, 0.24);
+            background: rgba(7, 23, 40, 0.42);
+            color: #d8e8f8;
+        }
+
+        .box-section.block-content-tourlist::before {
+            background:
+                radial-gradient(1100px 420px at -8% -24%, rgba(var(--primary-color-rgb), 0.28), transparent 58%),
+                radial-gradient(900px 360px at 108% 12%, rgba(72, 132, 206, 0.24), transparent 60%),
+                linear-gradient(180deg, #111f2f 0%, #0d1928 100%);
+        }
+
+        .cars-listing-modern {
+            .box-filters-modern {
+                background: linear-gradient(145deg, #1a2b3e 0%, #132536 100%);
+                border-color: var(--car-bold-border-strong);
+            }
+
+            .car-list-stage__eyebrow {
+                color: #9ab0c7;
+            }
+
+            .car-list-stage__title,
+            .number-found,
+            .car-list-toolbar__label {
+                color: var(--car-bold-ink) !important;
+            }
+
+            .number-found {
+                background: #132436;
+                border-color: var(--car-bold-border-strong);
+            }
+
+            .car-list-stage__mode {
+                color: #95c8ff;
+                border-color: rgba(106, 173, 245, 0.4);
+                background: rgba(87, 158, 235, 0.16);
+            }
+
+            .car-list-toolbar--rail {
+                border-top-color: var(--car-bold-border);
+            }
+
+            .layout-switcher-group {
+                border-color: var(--car-bold-border-strong);
+                background-color: #0d1a28;
+            }
+
+            .display-type {
+                svg {
+                    fill: #8fa8c1;
+                }
+
+                &.active {
+                    background: var(--car-bold-highlight);
+                    box-shadow: inset 0 0 0 1px var(--car-bold-highlight-border);
+                }
+            }
+
+            .btn-mobile-filter-modern {
+                background: #0f1d2c;
+                border-color: var(--car-bold-border-strong);
+                color: #d4e2f0;
+            }
+
+            .item-sort-modern {
+                background: #112132;
+                border-color: var(--car-bold-border-strong);
+
+                .text-xs-medium {
+                    color: #9db3ca !important;
+                }
+
+                .dropdown-toggle,
+                #dropdownSort {
+                    color: #dce8f4;
+                }
+
+                .dropdown-menu {
+                    background: #0d1a28;
+                    border-color: var(--car-bold-border-strong);
+
+                    .dropdown-item {
+                        color: #d4e2ef;
+
+                        &:hover,
+                        &:focus,
+                        &.active {
+                            background: var(--car-bold-highlight);
+                            color: var(--primary-color);
+                        }
+                    }
+                }
+            }
+
+            .car-list-cards {
+                .card-journey-small--modern,
+                .car-card-list {
+                    background: var(--car-bold-panel);
+                    border-color: var(--car-bold-border) !important;
+                }
+
+                .card-journey-small--modern {
+                    .car-card-grid__media-shade {
+                        background: linear-gradient(180deg, rgba(8, 16, 25, 0.2) 10%, rgba(4, 10, 18, 0.72) 100%);
+                    }
+
+                    .car-card-grid__rating .rating {
+                        background-color: rgba(6, 12, 20, 0.84);
+                        border-color: rgba(180, 202, 226, 0.35);
+
+                        .neutral-500 {
+                            color: #cfdeed !important;
+                        }
+                    }
+
+                    .car-card-grid__chip {
+                        background: #22364a;
+                        border-color: #3c5671;
+                        color: #d9e6f5;
+                    }
+
+                    .car-card-grid__chip--soft {
+                        background: #1a2b3d;
+                        border-color: var(--car-bold-border);
+                        color: #bbcee3;
+                    }
+
+                    .card-title a,
+                    .car-price-text {
+                        color: var(--car-bold-ink) !important;
+                    }
+
+                    .card-location .text-location {
+                        color: var(--car-bold-muted);
+                    }
+
+                    .car-card-grid__specs .card-facilities p {
+                        background: #0f1e2f;
+                        border-color: var(--car-bold-border);
+                        color: #d4e2ef;
+                    }
+
+                    .car-card-grid__cta {
+                        border-top-color: var(--car-bold-border);
+
+                        .card-button .btn-gray {
+                            border-color: var(--primary-color);
+                            background-color: var(--primary-color);
+                            color: #07130d;
+                        }
+                    }
+                }
+
+                .car-card-list {
+                    .tour-rate .rate-element {
+                        background: #1b2d40;
+                        border-color: var(--car-bold-border-strong);
+                    }
+
+                    .car-card-list__tag {
+                        background: #23384d;
+                        border-color: #3f5f7f;
+                        color: #d7e5f4;
+                    }
+
+                    .card-title a,
+                    .car-card-list__action-label,
+                    .car-card-list__endtime .car-price-text {
+                        color: var(--car-bold-ink) !important;
+                    }
+
+                    .card-location .text-location {
+                        color: var(--car-bold-muted);
+                    }
+
+                    .car-card-list__specs {
+                        border-top-color: var(--car-bold-border);
+
+                        .item-facilities p {
+                            background: #0f1e2f;
+                            border-color: var(--car-bold-border);
+                            color: #d5e4f2;
+                        }
+                    }
+
+                    .car-card-list__action {
+                        background: #102132;
+                        border-inline-start-color: var(--car-bold-border);
+                    }
+
+                    .car-card-list__endtime .card-button .btn-gray {
+                        border-color: var(--primary-color);
+                        background-color: var(--primary-color);
+                        color: #07130d;
+                    }
+                }
+            }
+
+            .car-list-pagination {
+                background: var(--car-bold-panel);
+                border-color: var(--car-bold-border);
+
+                .page-item {
+                    .page-link {
+                        background: #0f1e2f;
+                        border-color: var(--car-bold-border-strong);
+                        color: #d3e2f1;
+                    }
+
+                    .page-link:hover,
+                    &.active .page-link {
+                        background: var(--car-bold-highlight);
+                        border-color: var(--car-bold-highlight-border);
+                        color: var(--primary-color);
+                    }
+                }
+            }
+        }
+
+        .car-filters-modern,
+        .car-filters-offcanvas {
+            .car-filters-shell {
+                background: var(--car-bold-panel);
+                border-color: var(--car-bold-border-strong);
+            }
+
+            .car-filters-shell__intro {
+                background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.28) 0%, rgba(72, 132, 206, 0.14) 100%);
+                border-color: rgba(114, 181, 249, 0.42);
+            }
+
+            .car-filters-shell__eyebrow,
+            .car-filters-shell__text {
+                color: #a5b9cf;
+            }
+
+            .car-filters-shell__title {
+                color: var(--car-bold-ink);
+            }
+
+            .filter-section--desktop::-webkit-scrollbar-thumb {
+                background: #405c7a;
+            }
+
+            .filter-section--desktop .filter-widget {
+                border-color: var(--car-bold-border);
+                background: #142436;
+
+                .filter-widget-header {
+                    border-bottom-color: var(--car-bold-border);
+                    background: #102031;
+
+                    .filter-title {
+                        color: #dbe8f6;
+                    }
+                }
+            }
+
+            .custom-filter-label {
+                border-color: var(--car-bold-border) !important;
+                background: #102031 !important;
+
+                .filter-option-text {
+                    color: #d2e0ef;
+                }
+
+                .filter-option-count {
+                    background-color: #2a3f55 !important;
+                    color: #d2e0ef !important;
+                }
+            }
+
+            .custom-filter-check input[type='checkbox']:checked + .custom-filter-label {
+                background-color: var(--car-bold-highlight) !important;
+                border-color: var(--car-bold-highlight-border) !important;
+
+                .filter-option-text {
+                    color: var(--primary-color);
+                }
+
+                .filter-option-count {
+                    background-color: var(--primary-color) !important;
+                    color: #07130d !important;
+                }
+            }
+
+            .form-select,
+            .location-autocomplete {
+                background-color: #0f1d2d;
+                border-color: var(--car-bold-border);
+                color: #d6e5f3;
+            }
+
+            .price-range-display,
+            .horsepower-range-display,
+            .year-range-display,
+            .mileage-range-display {
+                background: #102131;
+                border-color: var(--car-bold-border);
+
+                .fw-semibold,
+                small {
+                    color: #d8e6f4 !important;
+                }
+            }
+        }
+
+        .car-filters-offcanvas {
+            .offcanvas-header,
+            .offcanvas-footer {
+                background: #0d1a2a;
+                border-color: var(--car-bold-border-strong);
+            }
+
+            .offcanvas-title {
+                color: var(--car-bold-ink);
+            }
+
+            .offcanvas-subtitle {
+                color: var(--car-bold-muted);
+            }
+
+            .offcanvas-body {
+                background: var(--car-bold-shell);
+            }
+
+            .btn-outline-secondary {
+                border-color: var(--car-bold-border-strong);
+                color: #d2e3f2;
+
+                &:hover,
+                &:focus {
+                    background: #21364a;
+                    border-color: #587da3;
+                    color: #eff7ff;
+                }
+            }
+
+            .btn-primary {
+                color: #07130d;
+            }
+        }
+    }
+
+    .blog-modern--journal {
+        --blog-journal-shell: #0f1c2a;
+        --blog-journal-panel: #122537;
+        --blog-journal-card: #122234;
+        --blog-journal-ink: #e1ecf7;
+        --blog-journal-muted: #9eb4ca;
+        --blog-journal-border: #2e4964;
+        --blog-journal-shadow: 0 28px 74px rgba(3, 9, 15, 0.55);
+
+        .blog-modern__hero {
+            border-color: #365473;
+            background: linear-gradient(135deg, #142739 0%, #102132 55%, #0f1d2c 100%);
+        }
+
+        .blog-modern__hero-panel {
+            background: rgba(9, 18, 30, 0.5);
+            border-color: var(--blog-journal-border);
+        }
+
+        .blog-modern__hero-pill,
+        .card-news--journal .btn-label-tag {
+            border-color: rgba(151, 201, 255, 0.42);
+            background: rgba(var(--primary-color-rgb), 0.22);
+            color: #bfe2ff;
+        }
+
+        .card-news--journal {
+            box-shadow: 0 16px 40px rgba(4, 10, 18, 0.56);
+        }
+
+        .card-news--journal .card-news__media-shade {
+            background: linear-gradient(180deg, rgba(6, 12, 20, 0) 34%, rgba(4, 10, 18, 0.74) 100%);
+        }
+
+        .card-news--journal .post-date,
+        .card-news--journal .post-time,
+        .card-news--journal .post-views {
+            border-color: #35536f;
+            background: #172c40 !important;
+            color: #bdd1e5 !important;
+        }
+
+        .card-news--journal .card-program .card-button .btn-gray {
+            border-color: #395875;
+            background: #1a3044;
+            color: #dbe8f6;
+
+            &:hover,
+            &:focus {
+                border-color: var(--primary-color);
+                background: var(--primary-color);
+                color: #07130d;
+            }
+        }
+
+        .blog-loop-modern__pagination {
+            .pagination {
+                border-color: var(--blog-journal-border);
+                background: #112234;
+            }
+
+            .page-item .page-link {
+                border-color: #385672;
+                background: #152a3d;
+                color: #d7e5f3;
+            }
+
+            .page-item .page-link.active,
+            .page-item.active .page-link,
+            .page-item .page-link:hover,
+            .page-item .page-link:focus {
+                border-color: var(--primary-color);
+                background: var(--primary-color);
+                color: #07130d;
+            }
+        }
+
+        .blog-loop-modern__posts > .text-center.text-muted {
+            border-color: #34526e;
+            background: #122436;
+
+            h6 {
+                color: #dce8f4;
+            }
+        }
+
+        .blog-modern__sidebar {
+            .box-search-style-2,
+            .box-sidebar-border,
+            .widget {
+                border-color: var(--blog-journal-border);
+                background: var(--blog-journal-card);
+                box-shadow: 0 14px 30px rgba(4, 10, 17, 0.45);
+            }
+
+            .box-search-style-2 {
+                form input {
+                    border-color: #35546f;
+                    background: #0f1f30;
+                    color: #dce9f6;
+
+                    &::placeholder {
+                        color: #8da8c2;
+                    }
+                }
+
+                .btn-search-submit {
+                    border-color: #73b2ef;
+                }
+            }
+
+            .box-head-sidebar,
+            .widget-title {
+                border-bottom-color: var(--blog-journal-border);
+            }
+
+            .card-post .card-image img {
+                border-color: var(--blog-journal-border);
+            }
+
+            .card-post .card-info .post-date {
+                color: var(--blog-journal-muted) !important;
+            }
+
+            .widget a {
+                color: #dce8f4;
+
+                &:hover {
+                    color: #8ec9ff;
+                }
+            }
+        }
+    }
+
+    .car-detail-modern {
+        --car-detail-shell: #102133;
+        --car-detail-panel: #132538;
+        --car-detail-ink: #dfeaf6;
+        --car-detail-muted: #9eb5cb;
+        --car-detail-border: #314c67;
+        --car-detail-shadow: 0 28px 62px rgba(3, 10, 17, 0.55);
+        --car-detail-soft: rgba(var(--primary-color-rgb), 0.24);
+
+        .car-detail-modern__breadcrumbs li {
+            background: #122436;
+            border-color: var(--car-detail-border);
+        }
+
+        .car-detail-modern__gallery-wrap {
+            border-color: #395673;
+            background: linear-gradient(135deg, #13273a 0%, #0f1f31 100%);
+        }
+
+        .banner-activities-detail {
+            .banner-slide-activity {
+                border-color: #36536f;
+            }
+        }
+
+        .car-detail-modern__gallery-thumbs {
+            .banner-slide {
+                border-color: transparent;
+            }
+
+            .slick-current .banner-slide {
+                border-color: #7ec4ff;
+                box-shadow: 0 0 0 3px rgba(104, 183, 249, 0.25);
+            }
+        }
+
+        .box-button-abs .btn {
+            border-color: #3c5a76;
+            background: #152a3d;
+            color: #dce8f5;
+        }
+
+        .box-button-abs .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #07130d;
+        }
+
+        .car-detail-modern__header {
+            background: var(--car-detail-panel);
+            border-color: var(--car-detail-border);
+        }
+
+        .car-detail-modern__header .rate-element {
+            background: #152a3d;
+            border-color: #3d5d7a;
+        }
+
+        .car-detail-modern__title-wrap h4,
+        .car-detail-modern__collapse-trigger .heading-6,
+        .car-detail-modern__share-trigger,
+        .sale-info--modern .text-lg-bold,
+        .booking-form--modern .text-xl-bold {
+            color: var(--car-detail-ink) !important;
+        }
+
+        .car-detail-modern__quick-meta span,
+        .car-detail-modern__badge {
+            border-color: #3b5974;
+            background: #172c40;
+            color: #bcd1e5;
+        }
+
+        .car-detail-modern__meta-row {
+            border-top-color: var(--car-detail-border);
+        }
+
+        .car-detail-modern__meta-row .tour-location,
+        .car-detail-modern__meta-row a {
+            color: var(--car-detail-muted) !important;
+        }
+
+        .car-detail-modern__share-trigger {
+            border-color: #3f607c;
+            background: #162b3f;
+        }
+
+        .car-detail-modern__share-trigger:hover,
+        .car-detail-modern__share-trigger:focus {
+            color: #07130d !important;
+        }
+
+        .car-detail-modern__share-menu {
+            background: #13263a;
+            border-color: #3c5a77;
+        }
+
+        .car-detail-modern__spec-strip,
+        .group-collapse-expand--modern,
+        .booking-form--modern,
+        .sale-info--modern,
+        .form-contact-wrapper--modern {
+            background: var(--car-detail-panel);
+            border-color: var(--car-detail-border);
+        }
+
+        .car-detail-modern__spec-pill,
+        .car-detail-modern__amenity-item,
+        .car-detail-modern__faq-item,
+        .car-detail-modern__reviews-summary,
+        .owner-info-card--modern .contact-item,
+        .sale-info--modern .detail-item--modern {
+            background: #152a3d !important;
+            border-color: #3a5772 !important;
+            color: #d9e6f4;
+        }
+
+        .car-detail-modern__spec-pill .feature-image {
+            background: #0f2031;
+            border-color: #3d5b77;
+        }
+
+        .car-detail-modern__collapse-trigger {
+            background: linear-gradient(180deg, #152b3f 0%, #112437 100%);
+        }
+
+        .car-detail-modern__collapse-card {
+            border-top-color: var(--car-detail-border);
+            background: var(--car-detail-panel);
+        }
+
+        .car-detail-modern__reviews-pagination .page-item .page-link {
+            background: #142739;
+            border-color: #3a5874;
+            color: #d7e4f2;
+        }
+
+        .car-detail-modern__reviews-pagination .page-item .page-link:hover,
+        .car-detail-modern__reviews-pagination .page-item.active .page-link,
+        .car-detail-modern__reviews-pagination .page-item .page-link.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: #07130d;
+        }
+
+        .owner-info-card--modern .owner-title,
+        .owner-info-card--modern .owner-since,
+        .owner-info-card--modern .contact-label,
+        .car-detail-modern__faq-item .neutral-800,
+        .car-detail-modern__amenity-item,
+        .sale-info--modern .text-muted,
+        .car-detail-modern__breadcrumbs .text-breadcrumb {
+            color: var(--car-detail-muted) !important;
+        }
+
+        .owner-info-card--modern .contact-value,
+        .owner-info-card--modern .owner-name {
+            color: var(--car-detail-ink) !important;
+        }
+
+        .booking-form--modern .head-booking-form,
+        .sale-info--modern .head-sale-info--modern {
+            background: #152b3f;
+            border-bottom-color: var(--car-detail-border);
+        }
+
+        .sale-info--modern .car-price-section--modern {
+            border-color: rgba(130, 188, 245, 0.42);
+            background: linear-gradient(145deg, rgba(76, 150, 224, 0.2) 0%, rgba(28, 64, 96, 0.32) 100%) !important;
+        }
+
+        .booking-form--modern .btn-book,
+        .sale-info--modern .btn-primary,
+        .form-contact-wrapper--modern .btn-book,
+        .car-detail-modern__contact-cta {
+            color: #07130d;
+        }
+
+        .car-detail-page--style-4 {
+            .car-detail-modern__gallery-wrap {
+                background: transparent;
+                border: 0;
+            }
+
+            .banner-activities-detail .banner-slide-activity {
+                background: #14283c;
+                border-color: #3a5874;
+            }
+        }
+    }
 }

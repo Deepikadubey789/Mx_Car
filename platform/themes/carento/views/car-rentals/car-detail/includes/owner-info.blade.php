@@ -1,6 +1,6 @@
 @if($car->author && $car->author->id && !get_car_rentals_setting('hide_owner_info', false))
-<div class="group-collapse-expand">
-    <button class="btn btn-collapse" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOwnerInfo" aria-expanded="true" aria-controls="collapseOwnerInfo">
+<div class="group-collapse-expand group-collapse-expand--modern">
+    <button class="btn btn-collapse car-detail-modern__collapse-trigger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOwnerInfo" aria-expanded="true" aria-controls="collapseOwnerInfo">
         <strong class="heading-6">{{ __('Owner Information') }}</strong>
         <svg width="12" height="7" viewBox="0 0 12 7" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M1 1L6 6L11 1" stroke="" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
@@ -8,7 +8,7 @@
     </button>
 
     <div class="collapse show" id="collapseOwnerInfo">
-        <div class="card card-body owner-info-card">
+        <div class="card card-body owner-info-card owner-info-card--modern car-detail-modern__collapse-card">
             <!-- Owner Profile Header -->
             <div class="owner-profile-header mb-4">
                 <div class="d-flex align-items-center">
