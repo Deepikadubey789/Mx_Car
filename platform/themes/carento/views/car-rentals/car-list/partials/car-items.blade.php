@@ -21,7 +21,7 @@
 
 @endphp
 
-<div class="content-right cars-listing cars-listing-modern">
+<div class="content-right cars-listing cars-listing-modern car-list-modern">
     @if($enableFilter === 'no')
         {!! Form::open(['url' => route('public.ajax.cars'), 'method' => 'GET', 'id' => 'cars-filter-form', 'class' => 'sidebar-filter-mobile__content']) !!}
         <input type="hidden" name="page" value="{{ $cars->currentPage() ?: 1 }}" data-value="{{ $cars->currentPage() ?: 1 }}" />

@@ -4,7 +4,7 @@
     $displayDescription = $displayDescription ?? false;
 @endphp
 
-<div>
+<div class="blog-modern--journal">
     <div class="blog-loop-modern">
         @if (($displayTitle && ($title = theme_option('blog_post_list_page_title'))) || ($displayDescription && ($description = theme_option('blog_post_list_page_description'))))
             <div class="blog-loop-modern__intro">
