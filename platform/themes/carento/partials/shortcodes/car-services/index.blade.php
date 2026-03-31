@@ -6,7 +6,10 @@
     .services-zoom-style .zoom-outer-wrapper {
         background-color: #f8f9fa !important; /* The gray card background */
         border-radius: 24px !important;      /* Large rounded corners for the whole block */
-        padding: 60px 40px !important;       /* Internal spacing */
+        
+        /* REDUCED GAP: Changed from 60px to 30px for top/bottom padding */
+        padding: 30px 40px !important;       
+        
         margin: 0 auto;
         max-width: 1240px;                   /* Limits the width so it's not full-screen */
         transition: background-color 0.3s ease; /* Smooth transition for theme toggle */
@@ -119,11 +122,13 @@
     }
 </style>
 
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-car-services services-zoom-style py-96 background-body">
+{{-- REDUCED GAP: Changed py-96 to py-5 to remove the massive outer spacing --}}
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-car-services services-zoom-style py-5 background-body">
     <div class="container">
         <div class="zoom-outer-wrapper">
             
-            <div class="row justify-content-center text-center mb-50">
+            {{-- REDUCED GAP: Changed mb-50 to mb-4 to bring the cars closer to the title --}}
+            <div class="row justify-content-center text-center mb-4">
                 <div class="col-lg-10">
                     <h2 class="fw-bold mb-3" style="font-size: 2rem;">
                         {!! BaseHelper::clean($shortcode->title) !!}

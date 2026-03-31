@@ -179,7 +179,52 @@ class DashboardController extends BaseController
             'maintenanceAlerts' => $maintenanceAlerts,
         ];
 
-        return CarRentalsHelper::view('vendor-dashboard.index', compact('totalCars', 'totalBookings', 'totalMessages', 'data'));
+        // ==========================================
+        // NEW: PREPARE DYNAMIC DATA FOR APEXCHARTS
+        // ==========================================
+        
+        // 1. Line Chart: Generate Revenue/Bookings for the last 7 days
+        $chartDates = [];
+        $chartRevenue = [];
+        $chartBookings = [];
+        
+        for ($i = 6; $i >= 0; $i--) {
+            $date = \Carbon\Carbon::today()->subDays($i);
+            $chartDates[] = $date->format('D'); // Mon, Tue, Wed...
+
+            $dailyBookings = Booking::query()
+                ->where('vendor_id', $vendorId)
+                ->whereDate('created_at', $date)
+                ->count();
+                
+            $dailyRevenue = Revenue::query()
+                ->where('customer_id', $vendorId)
+                ->whereDate('created_at', $date)
+                ->sum('amount');
+
+            $chartBookings[] = $dailyBookings;
+            $chartRevenue[] = (float) $dailyRevenue;
+        }
+        
+        $chartData = [
+            'dates' => $chartDates,
+            'revenue' => $chartRevenue,
+            'bookings' => $chartBookings,
+        ];
+
+        // 2. Donut Chart: Top Performing Cars data
+        $topCarsChart = [
+            'labels' => $topCars->map(fn($car) => $car->name ?? $car->license_plate ?? 'Car #' . $car->id)->toArray(),
+            'revenues' => $topCars->pluck('revenue')->map(fn($rev) => (float) $rev)->toArray(),
+        ];
+
+        // Fallback if vendor has no cars/data yet
+        if (empty($topCarsChart['labels'])) {
+             $topCarsChart = ['labels' => ['No Data'], 'revenues' => [1]];
+        }
+
+        // Return view with the new variables added to compact()
+        return CarRentalsHelper::view('vendor-dashboard.index', compact('totalCars', 'totalBookings', 'totalMessages', 'data', 'chartData', 'topCarsChart'));
     }
 
     public function postUpload(Request $request)
