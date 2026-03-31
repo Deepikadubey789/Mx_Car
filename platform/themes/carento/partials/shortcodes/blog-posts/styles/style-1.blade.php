@@ -3,11 +3,11 @@
     <div class="container">
         <div class="row align-items-end">
             <div class="col-md-9 mb-30 wow fadeInUp">
-                @if(!empty($title))
-                    <h2 class="heading-3 title-svg shortcode-title mb-15">{!! BaseHelper::clean($title) !!}</h2>
-                @endif
                 @if(!empty($subtitle))
-                    <p class="text-lg-medium text-bold neutral-500">{!! BaseHelper::clean($subtitle) !!}</p>
+                    <span class="section-subtitle">{!! BaseHelper::clean($subtitle) !!}</span>
+                @endif
+                @if(!empty($title))
+                    <h2 class="heading-3 mb-15">{!! BaseHelper::clean($title) !!}</h2>
                 @endif
             </div>
             <div class="col-md-3 position-relative mb-30 wow fadeInUp">

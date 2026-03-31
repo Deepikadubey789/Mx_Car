@@ -11,7 +11,7 @@
             <div class="row align-items-center">
                 <div class="col-lg-5">
                     @if($subtitle = $shortcode->subtitle)
-                        <span class="btn btn-signin bg-2 text-dark mb-4">{!! BaseHelper::clean($subtitle) !!}</span>
+                        <span class="section-subtitle">{!! BaseHelper::clean($subtitle) !!}</span>
                     @endif
 
                     @if ($title = $shortcode->title)

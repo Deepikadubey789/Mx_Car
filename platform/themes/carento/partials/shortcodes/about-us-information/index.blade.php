@@ -1,20 +1,16 @@
-<section {!! $shortcode->htmlAttributes() !!} class="section-1 py-96 background-body">
-    <div class="container">
-        <div class="row pb-50">
-            <div class="col-lg-4">
+<section {!! $shortcode->htmlAttributes() !!} class="section-1 py-96 background-body shortcode-faqs mxcar-faq-clean-section">
+    <div class="container mxcar-faq-clean-container">
+        <div class="row pb-50 align-items-end">
+            <div class="col-lg-5 text-start">
+                @if($description = $shortcode->description)
+                    <span class="section-subtitle mxcar-page-desc">{{ $description }}</span>
+                @endif
                 @if($title = $shortcode->title)
-                    <h2 class="heading-3 shortcode-title">
+                    <h2 class="heading-3 mxcar-page-title mb-0">
                         {!! BaseHelper::clean($title) !!}
                     </h2>
                 @endif
             </div>
-
-            @if ($description = $shortcode->description)
-                <div class="col-lg-7 offset-lg-1">
-                    <p class="text-lg-medium neutral-500">{!! BaseHelper::clean($description) !!}</p>
-                </div>
-            @endif
-
         </div>
         @if(count($tabs) > 0)
             @php

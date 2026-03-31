@@ -15,9 +15,9 @@
        ========================================= */
     /* Outer wrapper creating the 'Island' effect */
     .featured-zoom-style .zoom-outer-wrapper {
-        background-color: #f8f9fa !important; /* Match the gray background of other blocks */
-        border-radius: 24px !important;
-        padding: 80px 40px !important;
+        background-color: transparent !important; /* Transparency reset, backround handled by page wrapper */
+        border-radius: 20px !important;
+        padding: 40px 0 !important;
         margin: 0 auto;
         max-width: 1240px;
         position: relative;
@@ -36,8 +36,12 @@
         padding: 6px 16px;
         border-radius: 50px;
         font-weight: 700;
-        font-size: 14px;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
         margin-bottom: 20px;
+        background-color: #B03A2E !important;
+        color: #ffffff !important;
         transition: background-color 0.3s ease, color 0.3s ease;
     }
 

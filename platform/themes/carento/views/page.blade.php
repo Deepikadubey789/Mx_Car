@@ -150,133 +150,15 @@
 
 
     @if ($isAboutUsPage)
-        <style>
-            /* MXCar Ultra-Clean About Us Overrides */
-            .page-modern--about {
-                background-color: #ffffff !important;
-            }
-            .page-modern--about section,
-            .page-modern--about .background-body,
-            .page-modern--about .background-2,
-            .page-modern--about .background-brand-2,
-            .page-modern--about .background-100,
-            .page-modern--about .bg-light {
-                background-color: #ffffff !important; /* Pure white background to eliminate muddy beige */
-            }
-            .page-modern--about .card,
-            .page-modern--about .box-image,
-            .page-modern--about .box-tag,
-            .page-modern--about .card-why,
-            .page-modern--about .card-team,
-            .page-modern--about .about-modern-ribbon__item,
-            .page-modern--about .about-modern-hero__stat-card,
-            .page-modern--about .card-testimonial {
-                background-color: #ffffff !important;
-                border: 1px solid #E9ECEF !important;
-                border-radius: 20px !important;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
-                transition: all 0.3s ease;
-            }
-            .page-modern--about .card:hover,
-            .page-modern--about .box-image:hover,
-            .page-modern--about .box-tag:hover,
-            .page-modern--about .card-why:hover,
-            .page-modern--about .card-team:hover,
-            .page-modern--about .about-modern-ribbon__item:hover {
-                border-color: #B03A2E !important;
-                box-shadow: 0 8px 30px rgba(176, 58, 46, 0.05) !important;
-                transform: translateY(-2px);
-            }
-            .page-modern--about .heading-1,
-            .page-modern--about .heading-2,
-            .page-modern--about .heading-3,
-            .page-modern--about h1, 
-            .page-modern--about h2, 
-            .page-modern--about h3,
-            .page-modern--about .text-dark {
-                color: #111111 !important;
-                font-weight: 700 !important;
-            }
-            
-            /* Buttons Fix */
-            .page-modern--about .btn-primary {
-                background-color: #B03A2E !important;
-                border-color: #B03A2E !important;
-                color: #ffffff !important;
-            }
-            .page-modern--about .btn-primary:hover {
-                background-color: #8E2B21 !important;
-                box-shadow: 0 6px 20px rgba(176, 58, 46, 0.25) !important;
-            }
-
-            /* Fix icon backgrounds inside cards */
-            .page-modern--about .card-why .card-image,
-            .page-modern--about .card-contact .card-icon {
-                background-color: #f4f5f7 !important;
-                border-radius: 50% !important;
-                padding: 12px !important;
-                border: none !important;
-            }
-
-            /* Dark Mode Support for About Page */
-            [data-bs-theme="dark"] .page-modern--about {
-                background-color: transparent !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about section,
-            [data-bs-theme="dark"] .page-modern--about .background-body,
-            [data-bs-theme="dark"] .page-modern--about .background-2,
-            [data-bs-theme="dark"] .page-modern--about .background-brand-2,
-            [data-bs-theme="dark"] .page-modern--about .background-100 {
-                background-color: transparent !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .card,
-            [data-bs-theme="dark"] .page-modern--about .box-image,
-            [data-bs-theme="dark"] .page-modern--about .box-tag,
-            [data-bs-theme="dark"] .page-modern--about .card-why,
-            [data-bs-theme="dark"] .page-modern--about .card-team,
-            [data-bs-theme="dark"] .page-modern--about .about-modern-ribbon__item,
-            [data-bs-theme="dark"] .page-modern--about .about-modern-hero__stat-card {
-                background-color: #1a1a1a !important;
-                border-color: #2e2e2e !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .card:hover,
-            [data-bs-theme="dark"] .page-modern--about .box-image:hover,
-            [data-bs-theme="dark"] .page-modern--about .box-tag:hover,
-            [data-bs-theme="dark"] .page-modern--about .card-why:hover,
-            [data-bs-theme="dark"] .page-modern--about .card-team:hover,
-            [data-bs-theme="dark"] .page-modern--about .about-modern-ribbon__item:hover {
-                border-color: #B03A2E !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .heading-1,
-            [data-bs-theme="dark"] .page-modern--about .heading-2,
-            [data-bs-theme="dark"] .page-modern--about .heading-3,
-            [data-bs-theme="dark"] .page-modern--about h1, 
-            [data-bs-theme="dark"] .page-modern--about h2, 
-            [data-bs-theme="dark"] .page-modern--about h3,
-            [data-bs-theme="dark"] .page-modern--about .text-dark,
-            [data-bs-theme="dark"] .page-modern--about .neutral-1000,
-            [data-bs-theme="dark"] .page-modern--about .text-xl-bold,
-            [data-bs-theme="dark"] .page-modern--about .text-md-bold {
-                color: #f1f1f1 !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about p.neutral-500,
-            [data-bs-theme="dark"] .page-modern--about .text-md-medium {
-                color: #adb5bd !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .card-why .card-image,
-            [data-bs-theme="dark"] .page-modern--about .card-contact .card-icon {
-                background-color: #2e2e2e !important;
-            }
-        </style>
         <section class="about-modern-hero box-section background-body">
             <div class="container">
                 <div class="about-modern-hero__shell">
                     <div class="about-modern-hero__content">
-                        <p class="about-modern-hero__eyebrow text-xs-medium mb-0">{{ __('Built for Every Journey') }}</p>
-                        <h1 class="about-modern-hero__title">{{ $page->name }}</h1>
+                        <p class="about-modern-hero__eyebrow text-xs-medium mb-0 mxcar-page-desc">{{ __('Built for Every Journey') }}</p>
+                        <h1 class="about-modern-hero__title mxcar-page-title">{{ $page->name }}</h1>
 
                         @if ($page->description)
-                            <p class="about-modern-hero__description">{!! BaseHelper::clean($page->description) !!}</p>
+                            <p class="about-modern-hero__description mxcar-page-desc">{!! BaseHelper::clean($page->description) !!}</p>
                         @endif
 
                         <ul class="about-modern-hero__points" aria-label="{{ __('Why choose us') }}">
@@ -286,8 +168,8 @@
                         </ul>
 
                         <div class="about-modern-hero__actions">
-                            <a class="btn btn-primary" href="{{ url('/cars') }}">{{ __('Browse Cars') }}</a>
-                            <a class="btn btn-outline-secondary" href="{{ url('/contact') }}">{{ __('Talk to Our Team') }}</a>
+                            <a class="mxcar-btn-red" href="{{ url('/cars') }}">{{ __('Browse Cars') }}</a>
+                            <a class="mxcar-btn-grey" href="{{ url('/contact') }}">{{ __('Talk to Our Team') }}</a>
                         </div>
                     </div>
 

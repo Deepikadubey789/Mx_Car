@@ -13,110 +13,414 @@
 
 <div class="car-detail-page car-detail-page--style-1">
     <style>
-        /* MXCar Ultra-Clean Single Car Page Brand Overrides */
+        /* ═══════════════════════════════════════════════════════════════════
+           MXCar Car Detail — Brand Consistent Redesign (v2)
+           Class names verified from:
+             includes/attributes.blade.php     → .car-detail-modern__spec-pill
+             includes/additional-info.blade.php → .car-detail-modern__badge, .car-detail-modern__collapse-card
+             includes/amenities.blade.php       → .car-detail-modern__amenity-item
+             includes/booking-form.blade.php    → .head-booking-form, .booking-form--modern
+           Color system matching /car-list-1:
+             Background: #F4F6F8 | Cards: #fff | Brand red: #B03A2E
+        ═══════════════════════════════════════════════════════════════════ */
+
+        /* ── Page & Section Backgrounds ── */
         .car-detail-page--style-1,
         .car-detail-page--style-1 .background-body {
-            background-color: #FDFBF8 !important; /* Soft premium cream background */
+            background-color: #F4F6F8 !important;
         }
 
+        /* ── All white content cards ── */
         .car-detail-modern__header,
         .car-detail-modern__layout .col-lg-8 > div,
         .car-detail-modern__sidebar .car-detail-modern__sidebar-stack > div {
             background-color: #ffffff !important;
             border: 1px solid #E9ECEF !important;
             border-radius: 20px !important;
-            padding: 30px !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
-            margin-bottom: 24px;
+            padding: 28px 32px !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+            margin-bottom: 20px;
         }
 
-        /* Title & Logo Colors */
-        .car-detail-page--style-1 h4, 
-        .car-detail-page--style-1 h1, 
-        .car-detail-page--style-1 h2, 
-        .car-detail-page--style-1 h3, 
+        /* ── Typography ── */
+        .car-detail-page--style-1 h1,
+        .car-detail-page--style-1 h2,
+        .car-detail-page--style-1 h3,
+        .car-detail-page--style-1 h4,
+        .car-detail-page--style-1 h5,
         .car-detail-page--style-1 .neutral-1000 {
-            color: #000000 !important; /* Standard MXCar Logo Black */
+            color: #111111 !important;
             font-weight: 700 !important;
         }
 
+        /* ── Brand Red Eyebrow ("FEATURED VEHICLE") ── */
         .car-detail-modern__eyebrow {
-            color: #B03A2E !important; /* Logo Red for eyebrow text */
-            font-weight: 600 !important;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            color: #B03A2E !important;
+            font-size: 0.72rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 1.2px !important;
         }
 
-        /* Icon & Badge Colors */
+        /* ── Quick-meta pills (2015, MANUAL, ELECTRIC) ── */
+        .car-detail-modern__quick-meta span {
+            display: inline-flex;
+            align-items: center;
+            background: #F4F6F8 !important;
+            border: 1px solid #E9ECEF !important;
+            border-radius: 20px !important;
+            padding: 4px 14px !important;
+            font-size: 0.78rem !important;
+            font-weight: 600 !important;
+            color: #555 !important;
+            margin-right: 6px;
+            margin-top: 6px;
+        }
+
+        /* ── Spec Attribute Pills (mileage, fuel, seats, doors etc.) ── */
+        /* Real class from attributes.blade.php: .item-feature-car-inner / .car-detail-modern__spec-pill */
+        .car-detail-modern__spec-pill,
+        .item-feature-car-inner {
+            background-color: #F8F9FA !important;
+            border: 1px solid #E9ECEF !important;
+            border-radius: 12px !important;
+            padding: 14px 18px !important;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+        }
+
+        .car-detail-modern__spec-pill:hover,
+        .item-feature-car-inner:hover {
+            border-color: rgba(176, 58, 46, 0.4) !important;
+            box-shadow: 0 2px 8px rgba(176, 58, 46, 0.08) !important;
+        }
+
+        /* Spec pill icons — brand red */
+        .car-detail-modern__spec-pill .feature-image svg,
+        .car-detail-modern__spec-pill .feature-image i,
+        .item-feature-car-inner .feature-image svg,
+        .item-feature-car-inner .feature-image i {
+            color: #B03A2E !important;
+        }
+
+        /* Spec pill text */
+        .car-detail-modern__spec-pill .neutral-1000,
+        .item-feature-car-inner .neutral-1000 {
+            color: #111111 !important;
+            font-weight: 600 !important;
+        }
+
+        /* ── Collapse Section Headers (Additional Information, Accessories, Overview) ── */
+        /* Real class from additional-info.blade.php: .car-detail-modern__collapse-trigger */
+        .car-detail-modern__collapse-trigger {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            width: 100% !important;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            color: #111111 !important;
+            font-weight: 700 !important;
+        }
+
+        .car-detail-modern__collapse-trigger strong {
+            color: #111111 !important;
+            font-size: 1rem !important;
+            font-weight: 700 !important;
+        }
+
+        .car-detail-modern__collapse-trigger svg path {
+            stroke: #B03A2E !important;
+        }
+
+        /* ── Collapse card body ── */
+        .car-detail-modern__collapse-card {
+            background-color: transparent !important;
+            border: none !important;
+            padding: 16px 0 0 !important;
+        }
+
+        /* ── Attribute Badge Pills (Classic, Brown, tags) ── */
+        /* Real class from additional-info.blade.php: .car-detail-modern__badge */
+        .car-detail-modern__badge {
+            display: inline-flex !important;
+            align-items: center !important;
+            background-color: #FFF5F5 !important;
+            color: #B03A2E !important;
+            border: 1px solid rgba(176, 58, 46, 0.2) !important;
+            border-radius: 6px !important;
+            padding: 3px 10px !important;
+            font-size: 0.75rem !important;
+            font-weight: 600 !important;
+        }
+
+        /* Info row icons (folder, palette, calendar, barcode) */
+        .car-detail-modern__info-grid .feature-image svg,
+        .car-detail-modern__info-grid .feature-image i {
+            color: #B03A2E !important;
+        }
+
+        /* ── Amenity / Accessory Items ── */
+        /* Real class from amenities.blade.php: .car-detail-modern__amenity-item */
+        .car-detail-modern__amenity-item {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            background-color: #F8F9FA !important;
+            border: 1px solid #E9ECEF !important;
+            border-radius: 8px !important;
+            padding: 8px 14px !important;
+            margin: 4px !important;
+            list-style: none !important;
+            font-size: 0.875rem !important;
+            color: #333 !important;
+            transition: border-color 0.15s !important;
+        }
+
+        .car-detail-modern__amenity-item:hover {
+            border-color: rgba(176, 58, 46, 0.35) !important;
+        }
+
+        .car-detail-modern__amenity-item svg,
+        .car-detail-modern__amenity-item i {
+            color: #B03A2E !important;
+        }
+
+        /* Amenity list reset */
+        .car-detail-modern__collapse-card ul {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* ── Amenity Category Headings ── */
+        .car-detail-modern__amenity-category {
+            color: #B03A2E !important;
+            font-size: 0.8rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.8px !important;
+        }
+
+        .car-detail-modern__amenity-category svg,
+        .car-detail-modern__amenity-category i {
+            color: #B03A2E !important;
+        }
+
+        /* ── Star Ratings & Map Pins ── */
         .car-detail-page--style-1 .icon-tabler-star,
         .car-detail-page--style-1 .rate-element svg,
         .car-detail-page--style-1 .icon-tabler-map-pin,
-        .car-detail-page--style-1 .tour-location svg {
-            color: #B03A2E !important; /* Brand red for primary signals */
+        .car-detail-page--style-1 .tour-location svg,
+        .car-detail-page--style-1 .tour-location i {
+            color: #B03A2E !important;
         }
 
-        .car-detail-page--style-1 .card-program-info,
-        .car-detail-page--style-1 .item-attribute {
-            background-color: #FDFBF8 !important;
+        /* ── Booking Sidebar ── */
+        /* Real class from booking-form.blade.php: .head-booking-form, .booking-form--modern */
+        .car-detail-modern__sidebar-stack > div {
+            padding: 28px 32px !important;
+            overflow: hidden !important; 
+        }
+
+        /* Red Header - Reset to bleed to edges */
+        .head-booking-form {
+            background: linear-gradient(135deg, #B03A2E 0%, #8E2B21 100%) !important;
+            margin: -29px -33px 24px !important; 
+            padding: 22px 32px !important;
+            border-radius: 20px 20px 0 0 !important;
+            display: block !important;
+        }
+
+        .head-booking-form p,
+        .head-booking-form .text-xl-bold {
+            color: #ffffff !important;
+            font-size: 1.05rem !important;
+            font-weight: 700 !important;
+            margin: 0 !important;
+        }
+
+        /* AGGRESSIVE Removal of Theme's boxy grey containers — EXCEPT the header */
+        .booking-form--modern .content-booking-form div,
+        .booking-form--modern .availability-check,
+        .booking-form--modern .form-group,
+        .booking-form--modern .mb-20 {
+            background-color: transparent !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        /* Labels */
+        .booking-form--modern label,
+        .car-detail-modern__sidebar label {
+            color: #111111 !important;
+            font-weight: 600 !important;
+            font-size: 0.85rem !important;
+            margin-bottom: 8px !important;
+            display: block !important;
+        }
+
+        /* Form inputs - KEEP subtle grey fill only on the fields */
+        .booking-form--modern .form-control,
+        .booking-form--modern .form-select,
+        .car-detail-modern__sidebar .form-control,
+        .car-detail-modern__sidebar .form-select {
+            background-color: #F8F9FA !important;
             border: 1px solid #E9ECEF !important;
-            border-radius: 12px !important;
-            padding: 15px !important;
+            border-radius: 10px !important;
+            color: #111111 !important;
+            height: auto !important;
+            padding: 12px 16px !important;
         }
 
-        /* Buttons & CTA */
+
+        .booking-form--modern .form-control:focus,
+        .booking-form--modern .form-select:focus {
+            border-color: #B03A2E !important;
+            box-shadow: 0 0 0 3px rgba(176, 58, 46, 0.1) !important;
+        }
+
+        /* Additional Services section */
+        .booking-form--modern .form-check-label {
+            color: #333 !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* Subtotal / Total */
+        .booking-form--modern .text-sm-bold,
+        .booking-form--modern .text-heading-5,
+        .car-detail-modern__sidebar .text-end .heading-6 {
+            color: #111111 !important;
+            font-weight: 700 !important;
+        }
+
+        /* ── Book Now Button ── */
+        .car-detail-page--style-1 .btn-book,
         .car-detail-page--style-1 .btn-primary,
-        .car-detail-page--style-1 .btn-book-now,
-        .car-detail-page--style-1 .booking-form button[type="submit"] {
+        .car-detail-page--style-1 button[type="submit"].btn {
             background-color: #B03A2E !important;
             border-color: #B03A2E !important;
             color: #ffffff !important;
             font-weight: 700 !important;
-            padding: 14px 24px !important;
             border-radius: 10px !important;
-            transition: all 0.3s ease;
+            padding: 14px 24px !important;
+            letter-spacing: 0.3px !important;
+            transition: all 0.25s ease !important;
+            width: 100% !important;
         }
 
+        .car-detail-page--style-1 .btn-book:hover,
         .car-detail-page--style-1 .btn-primary:hover {
             background-color: #8E2B21 !important;
-            box-shadow: 0 10px 20px rgba(176, 58, 46, 0.2) !important;
-            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(176, 58, 46, 0.25) !important;
+            transform: translateY(-2px) !important;
         }
 
-        /* Gallery Overrides */
+        /* ── Gallery Styling ── */
         .car-detail-modern__gallery-main .wrapper-image img {
             border-radius: 20px !important;
         }
 
         .car-detail-modern__gallery-thumbs .banner-slide img {
-            border-radius: 12px !important;
+            border-radius: 10px !important;
             border: 2px solid transparent;
+            transition: border-color 0.2s;
         }
 
         .car-detail-modern__gallery-thumbs .slick-current img {
             border-color: #B03A2E !important;
         }
 
-        /* Sidebar Sidebar sticky fix */
+        /* ── Sidebar Sticky ── */
         .car-detail-modern__sidebar-stack--sticky {
-            top: 100px;
+            position: sticky;
+            top: 96px;
         }
 
-        /* Dark Mode Support */
+        /* ── Dark Mode ── */
         [data-bs-theme="dark"] .car-detail-page--style-1,
         [data-bs-theme="dark"] .car-detail-page--style-1 .background-body {
-            background-color: transparent !important;
+            background-color: #151515 !important;
         }
+
         [data-bs-theme="dark"] .car-detail-modern__header,
         [data-bs-theme="dark"] .car-detail-modern__layout .col-lg-8 > div,
         [data-bs-theme="dark"] .car-detail-modern__sidebar .car-detail-modern__sidebar-stack > div {
-            background-color: #1a1a1a !important;
+            background-color: #1e1e1e !important;
             border-color: #2e2e2e !important;
         }
-        [data-bs-theme="dark"] .car-detail-page--style-1 h4, 
-        [data-bs-theme="dark"] .car-detail-page--style-1 .neutral-1000 {
+
+        [data-bs-theme="dark"] .car-detail-modern__spec-pill,
+        [data-bs-theme="dark"] .item-feature-car-inner {
+            background-color: #252525 !important;
+            border-color: #333 !important;
+        }
+
+        [data-bs-theme="dark"] .car-detail-modern__amenity-item {
+            background-color: #252525 !important;
+            border-color: #333 !important;
+            color: #ccc !important;
+        }
+
+        /* ── Question & Answers (FAQ) ── */
+        /* Real class from faqs.blade.php: .car-detail-modern__faq-item */
+        .car-detail-modern__faq-item {
+            background-color: #F8F9FA !important;
+            border: 1px solid #E9ECEF !important;
+            border-radius: 16px !important;
+            padding: 20px 24px !important;
+            margin-bottom: 16px !important;
+            position: relative;
+            padding-left: 56px !important; /* Space for icon */
+        }
+
+        .car-detail-modern__faq-item::before {
+            content: '?' !important;
+            position: absolute !important;
+            left: 18px !important;
+            top: 20px !important;
+            width: 26px !important;
+            height: 26px !important;
+            background-color: #B03A2E !important;
+            color: #ffffff !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 0.85rem !important;
+            font-weight: 700 !important;
+        }
+
+        .car-detail-modern__faq-item .head-question p {
+            color: #111111 !important;
+            font-size: 0.95rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 8px !important;
+        }
+
+        .car-detail-modern__faq-item .content-question {
+            color: #555 !important;
+            font-size: 0.875rem !important;
+            line-height: 1.6 !important;
+        }
+
+        [data-bs-theme="dark"] .car-detail-modern__faq-item {
+            background-color: #252525 !important;
+            border-color: #333 !important;
+        }
+
+        [data-bs-theme="dark"] .car-detail-modern__faq-item .head-question p {
             color: #f1f1f1 !important;
         }
+
+        [data-bs-theme="dark"] .car-detail-modern__faq-item .content-question {
+            color: #aaa !important;
+        }
     </style>
+
     @include(Theme::getThemeNamespace('views.car-rentals.car-detail.includes.breadcrumbs'), compact('car'))
 
     <div class="section-box box-banner-home2 background-body car-detail-modern__gallery-shell">
