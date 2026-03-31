@@ -115,6 +115,11 @@
     stroke: #adb5bd;
 }
 
+/* Add bottom spacing to the dealers grid row to separate from CTA */
+.section-car-dealers .row.g-4.mt-20 {
+    margin-bottom: 3rem;
+}
+
 /* Actions Section */
 .mxcar-dealer-actions {
     flex-shrink: 0;
@@ -207,6 +212,17 @@
                                     @endif
                                 </h5>
 
+                                @if($showCarCount)
+                                    <div class="mxcar-car-count mt-2">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M16 6L16 4C16 2.89543 15.1046 2 14 2L10 2C8.89543 2 8 2.89543 8 4L8 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                            <path d="M3 8.5C3 7.67157 3.67157 7 4.5 7H19.5C20.3284 7 21 7.67157 21 8.5V11C21 11.5523 20.5523 12 20 12H18.5C18.2239 12 18 12.2239 18 12.5V13C18 13.5523 17.5523 14 17 14H7C6.44772 14 6 13.5523 6 13V12.5C6 12.2239 5.77614 12 5.5 12H4C3.44772 12 3 11.5523 3 11V8.5Z" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M7 14V18.5C7 19.3284 7.67157 20 8.5 20H9.5C10.3284 20 11 19.3284 11 18.5V18C11 17.4477 11.4477 17 12 17C12.5523 17 13 17.4477 13 18V18.5C13 19.3284 13.6716 20 14.5 20H15.5C16.3284 20 17 19.3284 17 18.5V14" stroke="currentColor" stroke-width="1.5"/>
+                                        </svg>
+                                        {{ $dealer->cars_count }} {{ $dealer->cars_count == 1 ? __('Car') : __('Cars') }}
+                                    </div>
+                                @endif
+
                                 @if(($dealer->email || $dealer->phone) && ($showPhone || $showEmail))
                                     <div class="mxcar-dealer-contact">
                                         @if($dealer->email && $showEmail)
@@ -231,18 +247,9 @@
                                 @endif
                             </div>
 
-                            <!-- Right: Actions/Car Count -->
+                            <!-- Right: Actions -->
                             <div class="mxcar-dealer-actions">
-                                @if($showCarCount)
-                                    <div class="mxcar-car-count">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M16 6L16 4C16 2.89543 15.1046 2 14 2L10 2C8.89543 2 8 2.89543 8 4L8 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                            <path d="M3 8.5C3 7.67157 3.67157 7 4.5 7H19.5C20.3284 7 21 7.67157 21 8.5V11C21 11.5523 20.5523 12 20 12H18.5C18.2239 12 18 12.2239 18 12.5V13C18 13.5523 17.5523 14 17 14H7C6.44772 14 6 13.5523 6 13V12.5C6 12.2239 5.77614 12 5.5 12H4C3.44772 12 3 11.5523 3 11V8.5Z" stroke="currentColor" stroke-width="1.5"/>
-                                            <path d="M7 14V18.5C7 19.3284 7.67157 20 8.5 20H9.5C10.3284 20 11 19.3284 11 18.5V18C11 17.4477 11.4477 17 12 17C12.5523 17 13 17.4477 13 18V18.5C13 19.3284 13.6716 20 14.5 20H15.5C16.3284 20 17 19.3284 17 18.5V14" stroke="currentColor" stroke-width="1.5"/>
-                                        </svg>
-                                        {{ $dealer->cars_count }} {{ $dealer->cars_count == 1 ? __('Car') : __('Cars') }}
-                                    </div>
-                                @endif
+                                {{-- reserved for CTA buttons or links --}}
                             </div>
                         </div>
                     </div>
@@ -250,7 +257,7 @@
             </div>
 
             @if($buttonLabel && $buttonUrl)
-                <div class="row mt-5">
+                <div class="row mt-5" style="margin-top: 5rem;">
                     <div class="col-12 text-center">
                         <a href="{{ $buttonUrl }}" class="btn btn-primary" style="background-color: #B03A2E; border-color: #B03A2E;">
                             {{ $buttonLabel }}
