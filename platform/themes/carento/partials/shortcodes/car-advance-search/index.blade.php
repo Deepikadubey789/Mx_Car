@@ -12,7 +12,7 @@
         "--box-mb: {$bottom}px" => $bottom,
         "--box-ml: {$left}px" => $left,
         "--box-mr: {$right}px" => $right,
-        "background-color: transparent" => true, // Ensure no CMS backgrounds bleed through
+        "background-color: transparent" => true, 
     ];
 
     $selectedTabs = array_filter(explode(',', $shortcode->tabs ?? ''));
@@ -43,60 +43,82 @@
 
 {{-- FRONTEND CUSTOM CSS SCOPED ONLY TO THE SEARCH BAR --}}
 <style>
-    /* 1. Remove the outer CMS background entirely */
+    /* 1. Positioning */
     section.shortcode-car-advance-search,
     #js-box-search-advance {
         background: transparent !important;
         border: none !important;
         padding: 0 !important;
+        
+        /* CHANGED: Positive margin so it sits neatly below the hero banner */
         margin-top: 2rem !important; 
-        margin-bottom: 2rem !important; 
+        margin-bottom: 4rem !important; 
+        
+        position: relative !important;
+        z-index: 50 !important;
     }
 
-    /* 2. The Main Floating Pill Container (Turo Style) */
+    /* 2. The Main Container */
     .custom-search-box {
         background: #ffffff !important;
-        border-radius: 60px !important; /* Heavy pill-shaped rounding */
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08) !important;
-        padding: 10px 10px 10px 30px !important; /* Tight padding, less on the right so the button fits snug */
-        max-width: 1000px !important; /* Keep it contained */
+        border-radius: 32px !important; 
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08) !important; 
+        padding: 25px 10px 10px 30px !important; 
+        max-width: 1000px !important; 
         margin-left: auto !important;
         margin-right: auto !important;
         position: relative;
         z-index: 20;
     }
 
-    /* 3. Hide Top Tabs (If you want it to look EXACTLY like the screenshot, tabs are usually hidden or moved. 
-          I am leaving them here but removing bottom borders so they don't break the pill shape) */
+    /* 3. The Top Tabs */
     .custom-search-box .box-top-search {
-        display: none !important; /* UNCOMMENT this line if you want to completely hide the "All Cars" tabs */
-        padding: 0 15px 10px 15px !important;
+        display: flex !important; 
+        padding: 0 20px 15px 0 !important;
         border-bottom: none !important;
+    }
+    
+    .custom-search-box .category-link {
+        font-size: 0.9rem !important;
+        font-weight: 700 !important;
+        color: #64748b !important;
+        margin-right: 12px !important;
+        padding: 8px 18px !important;
+        border-radius: 30px !important;
+        background: transparent;
+        text-decoration: none !important;
+        transition: all 0.2s ease;
+    }
+    
+    .custom-search-box .category-link.active,
+    .custom-search-box .category-link:hover {
+        color: #111827 !important;
+        background: #f1f5f9 !important; 
     }
 
     /* 4. Single-Row Flex Layout for Inputs */
     .custom-search-box .box-bottom-search {
         display: flex !important;
         align-items: center !important;
-        flex-wrap: nowrap !important; /* CRITICAL: Forces a single line */
+        flex-wrap: nowrap !important; 
         width: 100% !important;
     }
 
     .custom-search-box .item-search {
-        flex: 1; /* Inputs share available space equally */
+        flex: 1; 
         padding: 5px 20px !important;
-        border-right: 1px solid #e2e8f0 !important; /* Vertical dividers */
+        border-right: 1px solid #e2e8f0 !important; 
         margin: 0 !important;
         min-width: 0; 
     }
 
-    /* 5. The Search Button Container (Snug on the right) */
+    /* 5. The Search Button Container */
     .custom-search-box .item-search:last-child {
         border-right: none !important;
-        flex: 0 0 auto !important; /* Takes only the space it needs */
-        padding: 0 !important; /* Remove container padding */
+        flex: 0 0 auto !important; 
+        padding: 0 !important; 
         margin: 0 !important;
-        border-top: none !important; /* Remove horizontal dividers */
+        border-top: none !important; 
     }
 
     /* 6. Tidy up the labels and inputs */
@@ -104,7 +126,7 @@
         font-size: 0.75rem !important;
         font-weight: 700 !important;
         text-transform: uppercase;
-        color: #1e293b !important; /* Darker labels for contrast */
+        color: #1e293b !important; 
         margin-bottom: 2px;
         display: block;
     }
@@ -124,17 +146,16 @@
         outline: none !important;
     }
 
-    /* Adjust icon placement */
     .custom-search-box .position-relative span {
-        display: none !important; /* Hide input icons for a cleaner look like Turo */
+        display: none !important; 
     }
     .custom-search-box .ps-4 {
-        padding-left: 0 !important; /* Remove padding since icons are hidden */
+        padding-left: 0 !important; 
     }
 
     /* 7. The Square/Pill Search Button */
     .custom-search-box .btn-brand-2 {
-        border-radius: 50px !important; /* Round the button to match the outer pill */
+        border-radius: 50px !important; 
         border: none !important;
         padding: 15px 30px !important; 
         font-weight: 600 !important;
@@ -146,9 +167,7 @@
         align-items: center;
         color: white !important;
     }
-
     
-    /* Optional: Hide text and only show icon inside button if you want it exactly like the screenshot */
     .custom-search-box .btn-brand-2 .btn-text {
         display: none; 
     }
@@ -158,9 +177,20 @@
 
     /* 8. Mobile Responsiveness */
     @media (max-width: 991px) {
+        section.shortcode-car-advance-search,
+        #js-box-search-advance {
+            margin-top: 1rem !important; 
+        }
         .custom-search-box {
-            border-radius: 1rem !important;
+            border-radius: 1.5rem !important;
             padding: 15px !important;
+        }
+        .custom-search-box .box-top-search {
+            flex-wrap: wrap;
+            padding: 0 0 15px 0 !important;
+        }
+        .custom-search-box .category-link {
+            margin-bottom: 10px !important;
         }
         .custom-search-box .box-bottom-search {
             flex-direction: column !important;
@@ -184,7 +214,7 @@
             border-radius: 0.5rem !important;
         }
         .custom-search-box .btn-brand-2 .btn-text {
-            display: inline-block; /* Show text on mobile */
+            display: inline-block; 
             margin-left: 8px;
         }
     }
@@ -195,7 +225,7 @@
         <form action="{{ $url }}" method="GET">
             
             <div class="custom-search-box wow fadeIn">
-                <input value="{{ $type }}" name="adv_type" hidden/>
+                <input value="{{ $type }}" name="adv_type" id="adv_type_input" hidden/>
                 
                 @if (count($tabs) > 1 || $shortcode->title || $linkNeedHelp)
                     <div class="box-top-search d-flex justify-content-between align-items-center">
@@ -204,7 +234,8 @@
                                 $categoryLinkStyle = [
                                     'category-link',
                                     'text-sm-bold',
-                                    'btn-click'
+                                    'btn-click',
+                                    'filter-tab-btn' // Custom class added for our JS hook
                                 ];
                             @endphp
 
@@ -333,3 +364,26 @@
         </form>
     </div>
 </section>
+
+{{-- SCRIPT TO ENSURE TABS UPDATE THE FILTER --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabs = document.querySelectorAll('.filter-tab-btn');
+        const hiddenInput = document.getElementById('adv_type_input');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Update the hidden input value to be submitted with the form
+                hiddenInput.value = this.getAttribute('data-tab');
+            });
+        });
+    });
+</script>
