@@ -17,7 +17,8 @@
     .featured-zoom-style .zoom-outer-wrapper {
         background-color: transparent !important; /* Transparency reset, backround handled by page wrapper */
         border-radius: 20px !important;
-        padding: 40px 0 !important;
+        /* REDUCED GAP: Changed from 40px to 15px */
+        padding: 15px 0 !important; 
         margin: 0 auto;
         max-width: 1240px;
         position: relative;
@@ -28,7 +29,7 @@
     /* Centered Header Styles */
     .featured-zoom-style .header-centered {
         text-align: center;
-        margin-bottom: 50px;
+        margin-bottom: 40px; /* Slightly tightened from 50px */
     }
 
     .featured-zoom-style .subtitle-badge {
@@ -73,7 +74,7 @@
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 15px;
-        margin-top: 40px;
+        margin-top: 30px; /* Slightly tightened from 40px */
     }
 
     .featured-zoom-style .image-gallery img {
@@ -159,7 +160,8 @@
     }
 </style>
 
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-featured-block featured-zoom-style py-96 background-body">
+{{-- REDUCED GAP: Changed py-96 to py-3 --}}
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-featured-block featured-zoom-style py-3 background-body">
     <div class="container">
         <div class="zoom-outer-wrapper shadow-sm">
             <div class="bg-overlay-custom"></div>
