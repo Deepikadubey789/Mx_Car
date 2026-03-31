@@ -12,12 +12,15 @@
     $currentPageSlug = $pageSegments ? (string) end($pageSegments) : '';
     $isAboutUsPage = $currentPageSlug === 'about-us';
     $isContactPage = $currentPageSlug === 'contact';
+    $isLegalPage = in_array($currentPageSlug, ['terms-of-use', 'privacy-policy', 'cookie-policy']);
     $contentClasses = 'ck-content page-content';
 
     if ($isAboutUsPage) {
         $contentClasses = 'ck-content page-content about-modern-content';
     } elseif ($isContactPage) {
         $contentClasses = 'ck-content page-content contact-modern-content';
+    } elseif ($isLegalPage) {
+        $contentClasses = 'ck-content page-content legal-modern-content';
     }
 @endphp
 
@@ -25,8 +28,246 @@
     'page-modern',
     'page-modern--about' => $isAboutUsPage,
     'page-modern--contact' => $isContactPage,
+    'page-modern--legal' => $isLegalPage,
 ])>
+
+@if ($isLegalPage)
+    <style>
+        /* MXCar Ultra-Clean Legal / Terms of Use Document Styling */
+        body, .page-modern--legal, .background-body {
+            background-color: #F4F5F7 !important; /* Cool grey background ensures the white document strongly pops */
+        }
+        
+        .legal-modern-content {
+            background-color: #ffffff;
+            border: 1px solid #E9ECEF;
+            border-radius: 20px;
+            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08); /* Increased shadow for strong floating effect */
+            max-width: 900px;
+            margin: 60px auto;
+            padding: 60px !important;
+            font-family: inherit;
+        }
+
+        /* Typography & Headings */
+        .legal-modern-content h1, 
+        .legal-modern-content h2, 
+        .legal-modern-content h3 {
+            color: #111111;
+            font-weight: 700;
+            margin-top: 2.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        /* Add MXCar Red Accents to Headings */
+        .legal-modern-content h3 {
+            padding-left: 16px;
+            font-size: 1.5rem;
+        }
+        .legal-modern-content h3::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 5px;
+            bottom: 5px;
+            width: 4px;
+            background-color: #B03A2E;
+            border-radius: 4px;
+        }
+
+        .legal-modern-content p {
+            color: #495057;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Lists */
+        .legal-modern-content ul {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 2rem;
+        }
+        .legal-modern-content ul li {
+            position: relative;
+            padding-left: 28px;
+            color: #495057;
+            margin-bottom: 12px;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+        .legal-modern-content ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 8px;
+            height: 8px;
+            background-color: #B03A2E;
+            border-radius: 50%;
+        }
+
+        /* Dividers */
+        .legal-modern-content hr {
+            border-color: #E9ECEF;
+            margin: 3rem 0;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .legal-modern-content {
+                margin: 30px 15px;
+                padding: 30px !important;
+            }
+        }
+
+        /* Dark Mode Support */
+        [data-bs-theme="dark"] body, 
+        [data-bs-theme="dark"] .page-modern--legal, 
+        [data-bs-theme="dark"] .background-body {
+            background-color: var(--bs-body-bg) !important;
+        }
+        [data-bs-theme="dark"] .legal-modern-content {
+            background-color: #1a1a1a;
+            border-color: #2e2e2e;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+        [data-bs-theme="dark"] .legal-modern-content h1, 
+        [data-bs-theme="dark"] .legal-modern-content h2, 
+        [data-bs-theme="dark"] .legal-modern-content h3 {
+            color: #f1f1f1;
+        }
+        [data-bs-theme="dark"] .legal-modern-content p,
+        [data-bs-theme="dark"] .legal-modern-content ul li {
+            color: #adb5bd;
+        }
+        [data-bs-theme="dark"] .legal-modern-content hr {
+            border-color: #2e2e2e;
+        }
+    </style>
+@endif
+
+
     @if ($isAboutUsPage)
+        <style>
+            /* MXCar Ultra-Clean About Us Overrides */
+            .page-modern--about {
+                background-color: #ffffff !important;
+            }
+            .page-modern--about section,
+            .page-modern--about .background-body,
+            .page-modern--about .background-2,
+            .page-modern--about .background-brand-2,
+            .page-modern--about .background-100,
+            .page-modern--about .bg-light {
+                background-color: #ffffff !important; /* Pure white background to eliminate muddy beige */
+            }
+            .page-modern--about .card,
+            .page-modern--about .box-image,
+            .page-modern--about .box-tag,
+            .page-modern--about .card-why,
+            .page-modern--about .card-team,
+            .page-modern--about .about-modern-ribbon__item,
+            .page-modern--about .about-modern-hero__stat-card,
+            .page-modern--about .card-testimonial {
+                background-color: #ffffff !important;
+                border: 1px solid #E9ECEF !important;
+                border-radius: 20px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
+                transition: all 0.3s ease;
+            }
+            .page-modern--about .card:hover,
+            .page-modern--about .box-image:hover,
+            .page-modern--about .box-tag:hover,
+            .page-modern--about .card-why:hover,
+            .page-modern--about .card-team:hover,
+            .page-modern--about .about-modern-ribbon__item:hover {
+                border-color: #B03A2E !important;
+                box-shadow: 0 8px 30px rgba(176, 58, 46, 0.05) !important;
+                transform: translateY(-2px);
+            }
+            .page-modern--about .heading-1,
+            .page-modern--about .heading-2,
+            .page-modern--about .heading-3,
+            .page-modern--about h1, 
+            .page-modern--about h2, 
+            .page-modern--about h3,
+            .page-modern--about .text-dark {
+                color: #111111 !important;
+                font-weight: 700 !important;
+            }
+            
+            /* Buttons Fix */
+            .page-modern--about .btn-primary {
+                background-color: #B03A2E !important;
+                border-color: #B03A2E !important;
+                color: #ffffff !important;
+            }
+            .page-modern--about .btn-primary:hover {
+                background-color: #8E2B21 !important;
+                box-shadow: 0 6px 20px rgba(176, 58, 46, 0.25) !important;
+            }
+
+            /* Fix icon backgrounds inside cards */
+            .page-modern--about .card-why .card-image,
+            .page-modern--about .card-contact .card-icon {
+                background-color: #f4f5f7 !important;
+                border-radius: 50% !important;
+                padding: 12px !important;
+                border: none !important;
+            }
+
+            /* Dark Mode Support for About Page */
+            [data-bs-theme="dark"] .page-modern--about {
+                background-color: transparent !important;
+            }
+            [data-bs-theme="dark"] .page-modern--about section,
+            [data-bs-theme="dark"] .page-modern--about .background-body,
+            [data-bs-theme="dark"] .page-modern--about .background-2,
+            [data-bs-theme="dark"] .page-modern--about .background-brand-2,
+            [data-bs-theme="dark"] .page-modern--about .background-100 {
+                background-color: transparent !important;
+            }
+            [data-bs-theme="dark"] .page-modern--about .card,
+            [data-bs-theme="dark"] .page-modern--about .box-image,
+            [data-bs-theme="dark"] .page-modern--about .box-tag,
+            [data-bs-theme="dark"] .page-modern--about .card-why,
+            [data-bs-theme="dark"] .page-modern--about .card-team,
+            [data-bs-theme="dark"] .page-modern--about .about-modern-ribbon__item,
+            [data-bs-theme="dark"] .page-modern--about .about-modern-hero__stat-card {
+                background-color: #1a1a1a !important;
+                border-color: #2e2e2e !important;
+            }
+            [data-bs-theme="dark"] .page-modern--about .card:hover,
+            [data-bs-theme="dark"] .page-modern--about .box-image:hover,
+            [data-bs-theme="dark"] .page-modern--about .box-tag:hover,
+            [data-bs-theme="dark"] .page-modern--about .card-why:hover,
+            [data-bs-theme="dark"] .page-modern--about .card-team:hover,
+            [data-bs-theme="dark"] .page-modern--about .about-modern-ribbon__item:hover {
+                border-color: #B03A2E !important;
+            }
+            [data-bs-theme="dark"] .page-modern--about .heading-1,
+            [data-bs-theme="dark"] .page-modern--about .heading-2,
+            [data-bs-theme="dark"] .page-modern--about .heading-3,
+            [data-bs-theme="dark"] .page-modern--about h1, 
+            [data-bs-theme="dark"] .page-modern--about h2, 
+            [data-bs-theme="dark"] .page-modern--about h3,
+            [data-bs-theme="dark"] .page-modern--about .text-dark,
+            [data-bs-theme="dark"] .page-modern--about .neutral-1000,
+            [data-bs-theme="dark"] .page-modern--about .text-xl-bold,
+            [data-bs-theme="dark"] .page-modern--about .text-md-bold {
+                color: #f1f1f1 !important;
+            }
+            [data-bs-theme="dark"] .page-modern--about p.neutral-500,
+            [data-bs-theme="dark"] .page-modern--about .text-md-medium {
+                color: #adb5bd !important;
+            }
+            [data-bs-theme="dark"] .page-modern--about .card-why .card-image,
+            [data-bs-theme="dark"] .page-modern--about .card-contact .card-icon {
+                background-color: #2e2e2e !important;
+            }
+        </style>
         <section class="about-modern-hero box-section background-body">
             <div class="container">
                 <div class="about-modern-hero__shell">
