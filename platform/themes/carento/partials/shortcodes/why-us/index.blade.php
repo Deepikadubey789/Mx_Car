@@ -6,11 +6,11 @@
     <div class="container">
         <div class="text-center wow fadeInUp">
             @if($subTitle)
-                <p class="text-xl-medium shortcode-subtitle wow fadeInUp">{!! BaseHelper::clean($subTitle) !!}</p>
+                <span class="section-subtitle">{!! BaseHelper::clean($subTitle) !!}</span>
             @endif
 
             @if($title)
-                <h2 class="heading-3 shortcode-title wow fadeInUp">{!! BaseHelper::clean($title) !!}</h2>
+                <h2 class="heading-3">{!! BaseHelper::clean($title) !!}</h2>
             @endif
         </div>
         <div class="row mt-40">

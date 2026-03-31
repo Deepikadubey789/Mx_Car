@@ -22,6 +22,31 @@
     }
 @endphp
 
+{{--
+    HIDDEN AJAX EXTRACTION WRAPPER
+    ================================
+    The theme's AJAX handler does: $filterSection.html( $(filters_html).html() )
+    jQuery's .html() returns the innerHTML of the FIRST element in $(filters_html).
+    
+    By making this hidden .filter-section--desktop the FIRST element in this file's output,
+    the AJAX injection cleanly overwrites Card 2's content (just replaces the form inside)
+    instead of nesting an entire new sidebar structure inside it.
+    
+    This fixes the "grows one card per filter click" bug permanently.
+--}}
+<div class="filter-section filter-section--desktop"
+     style="display:none!important;visibility:hidden!important;position:absolute!important;pointer-events:none!important;height:0!important;overflow:hidden!important"
+     aria-hidden="true"
+     data-mxcar-ajax-extract="1">
+    @include(Theme::getThemeNamespace('views.car-rentals.car-list.partials.filter-form'), [
+        'layout'       => $layout,
+        'col'          => $col,
+        'enableFilter' => $enableFilter,
+        'cars'         => $cars,
+        'formId'       => 'cars-filter-form',
+    ])
+</div>
+
 <div class="content-left order-lg-first d-none d-lg-block car-filters-modern">
     <div class="car-filters-shell">
         <div class="car-filters-shell__intro">
@@ -32,15 +57,16 @@
 
         <div class="filter-section filter-section--desktop">
             @include(Theme::getThemeNamespace('views.car-rentals.car-list.partials.filter-form'), [
-                'layout' => $layout,
-                'col' => $col,
+                'layout'       => $layout,
+                'col'          => $col,
                 'enableFilter' => $enableFilter,
-                'cars' => $cars,
-                'formId' => 'cars-filter-form',
+                'cars'         => $cars,
+                'formId'       => 'cars-filter-form',
             ])
         </div>
     </div>
 </div>
+
 
 <div class="offcanvas offcanvas-start d-lg-none car-filters-offcanvas" tabindex="-1" id="mobileFiltersOffcanvas" aria-labelledby="mobileFiltersOffcanvasLabel">
     <div class="offcanvas-header">

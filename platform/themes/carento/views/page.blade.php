@@ -150,124 +150,6 @@
 
 
     @if ($isAboutUsPage)
-        <style>
-            /* MXCar Ultra-Clean About Us Overrides */
-            .page-modern--about {
-                background-color: #ffffff !important;
-            }
-            .page-modern--about section,
-            .page-modern--about .background-body,
-            .page-modern--about .background-2,
-            .page-modern--about .background-brand-2,
-            .page-modern--about .background-100,
-            .page-modern--about .bg-light {
-                background-color: #ffffff !important; /* Pure white background to eliminate muddy beige */
-            }
-            .page-modern--about .card,
-            .page-modern--about .box-image,
-            .page-modern--about .box-tag,
-            .page-modern--about .card-why,
-            .page-modern--about .card-team,
-            .page-modern--about .about-modern-ribbon__item,
-            .page-modern--about .about-modern-hero__stat-card,
-            .page-modern--about .card-testimonial {
-                background-color: #ffffff !important;
-                border: 1px solid #E9ECEF !important;
-                border-radius: 20px !important;
-                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
-                transition: all 0.3s ease;
-            }
-            .page-modern--about .card:hover,
-            .page-modern--about .box-image:hover,
-            .page-modern--about .box-tag:hover,
-            .page-modern--about .card-why:hover,
-            .page-modern--about .card-team:hover,
-            .page-modern--about .about-modern-ribbon__item:hover {
-                border-color: #B03A2E !important;
-                box-shadow: 0 8px 30px rgba(176, 58, 46, 0.05) !important;
-                transform: translateY(-2px);
-            }
-            .page-modern--about .heading-1,
-            .page-modern--about .heading-2,
-            .page-modern--about .heading-3,
-            .page-modern--about h1, 
-            .page-modern--about h2, 
-            .page-modern--about h3,
-            .page-modern--about .text-dark {
-                color: #111111 !important;
-                font-weight: 700 !important;
-            }
-            
-            /* Buttons Fix */
-            .page-modern--about .btn-primary {
-                background-color: #B03A2E !important;
-                border-color: #B03A2E !important;
-                color: #ffffff !important;
-            }
-            .page-modern--about .btn-primary:hover {
-                background-color: #8E2B21 !important;
-                box-shadow: 0 6px 20px rgba(176, 58, 46, 0.25) !important;
-            }
-
-            /* Fix icon backgrounds inside cards */
-            .page-modern--about .card-why .card-image,
-            .page-modern--about .card-contact .card-icon {
-                background-color: #f4f5f7 !important;
-                border-radius: 50% !important;
-                padding: 12px !important;
-                border: none !important;
-            }
-
-            /* Dark Mode Support for About Page */
-            [data-bs-theme="dark"] .page-modern--about {
-                background-color: transparent !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about section,
-            [data-bs-theme="dark"] .page-modern--about .background-body,
-            [data-bs-theme="dark"] .page-modern--about .background-2,
-            [data-bs-theme="dark"] .page-modern--about .background-brand-2,
-            [data-bs-theme="dark"] .page-modern--about .background-100 {
-                background-color: transparent !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .card,
-            [data-bs-theme="dark"] .page-modern--about .box-image,
-            [data-bs-theme="dark"] .page-modern--about .box-tag,
-            [data-bs-theme="dark"] .page-modern--about .card-why,
-            [data-bs-theme="dark"] .page-modern--about .card-team,
-            [data-bs-theme="dark"] .page-modern--about .about-modern-ribbon__item,
-            [data-bs-theme="dark"] .page-modern--about .about-modern-hero__stat-card {
-                background-color: #1a1a1a !important;
-                border-color: #2e2e2e !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .card:hover,
-            [data-bs-theme="dark"] .page-modern--about .box-image:hover,
-            [data-bs-theme="dark"] .page-modern--about .box-tag:hover,
-            [data-bs-theme="dark"] .page-modern--about .card-why:hover,
-            [data-bs-theme="dark"] .page-modern--about .card-team:hover,
-            [data-bs-theme="dark"] .page-modern--about .about-modern-ribbon__item:hover {
-                border-color: #B03A2E !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .heading-1,
-            [data-bs-theme="dark"] .page-modern--about .heading-2,
-            [data-bs-theme="dark"] .page-modern--about .heading-3,
-            [data-bs-theme="dark"] .page-modern--about h1, 
-            [data-bs-theme="dark"] .page-modern--about h2, 
-            [data-bs-theme="dark"] .page-modern--about h3,
-            [data-bs-theme="dark"] .page-modern--about .text-dark,
-            [data-bs-theme="dark"] .page-modern--about .neutral-1000,
-            [data-bs-theme="dark"] .page-modern--about .text-xl-bold,
-            [data-bs-theme="dark"] .page-modern--about .text-md-bold {
-                color: #f1f1f1 !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about p.neutral-500,
-            [data-bs-theme="dark"] .page-modern--about .text-md-medium {
-                color: #adb5bd !important;
-            }
-            [data-bs-theme="dark"] .page-modern--about .card-why .card-image,
-            [data-bs-theme="dark"] .page-modern--about .card-contact .card-icon {
-                background-color: #2e2e2e !important;
-            }
-        </style>
         <section class="about-modern-hero box-section background-body">
             <div class="container">
                 <div class="about-modern-hero__shell">
@@ -373,4 +255,109 @@
     @endif
 
     {!! apply_filters(PAGE_FILTER_FRONT_PAGE_CONTENT, Html::tag('div', BaseHelper::clean($page->content), ['class' => $contentClasses])->toHtml(), $page) !!}
+
+    @if ($isAboutUsPage)
+        <style>
+            /* MXCar ULTIMATE OVERRIDES — Force Off-White & spacing across all About Us shortcodes */
+            .page-modern--about {
+                --bs-background-body: #F4F6F8 !important;
+                --bs-background-body-2: #F4F6F8 !important;
+                --bs-background-1: #F4F6F8 !important;
+                --bs-background-2: #F4F6F8 !important;
+                --bs-background-white: #ffffff !important;
+                background-color: #F4F6F8 !important;
+            }
+
+            /* Clear all legacy backgrounds from major containers and nested boxes */
+            .page-modern--about section,
+            .page-modern--about .section-1,
+            .page-modern--about .shortcode-why-us,
+            .page-modern--about .section-team-1,
+            .page-modern--about .shortcode-featured-block,
+            .page-modern--about .shortcode-site-statistics,
+            .page-modern--about .shortcode-intro-video,
+            .page-modern--about .shortcode-testimonial,
+            .page-modern--about .shortcode-blog-posts,
+            .page-modern--about .box-cta-6,
+            .page-modern--about .box-cta-1,
+            .page-modern--about .box-why-book-22,
+            .page-modern--about .section-cta-7,
+            .page-modern--about .section-static-1,
+            .page-modern--about .section-box,
+            .page-modern--about .bg-overlay,
+            .page-modern--about .background-body,
+            .page-modern--about .background-100 {
+                background-color: #F4F6F8 !important;
+                background-image: none !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+
+            /* Section Spacing — Standardized 100px Gaps */
+            .page-modern--about .about-modern-content > section,
+            .page-modern--about section[data-block-id] {
+                padding-top: 100px !important;
+                padding-bottom: 100px !important;
+                margin-top: 0 !important;
+                margin-bottom: 100px !important; /* User requested final polish spacing */
+            }
+
+            /* Content Cards — Stand out in Pure White */
+            .page-modern--about .card,
+            .page-modern--about .box-image,
+            .page-modern--about .card-why,
+            .page-modern--about .card-team,
+            .page-modern--about .card-news,
+            .page-modern--about .card-testimonial,
+            .page-modern--about .about-modern-hero__stat-card,
+            .page-modern--about .about-modern-ribbon__item {
+                background-color: #ffffff !important;
+                border: 1px solid #E9ECEF !important;
+                border-radius: 20px !important;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+            }
+
+            /* Brand Eyebrow Standardization (Pill Style) */
+            .page-modern--about .section-subtitle,
+            .page-modern--about .shortcode-subtitle,
+            .page-modern--about .subtitle-badge,
+            .page-modern--about .btn-signin,
+            .page-modern--about .badge-green,
+            .page-modern--about [data-block-id] span[class*="subtitle"],
+            .page-modern--about [data-block-id] .btn-tag {
+                background-color: #B03A2E !important;
+                color: #ffffff !important;
+                border: none !important;
+                border-radius: 50px !important;
+                padding: 6px 16px !important;
+                font-size: 0.72rem !important;
+                text-transform: uppercase !important;
+                font-weight: 700 !important;
+                letter-spacing: 1.2px !important;
+                display: inline-block !important;
+                margin-bottom: 16px !important;
+            }
+
+            /* Site Statistics Override */
+            .shortcode-site-statistics {
+                --background-color: transparent !important;
+            }
+
+            /* Fix Hero Background */
+            .about-modern-hero {
+                background-color: #ffffff !important; /* Hero usually looks better on pure white */
+            }
+
+            /* Dark Mode Consistency */
+            [data-bs-theme="dark"] .page-modern--about,
+            [data-bs-theme="dark"] .page-modern--about section {
+                background-color: #121212 !important;
+            }
+            [data-bs-theme="dark"] .page-modern--about .card,
+            [data-bs-theme="dark"] .page-modern--about .card-news {
+                background-color: #1e1e1e !important;
+                border-color: #2e2e2e !important;
+            }
+        </style>
+    @endif
 </div>

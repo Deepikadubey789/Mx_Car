@@ -5,11 +5,11 @@
                 <div class="col-xl-6 col-lg-7 col-md-9 col-sm-11">
                     <div class="text-center mb-5">
                         @if ($subtitle = $shortcode->subtitle)
-                            <span class="text-xl-medium shortcode-subtitle">{!! BaseHelper::clean($subtitle) !!}</span>
+                            <span class="section-subtitle">{!! BaseHelper::clean($subtitle) !!}</span>
                         @endif
 
                         @if ($title = $shortcode->title)
-                            <h2 class="heading-3 section-title shortcode-title">{!! BaseHelper::clean($title) !!}</h2>
+                            <h2 class="heading-3">{!! BaseHelper::clean($title) !!}</h2>
                         @endif
                     </div>
                 </div>
