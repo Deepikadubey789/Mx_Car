@@ -154,11 +154,11 @@
             <div class="container">
                 <div class="about-modern-hero__shell">
                     <div class="about-modern-hero__content">
-                        <p class="about-modern-hero__eyebrow text-xs-medium mb-0">{{ __('Built for Every Journey') }}</p>
-                        <h1 class="about-modern-hero__title">{{ $page->name }}</h1>
+                        <p class="about-modern-hero__eyebrow text-xs-medium mb-0 mxcar-page-desc">{{ __('Built for Every Journey') }}</p>
+                        <h1 class="about-modern-hero__title mxcar-page-title">{{ $page->name }}</h1>
 
                         @if ($page->description)
-                            <p class="about-modern-hero__description">{!! BaseHelper::clean($page->description) !!}</p>
+                            <p class="about-modern-hero__description mxcar-page-desc">{!! BaseHelper::clean($page->description) !!}</p>
                         @endif
 
                         <ul class="about-modern-hero__points" aria-label="{{ __('Why choose us') }}">
@@ -168,8 +168,8 @@
                         </ul>
 
                         <div class="about-modern-hero__actions">
-                            <a class="btn btn-primary" href="{{ url('/cars') }}">{{ __('Browse Cars') }}</a>
-                            <a class="btn btn-outline-secondary" href="{{ url('/contact') }}">{{ __('Talk to Our Team') }}</a>
+                            <a class="mxcar-btn-red" href="{{ url('/cars') }}">{{ __('Browse Cars') }}</a>
+                            <a class="mxcar-btn-grey" href="{{ url('/contact') }}">{{ __('Talk to Our Team') }}</a>
                         </div>
                     </div>
 

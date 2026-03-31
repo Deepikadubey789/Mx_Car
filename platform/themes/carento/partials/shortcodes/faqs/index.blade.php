@@ -1,3 +1,26 @@
+@php
+    $signature = md5(json_encode([
+        'title' => $shortcode->title ?? '',
+        'description' => $shortcode->description ?? '',
+        'faq_category_ids' => $shortcode->faq_category_ids ?? '',
+        'limit' => $shortcode->limit ?? '',
+        'button_secondary_label' => $shortcode->button_secondary_label ?? '',
+        'button_secondary_url' => $shortcode->button_secondary_url ?? '',
+        'button_primary_label' => $shortcode->button_primary_label ?? '',
+        'button_primary_url' => $shortcode->button_primary_url ?? '',
+    ]));
+
+    if (! isset($GLOBALS['rendered_faqs_signatures'])) {
+        $GLOBALS['rendered_faqs_signatures'] = [];
+    }
+
+    if (in_array($signature, $GLOBALS['rendered_faqs_signatures'], true)) {
+        return; /* identical FAQ block already rendered on this page */
+    }
+
+    $GLOBALS['rendered_faqs_signatures'][] = $signature;
+@endphp
+
 <style>
 /* Clean Ultra-Light FAQ Redesign (Contact Page Match) */
 .mxcar-faq-clean-section {

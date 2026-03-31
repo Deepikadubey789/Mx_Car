@@ -1,5 +1,5 @@
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-testimonial section-box py-96 background-body">
-    <div class="container">
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-testimonial shortcode-faqs section-box py-96 background-body mxcar-faq-clean-section">
+    <div class="container mxcar-faq-clean-container">
         <div class="row align-items-end">
             <div class="col-auto mx-auto text-center d-flex flex-column align-items-center justify-content-center">
                 @if($shortcode->subtitle)
@@ -7,13 +7,12 @@
                         @foreach($testimonials as $testimonial)
                             {{ RvMedia::image($testimonial->image, $testimonial->name, 'thumb') }}
                         @endforeach
-
-                        {!! BaseHelper::clean($shortcode->subtitle) !!}
                     </div>
+                    <div class="section-subtitle mxcar-page-desc text-center mt-3">{!! BaseHelper::clean($shortcode->subtitle) !!}</div>
                 @endif
 
                 @if($shortcode->title)
-                    <h2 class="heading-3 mt-8 mb-15 shortcode-title">{!! BaseHelper::clean($shortcode->title) !!}</h2>
+                    <h2 class="mxcar-page-title mt-8 mb-15 text-center">{!! BaseHelper::clean($shortcode->title) !!}</h2>
                 @endif
             </div>
         </div>

@@ -180,8 +180,8 @@
     }
 </style>
 
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-testimonial testimonial-zoom-style py-96 background-body">
-    <div class="container">
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-testimonial shortcode-faqs testimonial-zoom-style py-96 background-body mxcar-faq-clean-section">
+    <div class="container mxcar-faq-clean-container">
         <div class="zoom-outer-wrapper shadow-sm">
             
             <div class="header-centered">
@@ -190,16 +190,15 @@
                         @foreach($testimonials->take(5) as $testimonial)
                             {{ RvMedia::image($testimonial->image, $testimonial->name, 'thumb') }}
                         @endforeach
-                        @if($subtitle)
-                            <span class="ms-3 text-sm-bold neutral-1000 d-flex align-items-center">
-                                {!! BaseHelper::clean($subtitle) !!}
-                            </span>
-                        @endif
                     </div>
                 @endif
 
+                @if($subtitle)
+                    <div class="section-subtitle mxcar-page-desc text-center mb-3">{!! BaseHelper::clean($subtitle) !!}</div>
+                @endif
+
                 @if($title)
-                    <h2 class="heading-2 fw-bold shortcode-title wow fadeInUp">{!! BaseHelper::clean($title) !!}</h2>
+                    <h2 class="mxcar-page-title wow fadeInUp text-center">{!! BaseHelper::clean($title) !!}</h2>
                 @endif
             </div>
 

@@ -1,19 +1,19 @@
-<section {!! $shortcode->htmlAttributes() !!} class="section-box py-96 background-body border-bottom border-top">
-    <div class="container">
+<section {!! $shortcode->htmlAttributes() !!} class="section-box py-96 background-body border-bottom border-top shortcode-faqs mxcar-faq-clean-section">
+    <div class="container mxcar-faq-clean-container">
         <div class="row align-items-end">
             <div class="col-lg-6">
                 <div class="box-author-testimonials background-2">
                     @foreach($testimonials as $testimonial)
                         {{ RvMedia::image($testimonial->image, $testimonial->name, 'thumb') }}
                     @endforeach
-
-                    @if($shortcode->subtitle)
-                        {!! BaseHelper::clean($shortcode->subtitle) !!}
-                    @endif
                 </div>
 
+                @if($shortcode->subtitle)
+                    <div class="section-subtitle mxcar-page-desc mt-3">{!! BaseHelper::clean($shortcode->subtitle) !!}</div>
+                @endif
+
                 @if($shortcode->title)
-                    <h4 class="mt-8 mb-15 shortcode-title">
+                    <h4 class="mxcar-page-title mt-8 mb-15">
                         {!! BaseHelper::clean($shortcode->title) !!}
                     </h4>
                 @endif
