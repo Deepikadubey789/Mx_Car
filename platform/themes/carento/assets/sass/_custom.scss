@@ -5928,6 +5928,90 @@ h2.heading-3 {
     }
 }
 
+/* ABOUT PAGE OVERRIDES — Light mode */
+.page-modern--about {
+    --bs-background-body: #F4F6F8 !important;
+    --bs-background-body-2: #F4F6F8 !important;
+    --bs-background-1: #F4F6F8 !important;
+    --bs-background-2: #F4F6F8 !important;
+    --bs-background-white: #ffffff !important;
+    background-color: #F4F6F8 !important;
+}
+
+.page-modern--about section,
+.page-modern--about .section-1,
+.page-modern--about .shortcode-why-us,
+.page-modern--about .section-team-1,
+.page-modern--about .shortcode-featured-block,
+.page-modern--about .shortcode-site-statistics,
+.page-modern--about .shortcode-intro-video,
+.page-modern--about .shortcode-testimonial,
+.page-modern--about .shortcode-blog-posts,
+.page-modern--about .box-cta-6,
+.page-modern--about .box-cta-1,
+.page-modern--about .box-why-book-22,
+.page-modern--about .section-cta-7,
+.page-modern--about .section-static-1,
+.page-modern--about .section-box,
+.page-modern--about .bg-overlay,
+.page-modern--about .background-body,
+.page-modern--about .background-100 {
+    background-color: #F4F6F8 !important;
+    background-image: none !important;
+    border: none !important;
+    box-shadow: none !important;
+}
+
+.page-modern--about .about-modern-content > section,
+.page-modern--about section[data-block-id] {
+    padding-top: 100px !important;
+    padding-bottom: 100px !important;
+    margin-top: 0 !important;
+    margin-bottom: 100px !important;
+}
+
+.page-modern--about .card,
+.page-modern--about .box-image,
+.page-modern--about .card-why,
+.page-modern--about .card-team,
+.page-modern--about .card-news,
+.page-modern--about .card-testimonial,
+.page-modern--about .about-modern-hero__stat-card,
+.page-modern--about .about-modern-ribbon__item {
+    background-color: #ffffff !important;
+    border: 1px solid #E9ECEF !important;
+    border-radius: 20px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03) !important;
+}
+
+.page-modern--about .section-subtitle,
+.page-modern--about .shortcode-subtitle,
+.page-modern--about .subtitle-badge,
+.page-modern--about .btn-signin,
+.page-modern--about .badge-green,
+.page-modern--about [data-block-id] span[class*="subtitle"],
+.page-modern--about [data-block-id] .btn-tag {
+    background-color: #B03A2E !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 50px !important;
+    padding: 6px 16px !important;
+    font-size: 0.72rem !important;
+    text-transform: uppercase !important;
+    font-weight: 700 !important;
+    letter-spacing: 1.2px !important;
+    display: inline-block !important;
+    margin-bottom: 16px !important;
+}
+
+.shortcode-site-statistics {
+    --background-color: transparent !important;
+}
+
+.page-modern--about .about-modern-hero {
+    background-color: #ffffff !important;
+}
+
 .page-modern--contact {
     --contact-shell: #f7efe7;
     --contact-panel: #ffffff;
