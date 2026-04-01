@@ -2,6 +2,13 @@
     $bgImage = $shortcode->background_image ? RvMedia::getImageUrl($shortcode->background_image) : null;
 @endphp
 
+<style>
+    .page-header-2 {
+        --block-banner-background-image: none !important;
+        background-image: none !important;
+    }
+</style>
+
 <div {!! $shortcode->htmlAttributes() !!} class="page-header-2 pt-30 background-body">
     <div class="custom-container position-relative mx-auto">
         <div class="bg-overlay rounded-12 overflow-hidden">

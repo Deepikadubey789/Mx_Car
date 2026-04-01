@@ -2476,9 +2476,45 @@ a {
 }
 
 .shortcode-car-advance-search {
+    margin-top: -200px !important;
+    position: relative;
+    z-index: 50;
+    
     .need-some-help {
         background: unset !important;
     }
+}
+
+@media (max-width: 991px) {
+    .shortcode-car-advance-search {
+        margin-top: -120px !important;
+    }
+}
+
+.page-header-2 {
+    padding-bottom: 120px !important;
+    min-height: 420px !important;
+    position: relative;
+    z-index: 1;
+}
+
+.custom-container {
+    position: relative;
+}
+
+.custom-container .shortcode-car-advance-search {
+    position: absolute !important;
+    bottom: -60px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 1000px !important;
+    z-index: 50 !important;
+}
+
+.custom-container .custom-search-box {
+    position: relative !important;
+    z-index: 20 !important;
 }
 
 .rate-element {
@@ -4618,7 +4654,7 @@ h2.heading-3 {
             .card-journey-small--modern {
                 margin-bottom: 0;
                 border-radius: 18px;
-                border: 1px solid var(--car-list-border);
+                border: none;
                 background: var(--car-list-surface);
                 box-shadow: var(--car-list-shadow);
                 transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
@@ -4626,7 +4662,7 @@ h2.heading-3 {
                 &:hover {
                     transform: translateY(-4px);
                     box-shadow: var(--car-list-shadow-hover);
-                    border-color: var(--car-list-accent-border);
+                    border-color: transparent;
                 }
 
                 .card-image {
@@ -4644,21 +4680,22 @@ h2.heading-3 {
                 .card-info {
                     margin-top: 0;
                     border-radius: 0 0 18px 18px;
-                    padding: 22px !important;
+                    padding: 18px !important;
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
-                    min-height: 255px;
+                    gap: 10px;
+                    min-height: 220px;
                 }
 
                 .card-title {
-                    min-height: 58px;
+                    min-height: 48px;
                     padding-bottom: 0;
 
                     a {
-                        font-size: 20px;
-                        line-height: 1.3;
-                        font-weight: 700;
+                        font-size: 16px !important;
+                        line-height: 1.35 !important;
+                        font-weight: 700 !important;
+                        color: var(--bs-body-color) !important;
                     }
                 }
 
@@ -4671,14 +4708,17 @@ h2.heading-3 {
                     .rating {
                         background-color: rgba(255, 255, 255, 0.95);
                         border: 1px solid var(--car-list-border);
-                        padding: 6px 10px;
+                        padding: 5px 8px;
                         display: inline-flex;
                         align-items: center;
                         gap: 4px;
                         box-shadow: 0 8px 16px rgba(16, 35, 61, 0.14);
+                        font-size: 12px !important;
 
                         svg {
                             color: #f7a600;
+                            width: 12px !important;
+                            height: 12px !important;
                         }
                     }
                 }
@@ -4692,45 +4732,69 @@ h2.heading-3 {
                         gap: 6px;
                         margin-bottom: 0;
                         color: var(--car-list-text-muted);
+                        font-size: 13px !important;
+                    }
+
+                    svg {
+                        width: 14px !important;
+                        height: 14px !important;
                     }
                 }
 
                 .card-program {
                     display: flex;
                     flex-direction: column;
-                    gap: 14px;
+                    gap: 10px;
                     height: 100%;
                 }
 
                 .card-facilities {
                     margin: 0;
-                    padding-top: 14px;
-                    border-top: 1px dashed var(--car-list-border);
-                    border-bottom: 1px dashed var(--car-list-border);
-                    padding-bottom: 4px;
+                    padding-top: 10px;
+                    border-top: 1px solid #f0f0f0;
+                    border-bottom: 1px solid #f0f0f0;
+                    padding-bottom: 8px;
 
                     p {
-                        color: #2b3f58;
-                        margin-bottom: 10px;
-                        font-size: 14px;
+                        color: var(--bs-body-color);
+                        margin-bottom: 6px;
+                        font-size: 13px !important;
+                        line-height: 1.3 !important;
+
+                        &:last-child {
+                            margin-bottom: 0;
+                        }
+
+                        strong {
+                            font-weight: 600 !important;
+                            color: var(--bs-body-color);
+                        }
                     }
                 }
 
                 .endtime {
                     margin-top: auto;
                     display: flex;
-                    align-items: flex-end;
+                    align-items: center;
                     justify-content: space-between;
                     flex-wrap: wrap;
-                    gap: 10px;
+                    gap: 8px;
 
                     .card-price p {
                         margin-bottom: 0;
                     }
 
                     .car-price-text {
-                        font-size: 22px;
-                        line-height: 1.1;
+                        font-size: 18px !important;
+                        line-height: 1.1 !important;
+                        font-weight: 700 !important;
+                        color: var(--bs-body-color) !important;
+                    }
+
+                    .car-price-text span {
+                        font-size: 14px !important;
+                        color: var(--car-list-text-muted) !important;
+                        font-weight: 500 !important;
                     }
 
                     .card-button .btn-gray {
@@ -4738,10 +4802,11 @@ h2.heading-3 {
                         border: 1px solid var(--primary-color);
                         background-color: var(--primary-color);
                         color: #fff;
-                        min-height: 42px;
-                        padding: 8px 18px;
-                        font-size: 14px;
+                        min-height: 36px;
+                        padding: 6px 16px;
+                        font-size: 13px !important;
                         font-weight: 600;
+                        white-space: nowrap;
 
                         &:hover {
                             background-color: var(--primary-color-hover);
@@ -4880,7 +4945,7 @@ h2.heading-3 {
                     .page-link {
                         border-radius: 10px;
                         border: 1px solid var(--car-list-border);
-                        color: #2b3f58;
+                        color: var(--bs-body-color);
                         min-width: 40px;
                         height: 40px;
                         display: inline-flex;
@@ -6481,17 +6546,17 @@ h2.heading-3 {
 }
 
 .car-list-modern--bold {
-    --car-bold-shell: #edf4fb;
-    --car-bold-panel: #ffffff;
-    --car-bold-panel-alt: #f5f9fd;
-    --car-bold-ink: #17263a;
-    --car-bold-muted: #617a95;
-    --car-bold-border: #cfdded;
-    --car-bold-border-strong: #b8cbdf;
-    --car-bold-highlight: rgba(var(--primary-color-rgb), 0.12);
-    --car-bold-highlight-border: rgba(var(--primary-color-rgb), 0.34);
-    --car-bold-shadow: 0 20px 42px rgba(14, 35, 60, 0.14);
-    --car-bold-shadow-soft: 0 10px 24px rgba(14, 35, 60, 0.09);
+    --car-bold-shell: var(--bs-gray-100);
+    --car-bold-panel: var(--bs-body-bg);
+    --car-bold-panel-alt: var(--bs-gray-100);
+    --car-bold-ink: var(--bs-body-color);
+    --car-bold-muted: var(--bs-secondary-color);
+    --car-bold-border: var(--bs-border-color);
+    --car-bold-border-strong: var(--bs-border-color-translucent);
+    --car-bold-highlight: rgba(var(--bs-primary-rgb), 0.12);
+    --car-bold-highlight-border: rgba(var(--bs-primary-rgb), 0.34);
+    --car-bold-shadow: 0 20px 42px rgba(0, 0, 0, 0.08);
+    --car-bold-shadow-soft: 0 10px 24px rgba(0, 0, 0, 0.04);
 
     .car-list-hero-wrap {
         padding-bottom: 8px;
@@ -6636,6 +6701,7 @@ h2.heading-3 {
 
     .box-section.block-content-tourlist {
         position: relative;
+        margin-top: 50px;
     }
 
     .box-section.block-content-tourlist::before {
@@ -6656,7 +6722,7 @@ h2.heading-3 {
 
     .box-content-main {
         display: flex;
-        flex-direction: row-reverse;
+        flex-direction: row;
         align-items: flex-start;
         gap: 26px;
     }
@@ -6847,7 +6913,7 @@ h2.heading-3 {
                 font-weight: 700;
                 letter-spacing: 0.08em;
                 text-transform: uppercase;
-                color: #617c97 !important;
+                color: var(--bs-secondary-color) !important;
                 margin-inline-end: 2px;
             }
 
@@ -6878,7 +6944,7 @@ h2.heading-3 {
             }
 
             .card-journey-small--modern {
-                border: 1px solid var(--car-bold-border);
+                border: none;
                 border-radius: 22px;
                 box-shadow: var(--car-bold-shadow-soft);
                 background: var(--car-bold-panel);
@@ -6889,7 +6955,7 @@ h2.heading-3 {
                 &:hover {
                     transform: translateY(-6px);
                     box-shadow: var(--car-bold-shadow);
-                    border-color: var(--car-bold-highlight-border);
+                    border-color: transparent;
                 }
 
                 .car-card-grid__media {
@@ -7320,16 +7386,16 @@ h2.heading-3 {
         }
 
         .filter-section--desktop {
-            max-height: calc(100vh - 210px);
-            overflow: auto;
-            padding-inline-end: 2px;
+            max-height: none;
+            overflow: visible;
+            padding-inline-end: 0;
 
             &::-webkit-scrollbar {
                 width: 5px;
             }
 
             &::-webkit-scrollbar-thumb {
-                background: #cad9e9;
+                background: transparent;
                 border-radius: 999px;
             }
         }
