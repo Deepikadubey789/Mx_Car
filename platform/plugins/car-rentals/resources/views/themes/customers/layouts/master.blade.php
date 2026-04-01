@@ -2,6 +2,8 @@
     $customer = auth('customer')->user();
 @endphp
 
+<link rel="stylesheet" href="{{ asset('vendor/core/plugins/car-rentals/css/overview-custom.css') }}?v={{ filemtime(public_path('vendor/core/plugins/car-rentals/css/overview-custom.css')) }}">
+
 <div class="container customer-page crop-avatar py-5">
     <div class="row wrapper-profile g-4">
         <div class="col-md-4 col-lg-3 d-md-block sidebar profile-sidebar">
