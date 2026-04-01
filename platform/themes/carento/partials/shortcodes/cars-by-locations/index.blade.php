@@ -3,47 +3,81 @@
     $buttonUrl = $shortcode->button_url;
     $title = $shortcode->title;
     $mainContent = $shortcode->main_content;
-    $redirectUrl = $shortcode->redirect_url ?: '';
 @endphp
 
 {{-- FRONTEND CUSTOM CSS SCOPED ONLY TO THE LOCATIONS SECTION --}}
 <style>
-    /* Section Typography */
-    .shortcode-cars-by-locations .heading-3 {
-        font-weight: 800 !important;
-        color: #111827 !important;
-        letter-spacing: -0.5px;
-    }
-    .shortcode-cars-by-locations .text-lg-medium {
-        color: #6b7280 !important;
-        font-weight: 500 !important;
+    /* =========================================
+       1. MAIN CONTAINER (BENTO STYLE)
+       ========================================= */
+    .shortcode-cars-by-locations {
+        background-color: transparent !important;
+        padding-top: 40px;
+        padding-bottom: 40px;
     }
 
-    /* Immersive Location Card */
+    .location-bento-container {
+        background-color: #f8f9fa; /* Off-white container */
+        border-radius: 24px;
+        padding: 50px 60px;
+        max-width: 1200px;
+        margin: 0 auto;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        position: relative;
+    }
+
+    /* =========================================
+       2. TITLE STYLING (WITH BARS)
+       ========================================= */
+    .section-title-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .section-title-center::before, 
+    .section-title-center::after {
+        content: '';
+        height: 2px;
+        width: 40px;
+        background: #475569; 
+        margin: 0 20px;
+        border-radius: 2px;
+    }
+
+    .section-subtitle-center {
+        text-align: center;
+        color: #6b7280;
+        font-weight: 500;
+        margin-bottom: 40px;
+    }
+
+    /* =========================================
+       3. IMMERSIVE LOCATION CARD (WITH ZOOM)
+       ========================================= */
     .location-turo-card {
         position: relative;
-        border-radius: 16px !important;
+        border-radius: 12px !important; /* Slightly sharper corners to match screenshot */
         overflow: hidden;
-        height: 340px; /* Taller, vertical aspect ratio like Turo destinations */
+        height: 380px; /* Taller vertical aspect ratio */
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: block; /* Makes the whole card a clickable link */
-        background: #000; /* Fallback */
+        display: block; 
+        background: #000; 
+        transform: translateZ(0); /* Hardware acceleration for smooth zoom */
     }
 
-    /* Hover Physics */
-    .location-turo-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Full-Cover Image */
+    /* Full-Cover Image & Hover Physics */
     .location-turo-card .card-image {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
+        overflow: hidden;
     }
     .location-turo-card .card-image img {
         width: 100% !important;
@@ -51,23 +85,25 @@
         object-fit: cover !important;
         transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
+    
+    /* THE ZOOM EFFECT - INCREASED TO 1.2 FOR MORE ZOOM */
     .location-turo-card:hover .card-image img {
-        transform: scale(1.05); /* Smooth zoom on hover */
+        transform: scale(1.2); /* Zooms in more noticeably */
     }
 
-    /* Dark Gradient Overlay for Text Readability */
+    /* Dark Gradient Overlay */
     .location-turo-card .gradient-overlay {
         position: absolute;
         bottom: 0;
         left: 0;
         width: 100%;
-        height: 60%;
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
+        height: 50%;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0) 100%);
         z-index: 1;
         transition: opacity 0.3s ease;
     }
 
-    /* Text Content */
+    /* Text Content - Centered */
     .location-turo-card .card-content {
         position: absolute;
         bottom: 0;
@@ -76,81 +112,123 @@
         padding: 24px 20px;
         z-index: 2;
         display: flex;
-        flex-direction: column;
+        justify-content: center; /* Centers horizontally */
+        align-items: center;
+        text-align: center;
     }
 
     .location-turo-card .location-title {
         color: #ffffff !important;
-        font-size: 1.5rem !important;
+        font-size: 1.25rem !important;
         font-weight: 700 !important;
-        margin-bottom: 4px !important;
-        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        margin: 0 !important;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.5);
     }
 
-    .location-turo-card .location-count {
-        color: rgba(255, 255, 255, 0.85) !important;
-        font-size: 0.95rem !important;
-        font-weight: 500 !important;
+    /* =========================================
+       4. SLIDER NAVIGATION & DOTS
+       ========================================= */
+    .slider-nav-wrapper {
+        position: relative;
     }
 
-    /* Restyled Swiper Navigation Arrows */
-    .shortcode-cars-by-locations .swiper-button-prev,
-    .shortcode-cars-by-locations .swiper-button-next {
-        background: #ffffff !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 50% !important;
+    /* Floating Arrows */
+    .swiper-button-prev.custom-arrow::after,
+    .swiper-button-next.custom-arrow::after { display: none !important; }
+
+    .swiper-button-prev.custom-arrow,
+    .swiper-button-next.custom-arrow {
+        background: transparent !important;
+        border: none !important;
         width: 40px !important;
         height: 40px !important;
-        color: #374151 !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.05) !important;
-        transition: all 0.2s ease;
-        margin-top: -20px !important; /* Vertically center them on the slider */
-    }
-    .shortcode-cars-by-locations .swiper-button-prev:hover,
-    .shortcode-cars-by-locations .swiper-button-next:hover {
-        border-color: #111827 !important;
         color: #111827 !important;
+        top: 50% !important;
+        margin: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: transform 0.2s ease !important;
+        z-index: 20 !important;
+    }
+    .swiper-button-prev.custom-arrow { left: -40px !important; transform: translateY(-50%) !important; }
+    .swiper-button-next.custom-arrow { right: -40px !important; transform: translateY(-50%) !important; }
+
+    .swiper-button-prev.custom-arrow:hover,
+    .swiper-button-next.custom-arrow:hover {
+        transform: translateY(-50%) scale(1.2) !important;
+    }
+
+    /* Pagination Dots */
+    .swiper-pagination-custom {
+        position: relative !important;
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 6px;
+    }
+    .swiper-pagination-custom .swiper-pagination-bullet {
+        background: #cbd5e1 !important;
+        opacity: 1 !important;
+        width: 8px !important;
+        height: 8px !important;
+        margin: 0 !important; 
+        border-radius: 50% !important;
+        transition: all 0.3s ease;
+    }
+    .swiper-pagination-custom .swiper-pagination-bullet-active {
+        background: #10b981 !important; /* Green dot matching screenshot */
+        width: 20px !important; 
+        border-radius: 8px !important;
+    }
+
+    /* =========================================
+       5. DARK MODE OVERRIDES
+       ========================================= */
+    html[data-bs-theme="dark"] .location-bento-container { background-color: #1e293b; box-shadow: none; border: 1px solid rgba(255,255,255,0.05); }
+    html[data-bs-theme="dark"] .section-title-center { color: #fff; }
+    html[data-bs-theme="dark"] .section-subtitle-center { color: #94a3b8; }
+    html[data-bs-theme="dark"] .section-title-center::before,
+    html[data-bs-theme="dark"] .section-title-center::after { background: #94a3b8; }
+    html[data-bs-theme="dark"] .swiper-button-prev.custom-arrow,
+    html[data-bs-theme="dark"] .swiper-button-next.custom-arrow { color: #f8fafc !important; }
+
+    /* =========================================
+       6. MOBILE RESPONSIVENESS
+       ========================================= */
+    @media (max-width: 991px) {
+        .location-bento-container { padding: 40px 30px; }
+        .swiper-button-prev.custom-arrow { left: -15px !important; }
+        .swiper-button-next.custom-arrow { right: -15px !important; }
     }
 </style>
 
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-cars-by-locations section-box box-properties-area pt-96 pb-50 background-body">
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-cars-by-locations section-box py-5">
     <div class="container">
         
-        <div class="row align-items-end mb-40">
-            <div class="col-md-8">
-                @if($title)
-                    <h2 class="heading-3 neutral-1000 wow fadeInUp">{!! BaseHelper::clean($title) !!}</h2>
-                @endif
+        <div class="location-bento-container wow fadeInUp" data-wow-delay="0.1s">
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    @if($title)
+                        <h2 class="section-title-center">{!! BaseHelper::clean($title) !!}</h2>
+                    @endif
 
-                @if($mainContent)
-                    <p class="text-lg-medium neutral-500 mt-2 wow fadeInUp" data-wow-delay="0.1s">{!! BaseHelper::clean($mainContent) !!}</p>
-                @endif
+                    @if($mainContent)
+                        <p class="section-subtitle-center">{!! BaseHelper::clean($mainContent) !!}</p>
+                    @endif
+                </div>
             </div>
             
-            @if($buttonName && $buttonUrl)
-                <div class="col-md-4 mt-md-0 mt-4 wow fadeInUp" data-wow-delay="0.2s">
-                    <div class="d-flex justify-content-md-end justify-content-start">
-                        <a class="btn btn-primary" href="{{ $buttonUrl }}">
-                            {!! BaseHelper::clean($buttonName) !!}
-                            <svg class="svg-icon-arrow ms-2" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 15L15 8L8 1M15 8L1 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            @endif
-        </div>
-        
-        <div class="box-list-featured wow fadeInUp" data-wow-delay="0.2s">
-            <div class="box-swiper mt-0 position-relative">
-                <div class="swiper-container swiper-group-cars-locations swiper-group-journey pb-4">
+            <div class="slider-nav-wrapper">
+                <div class="swiper-container location-swiper-container pt-2 pb-2">
                     <div class="swiper-wrapper">
+                        
                         @foreach($locations as $location)
                             @php
                                 $name = $location['name'] ?? '';
                                 $image = $location['image'] ?? '';
-                                $countCar = $location['count_cars'] ?? 0;
-                                $countCarLabel = $countCar === 1 ? __('Vehicle') : __('Vehicles');
                             @endphp
 
                             @continue(! $name)
@@ -163,23 +241,52 @@
                                     </div>
                                     <div class="card-content">
                                         <div class="location-title">{!! BaseHelper::clean($name) !!}</div>
-                                        <div class="location-count">{{ $countCar }} {{ $countCarLabel }}</div>
                                     </div>
                                 </a>
-                                </div>
+                            </div>
                         @endforeach
+                        
                     </div>
                 </div>
                 
-                <div class="swiper-button-prev swiper-button-prev-style-1 swiper-button-prev-cars-locations position-absolute top-50 start-0 translate-middle-y z-3 ms-n3">
-                    <x-core::icon name="ti ti-arrow-left" size="18"/>
+                <div class="swiper-button-prev custom-arrow location-arrow-prev">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
                 </div>
-                <div class="swiper-button-next swiper-button-next-style-1 swiper-button-next-cars-locations position-absolute top-50 end-0 translate-middle-y z-3 me-n3">
-                    <x-core::icon name="ti ti-arrow-right" size="18"/>
+                <div class="swiper-button-next custom-arrow location-arrow-next">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
                 </div>
-                
             </div>
+
+            <div class="swiper-pagination location-pagination swiper-pagination-custom text-center"></div>
+
         </div>
         
     </div>
 </section>
+
+{{-- SLIDER INITIALIZATION SCRIPT --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof Swiper !== 'undefined') {
+            new Swiper('.shortcode-cars-by-locations .location-swiper-container', {
+                slidesPerView: 1,
+                spaceBetween: 24,
+                loop: false,
+                watchOverflow: true,
+                navigation: {
+                    nextEl: '.shortcode-cars-by-locations .location-arrow-next',
+                    prevEl: '.shortcode-cars-by-locations .location-arrow-prev',
+                },
+                pagination: {
+                    el: '.shortcode-cars-by-locations .location-pagination',
+                    clickable: true,
+                },
+                breakpoints: {
+                    576: { slidesPerView: 2 },
+                    992: { slidesPerView: 3 },
+                    1200: { slidesPerView: 4 } /* Shows 4 cards at once to match screenshot */
+                }
+            });
+        }
+    });
+</script>

@@ -7,13 +7,64 @@
     $backgroundImage = $backgroundImage ? RvMedia::getImageUrl($backgroundImage) : null;
 @endphp
 
+<style>
+    /* =========================================
+       FOOTER SPACING & BORDER REMOVAL
+       ========================================= */
+    /* Remove the top line and reduce overall footer height */
+    .footer {
+        border-top: none !important;
+        border-bottom: none !important;
+        padding-top: 50px !important; /* Reduced from theme default */
+        padding-bottom: 20px !important; /* Reduced from theme default */
+    }
+
+    /* Remove the line above the copyright text */
+    .footer .footer-bottom {
+        border-top: none !important;
+        border-bottom: none !important;
+        margin-top: 40px !important; /* Adjusted to balance the height */
+        padding-top: 0 !important; 
+    }
+
+    /* =========================================
+       NEWSLETTER & BUTTON STYLING
+       ========================================= */
+    /* Make Newsletter Input smaller and pill-shaped */
+    .footer form input[type="email"],
+    .footer form input[type="text"],
+    .footer .newsletter-form input {
+        height: 45px !important; /* Reduced height */
+        border-radius: 50px !important; /* Pill shape */
+        padding: 8px 24px !important;
+    }
+
+    /* Make Subscribe Button smaller and pill-shaped */
+    .footer form button[type="submit"],
+    .footer .newsletter-form button {
+        height: 45px !important; /* Match input height perfectly */
+        border-radius: 50px !important; /* Pill shape */
+        padding: 0 32px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Maintain a gap directly below the newsletter form */
+    .footer form,
+    .footer .newsletter-form,
+    .footer .widget_newsletter {
+        margin-bottom: 20px !important; 
+    }
+</style>
+
 {!! apply_filters('ads_render', null, 'footer_before', ['class' => 'mb-2']) !!}
 
 <footer class="footer" @style([
     "--footer-background-color: $backgroundColor",
     "--footer-heading-color: $headingColor",
     "--footer-text-color: $textColor",
-    "--footer-border-color: $borderColor",
+    "--footer-border-color: transparent", /* Overrides the theme border variable to make lines invisible */
     "--footer-background-image: url($backgroundImage)" => $backgroundImage,
 ])>
     <div class="container">
@@ -24,7 +75,7 @@
             {!! dynamic_sidebar('footer_sidebar') !!}
         </div>
         <div class="footer-bottom mt-50">
-            <div class="row row align-items-center justify-content-center">
+            <div class="row align-items-center justify-content-center">
                 {!! dynamic_sidebar('bottom_footer_sidebar') !!}
             </div>
         </div>

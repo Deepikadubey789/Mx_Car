@@ -1,106 +1,162 @@
 @php
-    $styles = [
-        "background-color: $bgColor" => $bgColor,
-    ];
+    // Scoped variable name for readability/safety
+    $androidAppUrl = $shortcode->android_app_url ?? '#';
+    $androidAppImage = $shortcode->android_app_image;
+    $iosAppUrl = $shortcode->ios_app_url ?? '#';
+    $iosAppImage = $shortcode->ios_app_image;
+    $decorImage = $shortcode->decor_image;
 @endphp
 
+{{-- SCAMPED STYLES FOR REDESIGN --}}
 <style>
-    /* Add top padding so the entire block sits centered on the page */
-    .box-app-2 {
-        padding-top: 80px; 
+    /* Scope the section to avoid bleeding into other areas */
+    .install-app-modern-style {
+        padding-top: 60px; /* Modern spacing */
+        padding-bottom: 60px;
+        background-color: transparent !important;
+        background-image: none !important; /* Force remove any outer background */
     }
 
-    /* Ensures the map perfectly fills the right column and respects the rounded corners */
-    .box-app-map {
-        width: 100%;
-        height: 100%;
-        min-height: 450px; 
-    }
-    .box-app-map iframe {
-        width: 100%;
-        height: 100%;
-        border: 0;
-        /* Matches the border radius to the container */
-        border-top-right-radius: 12px;
-        border-bottom-right-radius: 12px;
-    }
-    
-    /* Responsive adjustment for when the map stacks under the text on mobile */
-    @media (max-width: 991px) {
-        .box-app-map iframe {
-            border-top-right-radius: 0;
-            border-bottom-left-radius: 12px;
-            border-bottom-right-radius: 12px;
-            min-height: 350px;
-        }
+    /* Target inner container */
+    .install-app-modern-style .main-card-container {
+        /* Screenshot looks light off-white, using standard f8f9fa */
+        background-color: #f8f9fa; 
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08); /* Soft, premium shadow */
+        border-radius: 16px;
+        overflow: hidden; /* Clips the image to the card's rounded corners */
     }
 
-    /* App Store Badges Styling */
-    .box-app-2 .download-apps {
+    /* Target left column content wrapper */
+    .install-app-modern-style .content-col {
+        padding: 80px 60px; 
         display: flex;
-        flex-wrap: nowrap !important; /* FORCES images to stay on one line */
-        gap: 12px !important; /* Slightly tighter gap to save space */
-        margin-top: 20px !important;
+        flex-direction: column;
+        justify-content: center;
     }
-    
-    .box-app-2 .download-apps a {
-        display: inline-block;
-        flex: 0 1 auto; /* Allows them to shrink slightly if the screen is very small */
+
+    /* Redesign shortcode title */
+    .install-app-modern-style .shortcode-title {
+        font-size: 2.5rem !important; 
+        font-weight: 800 !important;
+        color: #111827 !important; 
+        line-height: 1.2 !important;
+        letter-spacing: -0.5px;
+        margin-bottom: 15px !important;
     }
-    
-    .box-app-2 .download-apps a img {
-        height: 40px !important; /* REDUCED SIZE to fit on one line perfectly */
-        width: auto !important;
-        max-width: 100%;
-        transition: transform 0.2s ease, opacity 0.2s ease !important;
-        border-radius: 6px;
+
+    /* Redesign Description */
+    .install-app-modern-style .description-p {
+        color: #475569 !important; 
+        font-size: 1.05rem !important;
+        margin-bottom: 30px !important;
+        font-weight: 500;
     }
-    
-    .box-app-2 .download-apps a:hover img {
-        transform: translateY(-2px) !important;
-        opacity: 0.9 !important;
+
+    /* Target download buttons wrapper */
+    .install-app-modern-style .download-apps {
+        display: flex;
+        flex-direction: row; /* Aligns buttons horizontally */
+        flex-wrap: wrap;
+        gap: 15px; /* modern gap */
+        align-items: center;
+    }
+
+    /* Target standard button badges for modern shadow effect */
+    .install-app-modern-style .download-apps img {
+        height: 50px; /* Forces both buttons to be the exact same height for symmetry */
+        width: auto;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        border-radius: 8px; 
+    }
+
+    /* Standard modern button shadow/lift on hover */
+    .install-app-modern-style .download-apps img:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Target right column image container */
+    .install-app-modern-style .image-col {
+        position: relative;
+        min-height: 350px; /* Ensures image area has height on mobile */
+    }
+
+    .install-app-modern-style .box-app-img {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .install-app-modern-style .box-app-img img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important; /* Stretches image perfectly to fill the space */
+        /* CHANGED: Shows the top of the image instead of the center */
+        object-position: top !important;
+    }
+
+    /* Mobile Responsiveness */
+    @media (max-width: 991px) {
+        .install-app-modern-style .content-col { padding: 50px 40px; }
+        .install-app-modern-style .shortcode-title { font-size: 2rem !important; }
+        .install-app-modern-style .image-col { min-height: 300px; }
+        .install-app-modern-style .box-app-img { position: relative; height: 300px; }
+    }
+    @media (max-width: 575px) {
+        .install-app-modern-style .content-col { padding: 40px 25px; }
+        .install-app-modern-style .download-apps img { height: 45px; }
     }
 </style>
 
-<section {!! $shortcode->htmlAttributes(['style' => $styles]) !!} class="box-app-2 position-relative pb-80">
-    <div class="container bg-4 rounded-12 overflow-hidden">
-        <div class="row align-items-stretch"> 
+<section {!! $shortcode->htmlAttributes() !!} class="install-app-modern-style">
+    <div class="container">
+        <div class="main-card-container wow fadeInUp" data-wow-delay="0.1s">
             
-            <div class="col-lg-4 p-5 d-flex flex-column justify-content-center">
-                @if(empty($buttonLabel) === false)
-                    <div>
-                        <span class="btn btn-primary background-brand-2">{!! BaseHelper::clean($buttonLabel) !!}</span>
-                    </div>
-                @endif
+            {{-- g-0 removes the gap between columns so the image touches the middle seamlessly --}}
+            <div class="row g-0 align-items-stretch">
                 
-                @if(!empty($title))
-                    <h4 class="mt-4 mb-3 shortcode-title">{!! BaseHelper::clean($title) !!}</h4>
-                @endif
-                
-                @if(!empty($appsDescription))
-                    <p class="text-md-medium pb-3 neutral-500">{!! BaseHelper::clean($appsDescription) !!}</p>
-                @endif
-                
-                <div class="download-apps mt-0">
-                    @if(!empty($androidAppImage))
-                        <a class="wow fadeInUp" href="{{ $androidAppUrl }}">
-                            {{ RvMedia::image($androidAppImage) }}
-                        </a>
+                {{-- Text Column (Left) --}}
+                <div class="col-lg-6 content-col">
+                    
+                    @if(!empty($title))
+                        <h2 class="shortcode-title">{!! BaseHelper::clean($title) !!}</h2>
                     @endif
-                    @if(!empty($iosAppImage))
-                        <a class="wow fadeInUp" data-wow-delay="0.2s" href="{{ $iosAppUrl }}">
-                            {{ RvMedia::image($iosAppImage) }}
-                        </a>
+                    
+                    @if(!empty($buttonLabel))
+                        {{-- Used buttonLabel as the small gray subtitle matching the screenshot ("Install App") --}}
+                        <p class="description-p">{!! BaseHelper::clean($buttonLabel) !!}</p>
+                    @elseif(!empty($appsDescription))
+                        <p class="description-p">{!! BaseHelper::clean($appsDescription) !!}</p>
+                    @endif
+                    
+                    {{-- Side-by-Side App Buttons --}}
+                    <div class="download-apps">
+                        @if(!empty($androidAppImage))
+                            <a href="{{ $androidAppUrl }}" target="_blank">
+                                {{ RvMedia::image($androidAppImage) }}
+                            </a>
+                        @endif
+                        
+                        @if(!empty($iosAppImage))
+                            <a href="{{ $iosAppUrl }}" target="_blank">
+                                {{ RvMedia::image($iosAppImage) }}
+                            </a>
+                        @endif
+                    </div>
+                </div>
+                
+                {{-- Image Column (Right) --}}
+                <div class="col-lg-6 image-col">
+                    @if(!empty($decorImage))
+                        <div class="box-app-img">
+                            {{ RvMedia::image($decorImage) }}
+                        </div>
                     @endif
                 </div>
+
             </div>
-            
-            <div class="col-lg-8 px-0">
-                <div class="box-app-map">
-                   <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d25230.112843084957!2d-122.425599177959!3d37.77212904816295!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8085805f1234dce3%3A0xcf58a2e39e5265f5!2sSan%20Francisco%2C%20CA%2094111%2C%20USA!5e0!3m2!1sen!2sin!4v1775018174276!5m2!1sen!2sin" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
-                    </div>
-            </div>
-            
         </div>
     </div>
 </section>

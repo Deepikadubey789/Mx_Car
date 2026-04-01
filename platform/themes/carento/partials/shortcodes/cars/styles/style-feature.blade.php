@@ -341,12 +341,9 @@
         border-radius: 8px !important;
     }
 
-    /* Bottom Button */
-    .btn-solid-black {
-        background: #000000 !important;
-        color: #ffffff !important;
-        border: none !important;
-        border-radius: 6px !important;
+    /* Bottom Button - Pill Shaped and Theme-Colored */
+    .btn-theme-pill {
+        border-radius: 50px !important; /* Perfect pill shape */
         padding: 14px 40px !important;
         font-weight: 700 !important;
         text-transform: uppercase !important;
@@ -354,8 +351,7 @@
         font-size: 0.9rem !important;
         transition: all 0.3s ease !important;
     }
-    .btn-solid-black:hover {
-        background: #333333 !important;
+    .btn-theme-pill:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
     }
@@ -368,8 +364,6 @@
     html[data-bs-theme="dark"] .location-col, html[data-bs-theme="dark"] .price-col .price-amount { color: #f8fafc; }
     html[data-bs-theme="dark"] .location-col svg { fill: #f8fafc; }
     html[data-bs-theme="dark"] .card-host-footer { background: #1e293b; border-color: #334155; }
-    html[data-bs-theme="dark"] .btn-solid-black { background: #ffffff !important; color: #000000 !important; }
-    html[data-bs-theme="dark"] .btn-solid-black:hover { background: #e2e8f0 !important; }
     
     @media (max-width: 768px) {
         .feature-bento-container { padding: 30px 20px; }
@@ -468,7 +462,7 @@
             
             @if(empty($buttonLabel) === false)
                 <div class="d-flex justify-content-center mt-3">
-                    <a class="btn btn-solid-black" href="{{ $buttonUrl }}">
+                    <a class="btn btn-primary btn-theme-pill" href="{{ $buttonUrl }}">
                         {!! BaseHelper::clean($buttonLabel) !!}
                     </a>
                 </div>
