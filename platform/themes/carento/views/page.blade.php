@@ -31,18 +31,53 @@
     'page-modern--legal' => $isLegalPage,
 ])>
 
+@if ($isAboutUsPage)
+    <style>
+        .page-modern--about,
+        .page-modern--about *,
+        .page-modern--about section,
+        .page-modern--about .section-1,
+        .page-modern--about .background-body,
+        .page-modern--about .shortcode-faqs,
+        .page-modern--about .mxcar-faq-clean-section,
+        .page-modern--about .about-modern-content,
+        .page-modern--about .about-modern-content > section,
+        .page-modern--about .shortcode-about-us-information {
+            background: none !important;
+            background-color: transparent !important;
+            background-image: none !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .page-modern--about *::before,
+        .page-modern--about *::after,
+        .page-modern--about ::before,
+        .page-modern--about ::after {
+            background: none !important;
+            background-image: none !important;
+            display: none !important;
+        }
+
+        /* Keep actual images tag but remove background patterns */
+        .page-modern--about img {
+            display: block !important;
+        }
+    </style>
+@endif
+
 @if ($isLegalPage)
     <style>
         /* MXCar Ultra-Clean Legal / Terms of Use Document Styling */
         body, .page-modern--legal, .background-body {
-            background-color: #F4F5F7 !important; /* Cool grey background ensures the white document strongly pops */
+            background-color: var(--bs-background-body) !important;
         }
         
         .legal-modern-content {
-            background-color: #ffffff;
-            border: 1px solid #E9ECEF;
+            background-color: var(--bs-color-white);
+            border: 1px solid var(--bs-neutral-200);
             border-radius: 20px;
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.08); /* Increased shadow for strong floating effect */
+            box-shadow: 0 16px 48px rgba(var(--bs-color-1000), 0.08);
             max-width: 900px;
             margin: 60px auto;
             padding: 60px !important;
@@ -53,7 +88,7 @@
         .legal-modern-content h1, 
         .legal-modern-content h2, 
         .legal-modern-content h3 {
-            color: #111111;
+            color: var(--bs-neutral-1000);
             font-weight: 700;
             margin-top: 2.5rem;
             margin-bottom: 1.5rem;
@@ -72,12 +107,12 @@
             top: 5px;
             bottom: 5px;
             width: 4px;
-            background-color: #B03A2E;
+            background-color: var(--primary-color);
             border-radius: 4px;
         }
 
         .legal-modern-content p {
-            color: #495057;
+            color: var(--bs-neutral-500);
             line-height: 1.8;
             font-size: 1.05rem;
             margin-bottom: 1.5rem;
@@ -92,7 +127,7 @@
         .legal-modern-content ul li {
             position: relative;
             padding-left: 28px;
-            color: #495057;
+            color: var(--bs-neutral-500);
             margin-bottom: 12px;
             line-height: 1.7;
             font-size: 1.05rem;
@@ -104,13 +139,13 @@
             top: 10px;
             width: 8px;
             height: 8px;
-            background-color: #B03A2E;
+            background-color: var(--primary-color);
             border-radius: 50%;
         }
 
         /* Dividers */
         .legal-modern-content hr {
-            border-color: #E9ECEF;
+            border-color: var(--bs-neutral-200);
             margin: 3rem 0;
             opacity: 1;
         }
@@ -129,93 +164,27 @@
             background-color: var(--bs-body-bg) !important;
         }
         [data-bs-theme="dark"] .legal-modern-content {
-            background-color: #1a1a1a;
-            border-color: #2e2e2e;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            background-color: var(--bs-neutral-900);
+            border-color: var(--bs-neutral-700);
+            box-shadow: 0 10px 40px rgba(var(--bs-color-1000), 0.2);
         }
         [data-bs-theme="dark"] .legal-modern-content h1, 
         [data-bs-theme="dark"] .legal-modern-content h2, 
         [data-bs-theme="dark"] .legal-modern-content h3 {
-            color: #f1f1f1;
+            color: var(--bs-neutral-100);
         }
         [data-bs-theme="dark"] .legal-modern-content p,
         [data-bs-theme="dark"] .legal-modern-content ul li {
-            color: #adb5bd;
+            color: var(--bs-neutral-300);
         }
         [data-bs-theme="dark"] .legal-modern-content hr {
-            border-color: #2e2e2e;
+            border-color: var(--bs-neutral-700);
         }
     </style>
 @endif
 
 
-    @if ($isAboutUsPage)
-        <section class="about-modern-hero box-section background-body">
-            <div class="container">
-                <div class="about-modern-hero__shell">
-                    <div class="about-modern-hero__content">
-                        <p class="about-modern-hero__eyebrow text-xs-medium mb-0 mxcar-page-desc">{{ __('Built for Every Journey') }}</p>
-                        <h1 class="about-modern-hero__title mxcar-page-title">{{ $page->name }}</h1>
-
-                        @if ($page->description)
-                            <p class="about-modern-hero__description mxcar-page-desc">{!! BaseHelper::clean($page->description) !!}</p>
-                        @endif
-
-                        <ul class="about-modern-hero__points" aria-label="{{ __('Why choose us') }}">
-                            <li>{{ __('Real-time availability across premium and everyday vehicle classes.') }}</li>
-                            <li>{{ __('Fast pickup workflows designed for airport, city, and weekend trips.') }}</li>
-                            <li>{{ __('Friendly support team available every day, including urgent requests.') }}</li>
-                        </ul>
-
-                        <div class="about-modern-hero__actions">
-                            <a class="mxcar-btn-red" href="{{ url('/cars') }}">{{ __('Browse Cars') }}</a>
-                            <a class="mxcar-btn-grey" href="{{ url('/contact') }}">{{ __('Talk to Our Team') }}</a>
-                        </div>
-                    </div>
-
-                    <div class="about-modern-hero__stats" aria-label="{{ __('Company highlights') }}">
-                        <div class="about-modern-hero__stat-card">
-                            <p class="about-modern-hero__stat-value">25+</p>
-                            <p class="about-modern-hero__stat-label">{{ __('Years in service') }}</p>
-                        </div>
-
-                        <div class="about-modern-hero__stat-card">
-                            <p class="about-modern-hero__stat-value">120K+</p>
-                            <p class="about-modern-hero__stat-label">{{ __('Happy trips completed') }}</p>
-                        </div>
-
-                        <div class="about-modern-hero__stat-card">
-                            <p class="about-modern-hero__stat-value">4.9/5</p>
-                            <p class="about-modern-hero__stat-label">{{ __('Customer satisfaction') }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section class="about-modern-ribbon" aria-label="{{ __('About highlights') }}">
-            <div class="container">
-                <div class="about-modern-ribbon__shell">
-                    <article class="about-modern-ribbon__item">
-                        <p class="about-modern-ribbon__value">45+</p>
-                        <p class="about-modern-ribbon__label">{{ __('Global branches') }}</p>
-                    </article>
-                    <article class="about-modern-ribbon__item">
-                        <p class="about-modern-ribbon__value">24/7</p>
-                        <p class="about-modern-ribbon__label">{{ __('Human support') }}</p>
-                    </article>
-                    <article class="about-modern-ribbon__item">
-                        <p class="about-modern-ribbon__value">15m</p>
-                        <p class="about-modern-ribbon__label">{{ __('Average response time') }}</p>
-                    </article>
-                    <article class="about-modern-ribbon__item">
-                        <p class="about-modern-ribbon__value">4.9/5</p>
-                        <p class="about-modern-ribbon__label">{{ __('Verified satisfaction') }}</p>
-                    </article>
-                </div>
-            </div>
-        </section>
-    @elseif ($isContactPage)
+    @if ($isContactPage)
         <section class="contact-modern-hero box-section background-body">
             <div class="container">
                 <div class="contact-modern-hero__shell">

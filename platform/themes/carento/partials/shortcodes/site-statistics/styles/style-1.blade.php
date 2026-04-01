@@ -4,7 +4,7 @@
 
 @if(count($tabs))
     <section {!! $shortcode->htmlAttributes(['style' => ["--background-color: $backgroundColor" => $backgroundColor]]) !!}
-        class="shortcode-site-statistics shortcode-site-statistics-style-1 section-static-1 background-body border-bottom"
+        class="shortcode-site-statistics shortcode-site-statistics-style-1 section-static-1"
     >
         <div class="container">
             <div class="row">
