@@ -1,0 +1,388 @@
+/* Overview custom styles (scoped to .customer-page .customer-content) */
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap');
+
+.customer-page .customer-content * { box-sizing: border-box; margin: 0; padding: 0; }
+
+.customer-page .customer-content { font-family: 'DM Sans', sans-serif; background: transparent; color: var(--bb-body-color, #1a1a18); }
+
+.customer-page .breadcrumb { padding: 1.25rem 0 0; font-size: 13px; color: #888; }
+.customer-page .breadcrumb span { color: #333; font-weight: 500; }
+
+.customer-page .profile-card { background: var(--bb-secondary-bg, #fff); border: var(--bb-border-width, 1px) solid var(--bb-border-color, #e2ddd5); border-radius: 16px; padding: 1.5rem; text-align: center; }
+.customer-page .profile-avatar { width: 72px; height: 72px; border-radius: 50%; background: #c94c1e; display:flex; align-items:center; justify-content:center; margin:0 auto .75rem; font-size:26px; font-weight:600; color:#fff; font-family:'Syne',sans-serif; position:relative; }
+.customer-page .profile-avatar::after { content:''; position:absolute; bottom:2px; right:2px; width:14px; height:14px; background:#22c55e; border-radius:50%; border:2px solid #fff; }
+
+.customer-page .divider { height: 0.5px; background: var(--bb-border-color, #e2ddd5); margin: 1rem 0; }
+
+.customer-page .nav-menu { display:flex; flex-direction:column; gap:2px; }
+.customer-page .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; font-size:13.5px; color:var(--bb-secondary-color, #555); cursor:pointer; transition: background 0.15s, color 0.15s; text-decoration:none; }
+.customer-page .nav-item:hover { background:var(--bb-tertiary-bg, #f5f3ef); color:var(--bb-body-color, #111); }
+.customer-page .nav-item.active { background:var(--bb-light-bg-subtle, #fdf0eb); color:var(--bb-primary, #c94c1e); font-weight:500; }
+.customer-page .nav-item svg { width:16px; height:16px; opacity:0.7; flex-shrink:0; }
+
+.customer-page .vendor-mini { background: linear-gradient(135deg, #c94c1e 0%, #e8673a 100%); border-radius:12px; padding:1rem; color:#fff; }
+.customer-page .vendor-mini p { font-size: 12px; opacity: 0.85; margin-bottom: 8px; line-height: 1.4; }
+.customer-page .vendor-mini strong { display: block; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+
+.customer-page .btn-white { background: rgba(255,255,255,0.2); color:var(--bb-white, #fff); border:0.5px solid rgba(255,255,255,0.4); padding:6px 12px; border-radius:6px; font-size:12px; cursor:pointer; width:100%; margin-top:4px; }
+
+.customer-page .content { display:flex; flex-direction:column; gap:1.25rem; padding: 0 0 1rem; }
+
+.customer-page .welcome-bar { background:#111110; color:#f0ede6; border-radius:16px; padding:1.75rem 2rem; display:flex; align-items:center; justify-content:space-between; }
+.customer-page .welcome-bar h1 { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; margin-bottom:4px; }
+.customer-page .welcome-bar p { font-size:13px; opacity:0.55; }
+.customer-page .date-tag { background: rgba(255,255,255,0.08); border:0.5px solid rgba(255,255,255,0.15); color: rgba(255,255,255,0.6); font-size:12px; padding:6px 14px; border-radius:100px; }
+
+.customer-page .welcome-bar h1,
+.customer-page .welcome-bar p {
+  color: #fff !important;
+}
+.customer-page .welcome-bar .date-tag {
+  color: rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.customer-page .stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:1rem; }
+.customer-page .stat-card { background:var(--bb-secondary-bg, #fff); border:var(--bb-border-width, 1px) solid var(--bb-border-color, #e2ddd5); border-radius:14px; padding:1.25rem 1.5rem; display:flex; align-items:center; gap:1rem; }
+.customer-page .stat-icon { width:44px; height:44px; border-radius:10px; background:var(--bb-light-bg-subtle, #fdf0eb); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.customer-page .stat-icon svg { width:20px; height:20px; color:var(--bb-primary, #c94c1e); }
+.customer-page .stat-label { font-size:12px; color:var(--bb-secondary-color, #888); margin-bottom:4px; }
+.customer-page .stat-value { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; color:var(--bb-body-color, #111); }
+
+.customer-page .two-col { display:grid; grid-template-columns:1fr 1fr; gap:1.25rem; }
+.customer-page .card { background:var(--bb-secondary-bg, #fff); border:var(--bb-border-width, 1px) solid var(--bb-border-color, #e2ddd5); border-radius:16px; padding:1.25rem 1.5rem; }
+.customer-page .card-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; }
+.customer-page .card-title { font-family:'Syne',sans-serif; font-size:15px; font-weight:600; color:var(--bb-body-color, #111); }
+.customer-page .card-action { font-size:12px; color:var(--bb-primary, #c94c1e); cursor:pointer; border:var(--bb-border-width, 1px) solid var(--bb-light-bg-subtle, #f0c9b8); padding:4px 10px; border-radius:6px; transition:background 0.15s; }
+.customer-page .card-action a { color: inherit; text-decoration:none; }
+.customer-page .card-action:hover { background:var(--bb-light-bg-subtle, #fdf0eb); }
+
+.customer-page .upgrade-hero { background:#111110; border-radius:20px; border:1px solid rgba(255,255,255,0.08); box-shadow:0 25px 45px rgba(0,0,0,0.35); padding:1.75rem 2rem; }
+.customer-page .upgrade-hero .card-title {
+  color:#fff !important;
+  font-size:22px;
+  font-weight:600;
+}
+.customer-page .upgrade-hero .card-text {
+  color:#fff !important;
+  opacity:0.8;
+  margin-bottom:0;
+}
+
+.customer-page .upgrade-benefits-card { background:var(--bb-secondary-bg, #fff); border-radius:20px; border:1px solid rgba(0,0,0,0.05); box-shadow:0 18px 55px rgba(15,15,20,0.1); }
+.customer-page .upgrade-benefits-grid {
+  gap:1rem;
+}
+.customer-page .upgrade-benefits-grid .col-md-6 {
+  display:flex;
+}
+.customer-page .upgrade-benefit { background:var(--bb-light-bg-subtle, #fdf0ef); border-radius:14px; border:1px solid rgba(0,0,0,0.08); padding:1.25rem; transition:transform 0.2s ease, border-color 0.2s ease; margin-bottom:0; }
+.customer-page .upgrade-benefit:hover { transform:translateY(-3px); border-color:rgba(201,76,30,0.6); }
+.customer-page .upgrade-benefit h6 { font-size:0.95rem; font-weight:600; color:var(--bb-body-color, #111); }
+.customer-page .upgrade-benefit .text-muted { color:var(--bb-secondary-color, #888); }
+
+.customer-page .upgrade-confirmation-card { background:var(--bb-secondary-bg, #fff); border-radius:20px; border:1px solid rgba(0,0,0,0.05); box-shadow:0 18px 50px rgba(15,15,20,0.12); }
+.customer-page .upgrade-form { margin-bottom:0; }
+.customer-page .upgrade-form { display:flex; flex-direction:column; gap:1.25rem; }
+.customer-page .upgrade-form .form-group { margin-bottom:0; }
+.customer-page .upgrade-form .form-check { display:flex; align-items:center; gap:0.6rem; }
+.customer-page .upgrade-form .form-check-input { margin-top:0; }
+.customer-page .upgrade-alert { border:1px solid rgba(246,195,45,0.8); background:rgba(246,195,45,0.08); color:#5a3f00; padding:1rem 1.25rem; border-radius:12px; }
+.customer-page .upgrade-alert strong { color:#3d2100; }
+.customer-page .upgrade-actions .btn-secondary { background:rgba(0,0,0,0.04); border-color:rgba(0,0,0,0.12); color:var(--bb-body-color, #111); }
+.customer-page .upgrade-actions { justify-content:flex-start; }
+.customer-page .upgrade-actions .btn-primary { min-width:180px; }
+.customer-page .upgrade-actions .btn-secondary { min-width:90px; }
+
+.customer-page .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.customer-page .info-field label { font-size:11px; color:var(--bb-tertiary-color, #aaa); text-transform:uppercase; letter-spacing:0.06em; }
+.customer-page .info-field span { font-size:14px; color:var(--bb-body-color, #222); font-weight:400; }
+
+.customer-page .empty-state { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2.5rem; gap:0.75rem; text-align:center; }
+.customer-page .empty-icon { width:52px; height:52px; background:var(--bb-tertiary-bg, #f5f3ef); border-radius:12px; display:flex; align-items:center; justify-content:center; }
+.customer-page .empty-state h3 { font-size:15px; font-weight:500; color:var(--bb-body-color, #333); }
+.customer-page .empty-state p { font-size:13px; color:var(--bb-secondary-color, #999); }
+
+.customer-page .subscribe-bar { background:var(--bb-secondary-bg, #fff); border-top:var(--bb-border-width, 1px) solid var(--bb-border-color, #e2ddd5); padding:1.75rem 2rem; display:flex; align-items:center; justify-content:space-between; gap:2rem; margin-top:1.5rem; }
+.customer-page .subscribe-bar h3 { font-family:'Syne',sans-serif; font-size:16px; font-weight:600; }
+.customer-page .sub-form { display:flex; gap:8px; }
+.customer-page .sub-input { border:var(--bb-border-width, 1px) solid var(--bb-border-color, #e2ddd5); padding:9px 16px; border-radius:8px; font-size:13px; font-family:'DM Sans',sans-serif; outline:none; width:220px; color:var(--bb-body-color, #333); }
+.customer-page .sub-input:focus { border-color:#c94c1e; }
+
+.customer-page .btn-primary { background:#c94c1e; color:#fff; border:none; padding:8px 18px; border-radius:8px; font-size:13px; font-weight:500; cursor:pointer; transition:background 0.15s; }
+.customer-page .btn-primary:hover { background:#b03f16; }
+
+@media (max-width: 767.98px) {
+  .customer-page .profile-sidebar { margin-bottom: 1rem; }
+  .customer-page .stats-row { grid-template-columns: repeat(1,1fr); }
+  .customer-page .two-col { grid-template-columns: 1fr; }
+}
+
+/* Page-specific layout tweaks for the dark overview experience */
+[data-bs-theme=dark] {
+  .customer-page {
+    padding-top: 1rem !important;
+    padding-bottom: 2rem !important;
+    background: radial-gradient(circle at top, rgba(255, 255, 255, 0.05), transparent 40%), #030304;
+    color: var(--bb-body-color, #f8fafc);
+  }
+
+  .customer-page .welcome-bar {
+    color: #fff !important;
+    border: none;
+  }
+
+  .customer-page .welcome-bar h1,
+  .customer-page .welcome-bar p,
+  .customer-page .welcome-bar .date-tag {
+    color: #fff !important;
+  }
+
+  .customer-page .welcome-bar .date-tag {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+  }
+
+  .customer-page .profile-content {
+    padding: 0;
+  }
+
+  .customer-page .content-card {
+    background: rgba(12, 12, 17, 0.95);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65);
+  }
+
+  .customer-page .content-card .card-header {
+    padding: 1.5rem 2.25rem 0;
+    margin-top: 0;
+    border-bottom: none;
+    background: transparent;
+  }
+
+  .customer-page .content-card .card-body {
+    padding: 0 2rem 2rem;
+    background: transparent;
+  }
+
+  .customer-page .customer-content {
+    background: transparent;
+    padding: 1rem 0 0;
+  }
+
+  .customer-page .customer-content .card {
+    background: rgba(15, 15, 20, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02), 0 18px 40px rgba(0, 0, 0, 0.65);
+  }
+
+  .customer-page .customer-content .card-header {
+    padding-bottom: 0.45rem;
+    margin-bottom: 0.65rem;
+    border-bottom: none;
+    background: transparent;
+  }
+
+  .customer-page .customer-content .card-title {
+    color: #fff;
+  }
+
+  .customer-page .card-action {
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  .customer-page .stat-card {
+    background: rgba(14, 14, 18, 0.95);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .customer-page .stat-icon {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  .customer-page .stat-label,
+  .customer-page .stat-value {
+    color: #f5f7fa;
+  }
+
+  .customer-page .two-col {
+    gap: 1.25rem;
+  }
+
+  .customer-page .info-field label {
+    color: rgba(255, 255, 255, 0.55);
+  }
+
+  .customer-page .info-field span {
+    color: #f9fbff;
+  }
+
+  .customer-page .empty-state {
+    background: rgba(14, 14, 17, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    color: rgba(255, 255, 255, 0.8);
+  }
+
+  .customer-page .empty-state h3,
+  .customer-page .empty-state p {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .customer-page .subscribe-bar {
+    background: rgba(12, 12, 15, 0.95);
+    border-top: none;
+    border-radius: 18px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.7);
+  }
+
+  .customer-page .subscribe-bar h3,
+  .customer-page .subscribe-bar p {
+    color: #fff;
+  }
+
+  .customer-page .sub-input {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .customer-page .sub-input:focus {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+  }
+
+  .customer-page .btn-primary {
+    background: linear-gradient(135deg, #ff5b2a, #d9411f);
+    box-shadow: 0 12px 25px rgba(255, 91, 42, 0.45);
+  }
+
+  .customer-page .btn-primary:hover {
+    background: linear-gradient(135deg, #ff6236, #cb351b);
+  }
+
+  .customer-page .upgrade-hero {
+    background: rgba(15, 15, 20, 0.95);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.75);
+  }
+
+  .customer-page .upgrade-hero .card-text {
+    color: rgba(255, 255, 255, 0.75);
+  }
+
+  .customer-page .upgrade-benefits-card {
+    background: rgba(12, 12, 15, 0.95);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.7);
+  }
+
+  .customer-page .upgrade-benefit {
+    background: rgba(255, 255, 255, 0.02);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+  }
+
+  .customer-page .upgrade-benefit h6 {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .customer-page .upgrade-benefit .text-muted {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .customer-page .upgrade-confirmation-card {
+    background: rgba(13, 13, 18, 0.95);
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.75);
+  }
+
+  .customer-page .upgrade-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .customer-page .upgrade-form .form-group {
+    margin-bottom: 0;
+  }
+
+  .customer-page .upgrade-form .form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .customer-page .upgrade-form .form-check-input {
+    margin-top: 0;
+  }
+
+  .customer-page .upgrade-alert {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+  }
+
+  .customer-page .upgrade-alert strong {
+    color: #fff;
+  }
+
+  .customer-page .upgrade-actions {
+    justify-content: flex-start;
+  }
+
+  .customer-page .upgrade-actions .btn-primary {
+    min-width: 180px;
+  }
+
+  .customer-page .upgrade-actions .btn-secondary {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: #fff;
+  }
+
+  .customer-page .profile-sidebar {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 26px;
+    padding: 1rem;
+  }
+
+  .customer-page .profile-sidebar .profile-card {
+    background: rgba(13, 13, 18, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 25px 45px rgba(0, 0, 0, 0.7);
+    padding: 2rem 1.5rem;
+  }
+
+  .customer-page .profile-sidebar .nav-dashboard .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    margin-bottom: 0.35rem;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .customer-page .profile-sidebar .nav-dashboard .nav-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  .customer-page .profile-sidebar .nav-dashboard .nav-link.active {
+    background: linear-gradient(135deg, #ff5b2a, #d9411f);
+    color: #fff;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.65);
+  }
+
+  .customer-page .profile-sidebar .profile-card h5,
+  .customer-page .profile-sidebar .profile-card p {
+    color: #fff;
+  }
+}
+
+/* Override theme spacing for pages that use this container class */
+.container.page-default-content { padding-top: 0 !important; }

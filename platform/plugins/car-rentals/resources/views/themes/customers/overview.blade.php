@@ -1,21 +1,7 @@
 @extends(CarRentalsHelper::viewPath('customers.layouts.master'))
 
 @section('content')
-    <style>
-        .card-title {
-            font-size: 22px !important;
-        }
-        .btn-outline-primary {
-            border-radius: 12px;
-            border-color: var(--bs-brand-2);
-            color: var(--bs-brand-2) !important;
-        }
-        .btn-outline-primary:hover {
-            background-color: var(--bs-brand-2);
-            border-color: var(--bs-brand-2);
-            color: #101010 !important;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('vendor/core/plugins/car-rentals/css/overview-custom.css') }}?v={{ filemtime(public_path('vendor/core/plugins/car-rentals/css/overview-custom.css')) }}">
 
     @php
         $customer = auth('customer')->user();
@@ -28,141 +14,106 @@
             ->get();
     @endphp
 
-    <!-- Welcome Section -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h4 class="mb-1">
-                {{ __('Welcome back') }}, {{ $customer->name }}{!! $customer->badge !!}!
-            </h4>
-            <p class="text-muted mb-0">{{ __('Here\'s an overview of your account and recent activity') }}</p>
-        </div>
+    <div class="breadcrumb">
+        Home &rsaquo; Account &rsaquo; <span>Overview</span>
     </div>
 
-    <!-- Stats Section -->
-    <div class="mb-4">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h4 class="mb-1 fw-bold" style="font-size: 1.4rem;">{{ $totalBookings }}</h4>
-                                <p class="mb-0 text-muted">{{ __('Total Bookings') }}</p>
-                            </div>
-                            <div>
-                                <x-core::icon name="ti ti-calendar" class="text-muted" style="font-size: 28px;" />
-                            </div>
-                        </div>
-                    </div>
+    <div class="content">
+        <div class="welcome-bar">
+            <div>
+                <h1>Welcome back, {{ $customer->name }}!</h1>
+                <p>Here's a snapshot of your account and recent activity.</p>
+            </div>
+            <div class="date-tag">{{ now()->format('M j, Y') }}</div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+                </div>
+                <div>
+                    <div class="stat-label">{{ __('Total Bookings') }}</div>
+                    <div class="stat-value">{{ $totalBookings }}</div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h4 class="mb-1 fw-bold" style="font-size: 1.4rem;">{{ $totalReviews }}</h4>
-                                <p class="mb-0 text-muted">{{ __('Total Reviews') }}</p>
-                            </div>
-                            <div>
-                                <x-core::icon name="ti ti-star" class="text-muted" style="font-size: 28px;" />
-                            </div>
-                        </div>
-                    </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                </div>
+                <div>
+                    <div class="stat-label">{{ __('Total Reviews') }}</div>
+                    <div class="stat-value">{{ $totalReviews }}</div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <h4 class="mb-1 fw-bold" style="font-size: 1.4rem;">{{ $customer->created_at->diffForHumans(null, true) }}</h4>
-                                <p class="mb-0 text-muted">{{ __('Member Since') }}</p>
-                            </div>
-                            <div>
-                                <x-core::icon name="ti ti-user" class="text-muted" style="font-size: 28px;" />
-                            </div>
-                        </div>
-                    </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>
+                </div>
+                <div>
+                    <div class="stat-label">{{ __('Member Since') }}</div>
+                    <div class="stat-value" style="font-size:16px;margin-top:2px;">{{ $customer->created_at->diffForHumans(null, true) }}</div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Upgrade to Vendor Section -->
-    @if(!$customer->is_vendor)
-    <div class="mb-4">
-        <div class="card">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-lg-8">
-                        <h5 class="card-title mb-2">
-                            {{ __('Become a Car Rental Vendor') }}
-                        </h5>
-                        <p class="card-text text-muted mb-3 mb-lg-0">
-                            {{ __('Upgrade your account to vendor status and start renting out your vehicles. Earn money by listing your cars on our platform.') }}
-                        </p>
+        <div class="two-col" style="margin-top:1rem;">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">{{ __('Personal Information') }}</div>
+                    <div class="card-action"><a href="{{ route('customer.profile') }}">{{ __('Edit') }}</a></div>
+                </div>
+                <div class="info-grid">
+                    <div class="info-field">
+                        <label>{{ __('Name') }}</label>
+                        <span>{{ $customer->name }}{!! $customer->badge !!}</span>
                     </div>
-                    <div class="col-lg-4 text-lg-end">
-                        <a href="{{ route('customer.upgrade-to-vendor') }}" class="btn btn-primary ms-0">
-                            {{ __('Learn More & Upgrade') }}
-                        </a>
+                    <div class="info-field">
+                        <label>{{ __('Email') }}</label>
+                        <span>{{ $customer->email }}</span>
+                    </div>
+                    @if ($customer->phone)
+                    <div class="info-field">
+                        <label>{{ __('Phone') }}</label>
+                        <span>{{ $customer->phone }}</span>
+                    </div>
+                    @endif
+                    <div class="info-field">
+                        <label>{{ __('Member Since') }}</label>
+                        <span>{{ $customer->created_at->format('M d, Y') }}</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    @endif
 
-    <!-- Personal Information Section -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="card-title mb-0">{{ __('Personal Information') }}</h5>
-                <a href="{{ route('customer.profile') }}" class="btn btn-sm btn-outline-primary">
-                    {{ __('Edit') }}
-                </a>
-            </div>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div>
-                        <p class="text-muted small mb-1">{{ __('Name') }}</p>
-                        <p class="mb-0">{{ $customer->name }}{!! $customer->badge !!}</p>
-                    </div>
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">{{ __('Account Status') }}</div>
                 </div>
-                <div class="col-md-3">
-                    <div>
-                        <p class="text-muted small mb-1">{{ __('Email') }}</p>
-                        <p class="mb-0">{{ $customer->email }}</p>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f5f3ef;border-radius:10px;">
+                        <div style="font-size:13px;color:#555;">{{ __('Account type') }}</div>
+                        <div style="font-size:12px;font-weight:500;background:#e8f5e9;color:#2e7d32;padding:3px 10px;border-radius:20px;">Standard</div>
                     </div>
-                </div>
-                @if ($customer->phone)
-                    <div class="col-md-3">
-                        <div>
-                            <p class="text-muted small mb-1">{{ __('Phone') }}</p>
-                            <p class="mb-0">{{ $customer->phone }}</p>
-                        </div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f5f3ef;border-radius:10px;">
+                        <div style="font-size:13px;color:#555;">{{ __('Vendor status') }}</div>
+                        <div style="font-size:12px;font-weight:500;background:#fff3e0;color:#e65100;padding:3px 10px;border-radius:20px;">{{ $customer->is_vendor ? __('Active') : __('Not active') }}</div>
                     </div>
-                @endif
-                <div class="col-md-3">
-                    <div>
-                        <p class="text-muted small mb-1">{{ __('Member Since') }}</p>
-                        <p class="mb-0">{{ $customer->created_at->format('M d, Y') }}</p>
+                    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f5f3ef;border-radius:10px;">
+                        <div style="font-size:13px;color:#555;">{{ __('Profile verified') }}</div>
+                        <div style="font-size:12px;font-weight:500;background:#fce4ec;color:#c62828;padding:3px 10px;border-radius:20px;">{{ $customer->is_verified ? __('Verified') : __('Pending') }}</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Recent Bookings Section -->
-    <div class="card">
-        <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="card-title mb-0">{{ __('Recent Bookings') }}</h5>
-                <a href="{{ route('customer.bookings') }}" class="btn btn-sm btn-outline-primary">
-                    {{ __('View All') }}
-                </a>
+        <div class="card" style="margin-top:1rem;">
+            <div class="card-header">
+                <div class="card-title">{{ __('Recent Bookings') }}</div>
+                <div class="card-action"><a href="{{ route('customer.bookings') }}">{{ __('View all') }}</a></div>
             </div>
+
             @if ($recentBookings->isNotEmpty())
                 <div>
                     @foreach ($recentBookings as $booking)
@@ -216,15 +167,29 @@
                     @endforeach
                 </div>
             @else
-                <div class="text-center py-4">
-                    <x-core::icon name="ti ti-calendar-off" size="lg" class="text-muted mb-3" style="font-size: 48px;" />
-                    <h6>{{ __('No Bookings Yet') }}</h6>
-                    <p class="text-muted small mb-3">{{ __("You haven't made any bookings yet.") }}</p>
-                    <a href="{{ route('public.cars') }}" class="btn btn-sm btn-primary ms-0">
-                        {{ __('Explore Cars') }}
-                    </a>
+                <div class="empty-state">
+                    <div class="empty-icon">
+                        <x-core::icon name="ti ti-calendar-off" size="lg" class="text-muted mb-3" style="font-size: 24px;" />
+                    </div>
+                    <h3>{{ __('No bookings yet') }}</h3>
+                    <p>{{ __("You haven't made any bookings yet. Start exploring vehicles.") }}</p>
+                    <a href="{{ route('public.cars') }}" class="btn-primary" style="margin-top:4px;padding:9px 22px;">{{ __('Explore Cars') }}</a>
                 </div>
             @endif
         </div>
+
+        <div class="subscribe-bar">
+            <div>
+                <h3>{{ __('Subscribe for secret deals') }}</h3>
+                <p>{{ __('Prices drop the moment you sign up.') }}</p>
+            </div>
+            <div class="sub-form">
+                <form action="#" method="post" onsubmit="return false;">
+                    <input class="sub-input" type="email" placeholder="{{ __('Enter your email') }}" />
+                    <button class="btn-primary">{{ __('Subscribe') }}</button>
+                </form>
+            </div>
+        </div>
     </div>
+
 @endsection
