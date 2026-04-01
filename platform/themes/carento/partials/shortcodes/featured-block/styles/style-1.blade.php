@@ -2,222 +2,246 @@
     $buttonName = $shortcode->button_label;
     $title = $shortcode->title;
     $buttonUrl = $shortcode->button_url;
-    $image1 = $shortcode->image_1;
-    $image2 = $shortcode->image_2;
-    $image3 = $shortcode->image_3;
-    $image4 = $shortcode->image_4;
-    $image5 = $shortcode->image_5;
+    
+    // Map the inputs to a clean array for the 4 steps
+    $steps = [
+        [
+            'image' => $shortcode->image_1,
+            // Fallback text if tabs aren't filled out, and strips out any old HTML/SVGs from the previous design
+            'text'  => isset($tabs[0]) ? strip_tags(BaseHelper::clean(Arr::get($tabs[0], 'content'))) : 'Download app/ Visit Website',
+            'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>'
+        ],
+        [
+            'image' => $shortcode->image_2,
+            'text'  => isset($tabs[1]) ? strip_tags(BaseHelper::clean(Arr::get($tabs[1], 'content'))) : 'Search for desired Car and book',
+            'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>'
+        ],
+        [
+            'image' => $shortcode->image_3,
+            'text'  => isset($tabs[2]) ? strip_tags(BaseHelper::clean(Arr::get($tabs[2], 'content'))) : 'Verify your profile',
+            'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+        ],
+        [
+            'image' => $shortcode->image_4,
+            'text'  => isset($tabs[3]) ? strip_tags(BaseHelper::clean(Arr::get($tabs[3], 'content'))) : 'Get ready for your trip',
+            'icon'  => '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="8" rx="2" ry="2"></rect><circle cx="7" cy="19" r="2"></circle><circle cx="17" cy="19" r="2"></circle><path d="M3 11l2-5h14l2 5"></path></svg>'
+        ],
+    ];
 @endphp
 
 <style>
     /* =========================================
-       1. LIGHT MODE (DEFAULT) STYLES
+       1. MAIN CONTAINER (BENTO STYLE)
        ========================================= */
-    /* Outer wrapper creating the 'Island' effect */
-    .featured-zoom-style .zoom-outer-wrapper {
-        background-color: transparent !important; /* Transparency reset, backround handled by page wrapper */
-        border-radius: 20px !important;
-        /* REDUCED GAP: Changed from 40px to 15px */
-        padding: 15px 0 !important; 
+    .shortcode-featured-block {
+        background-color: transparent !important;
+        padding-top: 40px;
+        padding-bottom: 40px;
+    }
+
+    .how-it-works-container {
+        background-color: #f8f9fa; /* Off-white container */
+        border-radius: 24px;
+        padding: 60px 50px;
+        max-width: 1200px;
         margin: 0 auto;
-        max-width: 1240px;
-        position: relative;
-        overflow: hidden;
-        transition: background-color 0.3s ease, border-color 0.3s ease;
-    }
-
-    /* Centered Header Styles */
-    .featured-zoom-style .header-centered {
-        text-align: center;
-        margin-bottom: 40px; /* Slightly tightened from 50px */
-    }
-
-    .featured-zoom-style .subtitle-badge {
-        display: inline-block;
-        padding: 6px 16px;
-        border-radius: 50px;
-        font-weight: 700;
-        font-size: 0.72rem;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-        margin-bottom: 20px;
-        background-color: #B03A2E !important;
-        color: #ffffff !important;
-        transition: background-color 0.3s ease, color 0.3s ease;
-    }
-
-    /* Tick List Grid - Modern layout for bullet points */
-    .featured-zoom-style .tick-grid {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 20px;
-        margin-bottom: 40px;
-    }
-
-    .featured-zoom-style .tick-grid li {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: #ffffff;
-        padding: 10px 20px;
-        border-radius: 12px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-        font-weight: 600;
-        list-style: none;
-        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-        border: 1px solid transparent;
-    }
-
-    /* Image Gallery Grid */
-    .featured-zoom-style .image-gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-        gap: 15px;
-        margin-top: 30px; /* Slightly tightened from 40px */
-    }
-
-    .featured-zoom-style .image-gallery img {
-        width: 100%;
-        height: 180px;
-        object-fit: cover;
-        border-radius: 16px;
-        transition: transform 0.3s ease;
-    }
-
-    .featured-zoom-style .image-gallery img:hover {
-        transform: translateY(-5px);
-    }
-
-    /* Decorative Overlay */
-    .featured-zoom-style .bg-overlay-custom {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        height: 50%;
-        width: 30%;
-        background-color: var(--primary-color, #054232); 
-        opacity: 0.1;
-        z-index: 0;
-        border-top-left-radius: 100%;
-        transition: opacity 0.3s ease;
-    }
-
-    /* Smooth Text Transitions */
-    .featured-zoom-style h2,
-    .featured-zoom-style p.neutral-500 {
-        transition: color 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     }
 
     /* =========================================
-       2. DARK MODE OVERRIDES
+       2. TITLE STYLING (WITH BARS)
        ========================================= */
-    /* Island Wrapper */
-    [data-bs-theme="dark"] .featured-zoom-style .zoom-outer-wrapper,
-    .dark .featured-zoom-style .zoom-outer-wrapper,
-    .theme-dark .featured-zoom-style .zoom-outer-wrapper {
-        background-color: #18191a !important; 
-        border: 1px solid rgba(255, 255, 255, 0.05);
+    .section-title-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #111827;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .section-title-center::before, 
+    .section-title-center::after {
+        content: '';
+        height: 2px;
+        width: 40px;
+        background: #475569; 
+        margin: 0 20px;
+        border-radius: 2px;
     }
 
-    /* Text Colors */
-    [data-bs-theme="dark"] .featured-zoom-style h2,
-    .dark .featured-zoom-style h2,
-    .theme-dark .featured-zoom-style h2 {
-        color: #ffffff !important;
+    .section-subtitle-center {
+        text-align: center;
+        color: #6b7280;
+        font-weight: 500;
+        margin-bottom: 50px;
     }
 
-    [data-bs-theme="dark"] .featured-zoom-style p.neutral-500,
-    .dark .featured-zoom-style p.neutral-500,
-    .theme-dark .featured-zoom-style p.neutral-500 {
-        color: #adb5bd !important;
+    /* =========================================
+       3. 4-COLUMN STEPS GRID
+       ========================================= */
+    .steps-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 30px;
     }
 
-    /* Subtitle Badge */
-    [data-bs-theme="dark"] .featured-zoom-style .subtitle-badge,
-    .dark .featured-zoom-style .subtitle-badge,
-    .theme-dark .featured-zoom-style .subtitle-badge {
-        background-color: #242526 !important; 
-        color: #f8f9fa !important;
-        border: 1px solid rgba(255,255,255,0.1);
+    .step-card {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
-    /* Tick List Items */
-    [data-bs-theme="dark"] .featured-zoom-style .tick-grid li,
-    .dark .featured-zoom-style .tick-grid li,
-    .theme-dark .featured-zoom-style .tick-grid li {
-        background-color: #242526 !important; /* Dark mode card color */
-        color: #f8f9fa !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3); /* Darker shadow */
+    /* Image Box */
+    .step-img-box {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1.15; /* Makes it slightly taller than a perfect square */
+        border-radius: 20px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        background: #e2e8f0; /* Fallback before image loads */
+    }
+    .step-img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    .step-card:hover .step-img-box img {
+        transform: scale(1.05);
     }
 
-    /* Overlay adjustments for dark mode */
-    [data-bs-theme="dark"] .featured-zoom-style .bg-overlay-custom,
-    .dark .featured-zoom-style .bg-overlay-custom,
-    .theme-dark .featured-zoom-style .bg-overlay-custom {
-        opacity: 0.05; /* Reduce opacity of background blob in dark mode */
+    /* Floating Center Icon */
+    .step-icon-badge {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #ffffff;
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        z-index: 2;
+        color: #111827;
+        transition: transform 0.3s ease;
+    }
+    .step-card:hover .step-icon-badge {
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    /* Text */
+    .step-title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #111827;
+        line-height: 1.4;
+        max-width: 90%;
+    }
+
+    /* Pill Button - Made Smaller */
+    .btn-theme-pill {
+        border-radius: 50px !important;
+        padding: 10px 28px !important; /* Reduced padding */
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        font-size: 0.85rem !important; /* Slightly smaller font */
+        margin-top: 40px;
+        transition: all 0.3s ease !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .btn-theme-pill:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15) !important;
+    }
+
+    /* =========================================
+       4. DARK MODE OVERRIDES
+       ========================================= */
+    html[data-bs-theme="dark"] .how-it-works-container { background-color: #1e293b; box-shadow: none; border: 1px solid rgba(255,255,255,0.05); }
+    html[data-bs-theme="dark"] .section-title-center { color: #ffffff; }
+    html[data-bs-theme="dark"] .section-title-center::before,
+    html[data-bs-theme="dark"] .section-title-center::after { background: #94a3b8; }
+    html[data-bs-theme="dark"] .section-subtitle-center { color: #94a3b8; }
+    html[data-bs-theme="dark"] .step-img-box { background: #334155; }
+    html[data-bs-theme="dark"] .step-icon-badge { background: #0f172a; color: #ffffff; border: 1px solid rgba(255,255,255,0.1); }
+    html[data-bs-theme="dark"] .step-title { color: #f8fafc; }
+
+    /* =========================================
+       5. RESPONSIVE LAYOUT
+       ========================================= */
+    @media (max-width: 991px) {
+        .how-it-works-container { padding: 40px 30px; }
+        .steps-grid { grid-template-columns: repeat(2, 1fr); gap: 40px 20px; }
+        .section-title-center { font-size: 1.6rem; }
+    }
+    @media (max-width: 575px) {
+        .how-it-works-container { padding: 30px 20px; }
+        .steps-grid { grid-template-columns: 1fr; gap: 40px; }
+        .section-title-center::before, .section-title-center::after { width: 20px; }
     }
 </style>
 
-{{-- REDUCED GAP: Changed py-96 to py-3 --}}
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-featured-block featured-zoom-style py-3 background-body">
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-featured-block py-5">
     <div class="container">
-        <div class="zoom-outer-wrapper shadow-sm">
-            <div class="bg-overlay-custom"></div>
-
-            <div class="position-relative z-1">
-                <div class="header-centered">
-                    @if ($subtitle = $shortcode->subtitle)
-                        <span class="subtitle-badge bg-white text-dark wow fadeInDown">
-                            {!! BaseHelper::clean($subtitle) !!}
-                        </span>
-                    @endif
-
-                    @if($title = $shortcode->title)
-                        <h2 class="mb-3 fw-bold wow fadeInUp">{!! BaseHelper::clean($title) !!}</h2>
+        <div class="how-it-works-container wow fadeInUp" data-wow-delay="0.1s">
+            
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    @if($title)
+                        <h2 class="section-title-center">{!! BaseHelper::clean($title) !!}</h2>
                     @endif
 
                     @if ($description = $shortcode->description)
-                        <p class="text-lg-medium neutral-500 mx-auto wow fadeInUp" style="max-width: 700px;">
+                        <p class="section-subtitle-center text-lg-medium neutral-500 mx-auto" style="max-width: 700px;">
                             {!! BaseHelper::clean($description) !!}
                         </p>
                     @endif
                 </div>
-
-                @if (count($tabs) > 0)
-                    <ul class="tick-grid">
-                        @foreach($tabs as $tab)
-                            @continue(! $content = Arr::get($tab, 'content'))
-                            <li class="wow fadeInUp" data-wow-delay="{{ $loop->index * 0.1 }}s">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" class="text-success">
-                                    <path d="M17 3.34a10 10 0 1 1 -14.995 8.984l-.005 -.324l.005 -.324a10 10 0 0 1 14.995 -8.336zm-1.293 5.953a1 1 0 0 0 -1.32 -.083l-.094 .083l-3.293 3.292l-1.293 -1.292l-.094 -.083a1 1 0 0 0 -1.403 1.403l.083 .094l2 2l.094 .083a1 1 0 0 0 1.226 0l.094 -.083l4 -4l.083 -.094a1 1 0 0 0 -.083 -1.32z" />
-                                </svg>
-                                {!! BaseHelper::clean($content) !!}
-                            </li>
-                        @endforeach
-                    </ul>
-                @endif
-
-                @if($buttonName && $buttonUrl)
-                    <div class="text-center mb-5">
-                        <a class="btn btn-primary px-5 py-3 wow fadeInUp" href="{{ $buttonUrl }}">
-                            {!! BaseHelper::clean($buttonName) !!}
-                            <svg class="ms-2" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M8 15L15 8L8 1M15 8L1 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
-                            </svg>
-                        </a>
-                    </div>
-                @endif
-                
-                <div class="image-gallery">
-                    @if($image1 = $shortcode->image_1) {{ RvMedia::image($image1, $title) }} @endif
-                    @if($image2 = $shortcode->image_2) {{ RvMedia::image($image2, $title) }} @endif
-                    @if($image3 = $shortcode->image_3) {{ RvMedia::image($image3, $title) }} @endif
-                    @if($image4 = $shortcode->image_4) {{ RvMedia::image($image4, $title) }} @endif
-                    @if($image5 = $shortcode->image_5) {{ RvMedia::image($image5, $title) }} @endif
-                </div>
             </div>
+
+            <div class="steps-grid">
+                @foreach($steps as $index => $step)
+                    @if($step['image'] || $step['text'])
+                        <div class="step-card wow fadeIn" data-wow-delay="{{ $index * 0.1 }}s">
+                            
+                            <div class="step-img-box">
+                                @if($step['image'])
+                                    {{ RvMedia::image($step['image'], $step['text']) }}
+                                @endif
+                                
+                                <div class="step-icon-badge">
+                                    {!! $step['icon'] !!}
+                                </div>
+                            </div>
+
+                            <div class="step-title">
+                                {!! BaseHelper::clean($step['text']) !!}
+                            </div>
+                            
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+
+            @if($buttonName && $buttonUrl)
+                <div class="d-flex justify-content-center">
+                    <a class="btn btn-primary btn-theme-pill" href="{{ $buttonUrl }}">
+                        {!! BaseHelper::clean($buttonName) !!}
+                    </a>
+                </div>
+            @endif
+
         </div>
     </div>
 </section>

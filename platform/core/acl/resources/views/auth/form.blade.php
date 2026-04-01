@@ -1,6 +1,7 @@
 @extends('core/acl::layouts.guest')
 
 @section('content')
+
     @if ($showStart)
         {!! Form::open(Arr::except($formOptions, ['template'])) !!}
     @endif
