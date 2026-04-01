@@ -5,6 +5,11 @@
 @endphp
 
 <style>
+    /* Add top padding so the entire block sits centered on the page */
+    .box-app-2 {
+        padding-top: 80px; 
+    }
+
     /* Ensures the map perfectly fills the right column and respects the rounded corners */
     .box-app-map {
         width: 100%;
@@ -76,7 +81,7 @@
                     <p class="text-md-medium pb-3 neutral-500">{!! BaseHelper::clean($appsDescription) !!}</p>
                 @endif
                 
-                <div class="download-apps">
+                <div class="download-apps mt-0">
                     @if(!empty($androidAppImage))
                         <a class="wow fadeInUp" href="{{ $androidAppUrl }}">
                             {{ RvMedia::image($androidAppImage) }}
