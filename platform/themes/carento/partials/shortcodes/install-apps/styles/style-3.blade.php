@@ -48,31 +48,30 @@
     .install-app-modern-style .description-p {
         color: #475569 !important; 
         font-size: 1.05rem !important;
-        margin-bottom: 30px !important;
+        margin-bottom: 35px !important; /* Increased slightly to separate from buttons */
         font-weight: 500;
     }
 
     /* Target download buttons wrapper */
     .install-app-modern-style .download-apps {
         display: flex;
-        flex-direction: row; /* Aligns buttons horizontally */
-        flex-wrap: wrap;
-        gap: 15px; /* modern gap */
-        align-items: center;
+        flex-direction: column; /* CHANGED: Stacks buttons vertically */
+        gap: 20px; /* Increased gap for vertical layout */
+        align-items: flex-start; /* Aligns them to the left */
     }
 
     /* Target standard button badges for modern shadow effect */
     .install-app-modern-style .download-apps img {
-        height: 50px; /* Forces both buttons to be the exact same height for symmetry */
+        height: 85px; /* CHANGED: Increased from 50px to make them much bigger */
         width: auto;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-        border-radius: 8px; 
+        border-radius: 10px; 
     }
 
     /* Standard modern button shadow/lift on hover */
     .install-app-modern-style .download-apps img:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
 
     /* Target right column image container */
@@ -93,7 +92,6 @@
         width: 100% !important;
         height: 100% !important;
         object-fit: cover !important; /* Stretches image perfectly to fill the space */
-        /* CHANGED: Shows the top of the image instead of the center */
         object-position: top !important;
     }
 
@@ -106,7 +104,7 @@
     }
     @media (max-width: 575px) {
         .install-app-modern-style .content-col { padding: 40px 25px; }
-        .install-app-modern-style .download-apps img { height: 45px; }
+        .install-app-modern-style .download-apps img { height: 55px; } /* Slightly smaller on very small screens, but still bigger than before */
     }
 </style>
 
@@ -131,7 +129,7 @@
                         <p class="description-p">{!! BaseHelper::clean($appsDescription) !!}</p>
                     @endif
                     
-                    {{-- Side-by-Side App Buttons --}}
+                    {{-- Stacked App Buttons --}}
                     <div class="download-apps">
                         @if(!empty($androidAppImage))
                             <a href="{{ $androidAppUrl }}" target="_blank">
