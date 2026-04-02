@@ -225,16 +225,16 @@
         text-underline-offset: 2px;
     }
 
-    /* --- HOST FOOTER (CYAN BACKGROUND) --- */
+    /* --- HOST FOOTER --- */
     .card-host-footer {
         padding: 12px 16px;
-        background: #f0fdf4; 
+        background: #f8f9fa; /* Clean neutral background */
         border-top: 1px solid #f1f5f9;
         display: flex;
         align-items: center;
         gap: 8px;
         font-size: 0.75rem;
-        color: #0369a1; 
+        color: var(--primary-color, #df4827) !important; /* Uses Theme Color for all text */
         font-weight: 600;
         border-bottom-left-radius: 16px;
         border-bottom-right-radius: 16px;
@@ -244,16 +244,22 @@
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: #0ea5e9; 
+        background: var(--primary-color, #df4827) !important; /* Uses Theme Color for avatar background */
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #fff;
+        color: #fff !important; /* Keep the inner SVG icon white */
     }
     .host-avatar svg {
         width: 12px;
         height: 12px;
         fill: currentColor;
+    }
+    
+    /* Dynamically colors the host name with the theme's primary color */
+    .card-host-footer .host-name {
+        color: var(--primary-color, #df4827) !important;
+        font-weight: 800;
     }
 
     /* =========================================
