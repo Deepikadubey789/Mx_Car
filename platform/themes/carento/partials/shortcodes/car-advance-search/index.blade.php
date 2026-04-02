@@ -50,10 +50,6 @@
         border: none !important;
         padding: 0 !important;
         
-        /* CHANGED: Positive margin so it sits neatly below the hero banner */
-        margin-top: 2rem !important; 
-        margin-bottom: 4rem !important; 
-        
         position: relative !important;
         z-index: 50 !important;
     }
@@ -61,82 +57,107 @@
     /* 2. The Main Container */
     .custom-search-box {
         background: #ffffff !important;
-        border-radius: 32px !important; 
-        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08) !important; 
-        padding: 25px 10px 10px 30px !important; 
-        max-width: 1000px !important; 
+        border-radius: 24px !important; 
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important; 
+        padding: 30px !important; 
+        max-width: 1200px !important; 
         margin-left: auto !important;
         margin-right: auto !important;
-        position: relative;
-        z-index: 20;
+        position: relative !important;
+        z-index: 20 !important;
     }
 
     /* 3. The Top Tabs */
     .custom-search-box .box-top-search {
-        display: flex !important; 
-        padding: 0 20px 15px 0 !important;
-        border-bottom: none !important;
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        padding: 0 0 20px 0 !important;
+        border-bottom: 1px solid #e5e7eb !important;
+        margin-bottom: 25px !important;
+    }
+    
+    .custom-search-box .left-top-search {
+        display: flex !important;
+        gap: 12px !important;
     }
     
     .custom-search-box .category-link {
-        font-size: 0.9rem !important;
-        font-weight: 700 !important;
-        color: #64748b !important;
-        margin-right: 12px !important;
-        padding: 8px 18px !important;
-        border-radius: 30px !important;
-        background: transparent;
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        color: #6b7280 !important;
+        padding: 10px 20px !important;
+        border-radius: 20px !important;
+        background: transparent !important;
         text-decoration: none !important;
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
+        border: none !important;
     }
     
-    .custom-search-box .category-link.active,
+    .custom-search-box .category-link.active {
+        color: #ffffff !important;
+        background: #dc2626 !important;
+        font-weight: 700 !important;
+    }
+    
     .custom-search-box .category-link:hover {
-        color: #111827 !important;
-        background: #f1f5f9 !important; 
+        color: #374151 !important;
+    }
+    
+    .custom-search-box .right-top-search {
+        display: flex !important;
+        align-items: center !important;
+    }
+    
+    .custom-search-box .need-some-help {
+        font-size: 0.9rem !important;
+        color: #9ca3af !important;
+        text-decoration: none !important;
+    }
+    
+    .custom-search-box .need-some-help:hover {
+        color: #6b7280 !important;
     }
 
     /* 4. Single-Row Flex Layout for Inputs */
     .custom-search-box .box-bottom-search {
         display: flex !important;
-        align-items: center !important;
+        align-items: flex-end !important;
         flex-wrap: nowrap !important; 
         width: 100% !important;
+        gap: 15px !important;
     }
 
     .custom-search-box .item-search {
         flex: 1; 
-        padding: 5px 20px !important;
-        border-right: 1px solid #e2e8f0 !important; 
+        padding: 0 !important;
+        border: none !important;
         margin: 0 !important;
-        min-width: 0; 
+        min-width: 0 !important;
     }
 
     /* 5. The Search Button Container */
     .custom-search-box .item-search:last-child {
-        border-right: none !important;
-        flex: 0 0 auto !important; 
-        padding: 0 !important; 
-        margin: 0 !important;
-        border-top: none !important; 
+        flex: 0 0 auto !important;
+        min-width: 160px !important;
     }
 
     /* 6. Tidy up the labels and inputs */
     .custom-search-box .item-search label {
-        font-size: 0.75rem !important;
+        font-size: 0.85rem !important;
         font-weight: 700 !important;
-        text-transform: uppercase;
-        color: #1e293b !important; 
-        margin-bottom: 2px;
-        display: block;
+        text-transform: capitalize !important;
+        color: #1f2937 !important; 
+        margin-bottom: 8px !important;
+        display: block !important;
     }
 
     .custom-search-box .search-input {
         border: none !important;
         background: transparent !important;
         padding: 0 !important;
-        font-size: 1rem !important;
-        color: #64748b !important;
+        font-size: 0.95rem !important;
+        color: #6b7280 !important;
         box-shadow: none !important;
         height: auto !important;
         width: 100% !important;
@@ -144,13 +165,45 @@
 
     .custom-search-box .search-input:focus {
         outline: none !important;
+        color: #1f2937 !important;
+    }
+    
+    .custom-search-box .search-input::placeholder {
+        color: #d1d5db !important;
     }
 
     .custom-search-box .position-relative span {
         display: none !important; 
     }
+    
     .custom-search-box .ps-4 {
         padding-left: 0 !important; 
+    }
+    
+    /* 7. Search Button Styling */
+    .custom-search-box .btn-brand-2 {
+        background-color: #dc2626 !important;
+        border: none !important;
+        color: #ffffff !important;
+        padding: 12px 28px !important;
+        border-radius: 16px !important;
+        font-weight: 600 !important;
+        font-size: 0.95rem !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        width: 100% !important;
+        justify-content: center !important;
+        transition: background-color 0.3s ease !important;
+    }
+    
+    .custom-search-box .btn-brand-2:hover {
+        background-color: #b91c1c !important;
+    }
+    
+    .custom-search-box .btn-brand-2 .icon {
+        width: 20px !important;
+        height: 20px !important;
     }
 
     /* 7. The Square/Pill Search Button */
@@ -217,6 +270,42 @@
             display: inline-block; 
             margin-left: 8px;
         }
+    }
+
+    /* Dark Mode Overrides */
+    [data-bs-theme="dark"] .custom-search-box {
+        background: #1b2736 !important;
+        border-bottom-color: #30455d !important;
+        box-shadow: 0 12px 26px rgba(2, 7, 13, 0.5) !important;
+    }
+
+    [data-bs-theme="dark"] .custom-search-box .box-top-search {
+        border-bottom-color: #30455d !important;
+    }
+
+    [data-bs-theme="dark"] .custom-search-box .category-link {
+        color: #a7bad0 !important;
+    }
+
+    [data-bs-theme="dark"] .custom-search-box .category-link.active {
+        background: #dc2626 !important;
+        color: #ffffff !important;
+    }
+
+    [data-bs-theme="dark"] .custom-search-box .item-search label {
+        color: #e6eef8 !important;
+    }
+
+    [data-bs-theme="dark"] .custom-search-box .search-input {
+        color: #a7bad0 !important;
+    }
+
+    [data-bs-theme="dark"] .custom-search-box .search-input:focus {
+        color: #e6eef8 !important;
+    }
+
+    [data-bs-theme="dark"] .custom-search-box .search-input::placeholder {
+        color: #5a6f87 !important;
     }
 </style>
 

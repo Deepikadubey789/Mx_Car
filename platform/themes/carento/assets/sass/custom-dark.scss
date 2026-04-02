@@ -71,8 +71,75 @@
         background-color: var(--bs-background-body);
     }
 
-    .shortcode-car-advance-search {
-        background-color: var(--bs-neutral-100) !important
+    .shortcode-car-advance-search,
+    .shortcode-car-advance-search.box-section {
+        background-color: transparent !important;
+        background-image: none !important;
+    }
+
+    .car-list-modern .custom-search-box {
+        background: #1b2736 !important;
+        box-shadow: 0 12px 26px rgba(2, 7, 13, 0.5) !important;
+
+        .box-top-search {
+            border-bottom-color: #30455d !important;
+        }
+
+        .category-link {
+            color: #a7bad0 !important;
+
+            &:hover {
+                color: #e6eef8 !important;
+            }
+        }
+
+        .category-link.active {
+            background: var(--primary-color) !important;
+            color: #ffffff !important;
+        }
+
+        .need-some-help {
+            color: #a7bad0 !important;
+
+            &:hover {
+                color: #e6eef8 !important;
+            }
+        }
+
+        .item-search label {
+            color: #e6eef8 !important;
+        }
+
+        .search-input {
+            background-color: transparent !important;
+            color: #a7bad0 !important;
+
+            &:focus {
+                color: #e6eef8 !important;
+            }
+
+            &::placeholder {
+                color: #5a6f87 !important;
+            }
+        }
+
+        .btn-brand-2 {
+            background-color: var(--primary-color) !important;
+            color: #ffffff !important;
+
+            &:hover {
+                background-color: var(--primary-color-hover) !important;
+            }
+        }
+    }
+
+    /* Override inline style background from blade file */
+    [data-bs-theme="dark"] section.shortcode-car-advance-search .custom-search-box {
+        background: #1b2736 !important;
+    }
+
+    .car-list-modern .shortcode-car-advance-search {
+        background: transparent !important;
     }
 
     .post-comment-wrapper {
