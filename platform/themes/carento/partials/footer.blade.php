@@ -15,15 +15,15 @@
     .footer {
         border-top: none !important;
         border-bottom: none !important;
-        padding-top: 50px !important; /* Reduced from theme default */
-        padding-bottom: 20px !important; /* Reduced from theme default */
+        padding-top: 0px !important; /* Reduced from theme default */
+        padding-bottom: 0px !important; /* Reduced from theme default */
     }
 
     /* Remove the line above the copyright text */
     .footer .footer-bottom {
         border-top: none !important;
         border-bottom: none !important;
-        margin-top: 40px !important; /* Adjusted to balance the height */
+        margin-top: 0px !important; /* Adjusted to balance the height */
         padding-top: 0 !important; 
     }
 
