@@ -86,47 +86,17 @@
         </div>
     </div>
 
-    <section class="post-summary-panel background-body">
-        <div class="container">
-            <div class="post-summary-grid">
-                <div class="post-summary-description-block">
-                    <div class="post-summary-description-text">
-                        <p class="post-summary-description">{{ $summary }}</p>
-                    </div>
-                </div>
-                <div class="post-summary-stats">
-                    <div class="stat-card">
-                        <span>{{ __('Published on') }}</span>
-                        <strong>{{ Theme::formatDate($post->created_at) }}</strong>
-                        @if ($category)
-                            <small class="stat-accent">{{ $category->name }}</small>
-                        @endif
-                    </div>
-                    <div class="stat-card">
-                        <span>{{ __('Topics covered') }}</span>
-                        <strong>{{ $tagCount }}</strong>
-                        <small class="stat-accent">{{ __('Tags mentioned') }}</small>
-                    </div>
-                    <div class="stat-card">
-                        <span>{{ __('Read time') }}</span>
-                        <strong>{{ __(':minutes min read', ['minutes' => $readTimeMinutes]) }}</strong>
-                        <small class="stat-accent">{{ __('Average pace') }}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <section class="post-body background-body">
-        <div class="container">
-            <div class="row gx-4 gy-4">
-                <div @class(['col-lg-8' => $blogSidebar, 'col-lg-12' => ! $blogSidebar])>
+    <section class="post-body background-body py-5">
+        <div class="container py-3">
+            <div class="row gx-lg-5">
+                <div @class(['col-lg-8' => $blogSidebar, 'col-lg-10 mx-auto' => ! $blogSidebar])>
                     <div class="box-content-detail-blog">
                         <div class="box-content-info-detail">
-                            <div class="content-detail-post">
+                            <div class="content-detail-post lh-base" style="font-size: 1.1rem; color: var(--bs-neutral-800);">
                                 {!! BaseHelper::clean($post->content) !!}
                             </div>
-                            <div class="footer-post-tags mb-50">
+                            <div class="footer-post-tags mt-5 pt-4 border-top">
                                 @if ($tags = $post->tags)
                                     <div class="box-tags">
                                         @foreach($tags as $tag)

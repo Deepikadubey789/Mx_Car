@@ -17,34 +17,33 @@
             <div class="row mt-50">
                 @foreach($teams as $team)
                     <div class="col-lg-3 col-md-6 col-12 mb-40">
-                        <div class="card-news background-card hover-up shadow-2 mb-4 mb-lg-0">
-                            <div class="card-image">
+                        <div class="card-news background-card hover-up shadow-2 mb-4 mb-lg-0 border-0" style="border-radius: 20px; overflow: hidden; background: #fff;">
+                            <div class="card-image" style="border-radius: 20px 20px 0 0; overflow: hidden;">
                                 <a href="{{ $team->url }}">
-                                    {{ RvMedia::image($team->photo, $team->name, 'medium-square') }}
+                                    {{ RvMedia::image($team->photo, $team->name, 'medium-square', false, ['style' => 'width: 100%; height: auto; display: block;']) }}
                                 </a>
                             </div>
-                            <div class="card-info p-4">
-                                <div class="card-title">
-                                    <a class="text-xl-bold neutral-1000" href="{{ $team->url }}">
-                                        <h6>{{ $team->name }}</h6>
+                            <div class="card-info p-4 text-start">
+                                <div class="card-title mb-3">
+                                    <a class="text-xl-bold neutral-1000 text-decoration-none" href="{{ $team->url }}">
+                                        <h5 class="fw-bold mb-1" style="color: #000; font-size: 20px; letter-spacing: -0.5px;">{{ $team->name }}</h5>
                                     </a>
 
                                     @if($teamTitle = $team->title)
-                                        <span class="text-sm-medium neutral-500">{!! BaseHelper::clean($teamTitle) !!}</span>
+                                        <p class="text-sm-medium neutral-500 mb-0" style="font-size: 14px; color: #6b7280;">{!! BaseHelper::clean($teamTitle) !!}</p>
                                     @endif
                                 </div>
-                                <div class="card-program">
-                                    <div class="endtime">
-                                        <div class="card-author d-flex align-items-center gap-2">
+                                <div class="card-program mt-4">
+                                    <div class="endtime d-flex align-items-center justify-content-between">
+                                        <div class="card-author d-flex align-items-center gap-3">
                                             @foreach($team->socials as $key => $social)
-                                                <a href="{{ $social }}" class="rounded-circle background-100 icon-shape icon icon-sm hover-up">
+                                                <a href="{{ $social }}" class="text-dark hover-up" style="font-size: 18px; color: #000;">
                                                     <x-core::icon name="ti ti-brand-{{ $key }}" class="m-0" />
                                                 </a>
                                             @endforeach
                                         </div>
-                                        <a href="{{ $team->url }}" class="rounded-circle background-100 icon-shape icon icon-sm hover-up border icon-shape-arrow">
-                                            <img class="m-0" src="{{ Theme::asset()->url('images/icons/arrow-up-right.svg') }}" alt="icon" />
-
+                                        <a href="{{ $team->url }}" class="rounded-circle background-100 icon-shape icon icon-sm hover-up border-0" style="background: #f3f4f6; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
+                                            <img class="m-0" src="{{ Theme::asset()->url('images/icons/arrow-up-right.svg') }}" alt="icon" style="width: 18px; height: 18px;" />
                                         </a>
                                     </div>
                                 </div>
