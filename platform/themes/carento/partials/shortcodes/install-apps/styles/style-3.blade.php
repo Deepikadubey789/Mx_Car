@@ -48,21 +48,21 @@
     .install-app-modern-style .description-p {
         color: #475569 !important; 
         font-size: 1.05rem !important;
-        margin-bottom: 35px !important; /* Increased slightly to separate from buttons */
+        margin-bottom: 0px !important; 
         font-weight: 500;
     }
 
     /* Target download buttons wrapper */
     .install-app-modern-style .download-apps {
         display: flex;
-        flex-direction: column; /* CHANGED: Stacks buttons vertically */
-        gap: 20px; /* Increased gap for vertical layout */
-        align-items: flex-start; /* Aligns them to the left */
+        flex-direction: column; /* Default: Stacks buttons vertically on desktop */
+        gap: 20px; 
+        align-items: flex-start; 
     }
 
     /* Target standard button badges for modern shadow effect */
     .install-app-modern-style .download-apps img {
-        height: 85px; /* CHANGED: Increased from 50px to make them much bigger */
+        height: 85px; /* Large desktop size */
         width: auto;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
         border-radius: 10px; 
@@ -91,20 +91,35 @@
     .install-app-modern-style .box-app-img img {
         width: 100% !important;
         height: 100% !important;
-        object-fit: cover !important; /* Stretches image perfectly to fill the space */
+        object-fit: cover !important; 
         object-position: top !important;
     }
 
-    /* Mobile Responsiveness */
+    /* =========================================
+       Mobile Responsiveness
+       ========================================= */
     @media (max-width: 991px) {
         .install-app-modern-style .content-col { padding: 50px 40px; }
         .install-app-modern-style .shortcode-title { font-size: 2rem !important; }
         .install-app-modern-style .image-col { min-height: 300px; }
         .install-app-modern-style .box-app-img { position: relative; height: 300px; }
     }
+    
+    @media (max-width: 767px) {
+        /* Force horizontal layout on tablets/phones */
+        .install-app-modern-style .download-apps {
+            flex-direction: row; 
+            flex-wrap: wrap; /* Allows them to wrap if screen gets incredibly narrow */
+            gap: 15px; 
+        }
+        .install-app-modern-style .download-apps img { 
+            height: 55px; /* Scale down so both fit side-by-side */
+        } 
+    }
+
     @media (max-width: 575px) {
         .install-app-modern-style .content-col { padding: 40px 25px; }
-        .install-app-modern-style .download-apps img { height: 55px; } /* Slightly smaller on very small screens, but still bigger than before */
+        .install-app-modern-style .download-apps img { height: 45px; } /* Ensures fit on very small smartphones */
     }
 </style>
 
@@ -123,13 +138,12 @@
                     @endif
                     
                     @if(!empty($buttonLabel))
-                        {{-- Used buttonLabel as the small gray subtitle matching the screenshot ("Install App") --}}
                         <p class="description-p">{!! BaseHelper::clean($buttonLabel) !!}</p>
                     @elseif(!empty($appsDescription))
                         <p class="description-p">{!! BaseHelper::clean($appsDescription) !!}</p>
                     @endif
                     
-                    {{-- Stacked App Buttons --}}
+                    {{-- Stacked App Buttons (Horizontal on Mobile) --}}
                     <div class="download-apps">
                         @if(!empty($androidAppImage))
                             <a href="{{ $androidAppUrl }}" target="_blank">
