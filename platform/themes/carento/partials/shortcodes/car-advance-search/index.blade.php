@@ -12,7 +12,8 @@
         "--box-mb: {$bottom}px" => $bottom,
         "--box-ml: {$left}px" => $left,
         "--box-mr: {$right}px" => $right,
-        "background-color: transparent" => true, 
+        "background-color: transparent !important" => true,
+        "--block-car-advance-search-background-color: transparent !important" => true,
     ];
 
     $selectedTabs = array_filter(explode(',', $shortcode->tabs ?? ''));
@@ -45,8 +46,11 @@
 <style>
     /* 1. Positioning */
     section.shortcode-car-advance-search,
+    section.no-bg-override,
+    section.box-search-advance-home10,
 #js-box-search-advance {
     background: transparent !important;
+    background-color: transparent !important;
     border: none !important;
     padding: 0 !important;
     margin-top: 0 !important;
@@ -67,7 +71,7 @@
     margin-right: auto !important;
 }
     .form {
-    margin-top: -100px;  /* -12rem hatao, ye lagao */
+    margin-top: -180px;  /* Covers roughly 30% of a 500px-600px hero */
     position: relative;
     z-index: 100;
 }
@@ -314,7 +318,7 @@
     }
 </style>
 
-<section {!! $shortcode->htmlAttributes(['style' => $variablesStyle]) !!} class="shortcode-car-advance-search box-section box-search-advance-home10" id="js-box-search-advance">
+<section {!! $shortcode->htmlAttributes(['style' => $variablesStyle]) !!} class="shortcode-car-advance-search box-section box-search-advance-home10 no-bg-override" id="js-box-search-advance">
     <div class="container">
         <form action="{{ $url }}" method="GET" class="form">
             

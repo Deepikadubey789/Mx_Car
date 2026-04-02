@@ -12,7 +12,7 @@
 <style>
     .custom-hero-wrapper {
         padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding-bottom: 7rem;
     }
 
     @keyframes kenBurns {
@@ -180,7 +180,7 @@
 <style>
     .custom-hero-wrapper {
         padding-top: 2rem;
-        padding-bottom: 2rem;
+        padding-bottom: 7rem;
     }
 
     /* ── Glitch CSS Variables ── */
