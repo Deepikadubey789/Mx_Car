@@ -18,7 +18,7 @@
     if ($isAboutUsPage) {
         $contentClasses = 'ck-content page-content about-modern-content';
     } elseif ($isContactPage) {
-        $contentClasses = 'ck-content page-content contact-modern-content';
+        $contentClasses = 'ck-content page-content';
     } elseif ($isLegalPage) {
         $contentClasses = 'ck-content page-content legal-modern-content';
     }

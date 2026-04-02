@@ -6399,10 +6399,9 @@ h2.heading-3 {
 
     .contact-modern-content > section {
         margin: 0 !important;
-        border: 1px solid var(--contact-border);
-        border-radius: 28px;
-        background: linear-gradient(150deg, #fffdfb 0%, #f8f1ea 100%) !important;
-        box-shadow: 0 22px 44px rgba(82, 45, 18, 0.1);
+        border: none !important;
+        background: none !important;
+        box-shadow: none !important;
         overflow: hidden;
     }
 
@@ -6425,29 +6424,54 @@ h2.heading-3 {
 
     .contact-modern-content .shortcode-branch-locations .card-contact {
         height: 100%;
-        border: 1px solid var(--contact-border);
-        border-radius: 18px;
-        background: #fffefc;
-        box-shadow: 0 14px 28px rgba(82, 45, 18, 0.1);
-        padding: 22px;
-        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+        border: 1px solid var(--bs-neutral-200);
+        border-radius: 16px;
+        background: #ffffff;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        padding: 24px;
+        transition: all 0.3s ease;
     }
 
     .contact-modern-content .shortcode-branch-locations .card-contact:hover {
         transform: translateY(-5px);
-        border-color: rgba(var(--contact-accent-rgb), 0.42);
-        box-shadow: 0 22px 36px rgba(82, 45, 18, 0.15);
+        border-color: var(--bs-brand-2);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
     }
 
     .contact-modern-content .shortcode-branch-locations .card-icon {
-        width: 54px;
-        height: 54px;
-        border-radius: 14px;
-        border: 1px solid rgba(var(--contact-accent-rgb), 0.3);
-        background: rgba(var(--contact-accent-rgb), 0.12);
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: var(--bs-neutral-100);
         display: grid;
         place-items: center;
-        margin-bottom: 16px;
+        margin-bottom: 20px;
+        border: none;
+        transition: background 0.3s ease;
+    }
+
+    .contact-modern-content .shortcode-branch-locations .card-contact:hover .card-icon {
+        background: rgba(var(--primary-color-rgb), 0.1);
+    }
+
+    .contact-modern-content .shortcode-branch-locations .card-method-contact .icon {
+        width: 20px;
+        height: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--bs-brand-2);
+    }
+
+    .contact-modern-content .shortcode-branch-locations .card-method-contact a {
+        color: var(--bs-neutral-600);
+        text-decoration: none;
+        transition: color 0.2s;
+        font-size: 14px;
+    }
+
+    .contact-modern-content .shortcode-branch-locations .card-method-contact a:hover {
+        color: var(--bs-brand-2);
     }
 
     .contact-modern-content .shortcode-branch-locations .card-title {
