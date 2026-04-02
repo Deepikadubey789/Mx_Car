@@ -45,27 +45,32 @@
 <style>
     /* 1. Positioning */
     section.shortcode-car-advance-search,
-    #js-box-search-advance {
-        background: transparent !important;
-        border: none !important;
-        padding: 0 !important;
-        
-        position: relative !important;
-        z-index: 50 !important;
-    }
+#js-box-search-advance {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    position: relative !important;
+    z-index: 50 !important;
+}
+
 
     /* 2. The Main Container */
     .custom-search-box {
-        background: #ffffff !important;
-        border-radius: 24px !important; 
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important; 
-        padding: 30px !important; 
-        max-width: 1200px !important; 
-        margin-left: auto !important;
-        margin-right: auto !important;
-        position: relative !important;
-        z-index: 20 !important;
-    }
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15) !important;
+    padding: 20px 30px !important;
+    max-width: 1000px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+}
+    .form {
+    margin-top: -100px;  /* -12rem hatao, ye lagao */
+    position: relative;
+    z-index: 100;
+}
 
     /* 3. The Top Tabs */
     .custom-search-box .box-top-search {
@@ -311,7 +316,7 @@
 
 <section {!! $shortcode->htmlAttributes(['style' => $variablesStyle]) !!} class="shortcode-car-advance-search box-section box-search-advance-home10" id="js-box-search-advance">
     <div class="container">
-        <form action="{{ $url }}" method="GET">
+        <form action="{{ $url }}" method="GET" class="form">
             
             <div class="custom-search-box wow fadeIn">
                 <input value="{{ $type }}" name="adv_type" id="adv_type_input" hidden/>
