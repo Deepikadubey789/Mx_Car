@@ -18,7 +18,7 @@
     if ($isAboutUsPage) {
         $contentClasses = 'ck-content page-content about-modern-content';
     } elseif ($isContactPage) {
-        $contentClasses = 'ck-content page-content contact-modern-content';
+        $contentClasses = 'ck-content page-content';
     } elseif ($isLegalPage) {
         $contentClasses = 'ck-content page-content legal-modern-content';
     }
@@ -184,44 +184,6 @@
 @endif
 
 
-    @if ($isContactPage)
-        <section class="contact-modern-hero box-section background-body">
-            <div class="container">
-                <div class="contact-modern-hero__shell">
-                    <div class="contact-modern-hero__content">
-                        <p class="contact-modern-hero__eyebrow text-xs-medium mb-0">{{ __('Contact & Support') }}</p>
-                        <h1 class="contact-modern-hero__title">{{ $page->name }}</h1>
-
-                        @if ($page->description)
-                            <p class="contact-modern-hero__description">{!! BaseHelper::clean($page->description) !!}</p>
-                        @else
-                            <p class="contact-modern-hero__description">{{ __('Tell us what you need and our team will route your request to the right specialist quickly.') }}</p>
-                        @endif
-
-                        <div class="contact-modern-hero__actions">
-                            <a class="btn btn-primary" href="{{ url('/cars') }}">{{ __('Browse Available Cars') }}</a>
-                            <a class="btn btn-outline-secondary" href="{{ url('/about-us') }}">{{ __('Learn About MXCar') }}</a>
-                        </div>
-                    </div>
-
-                    <div class="contact-modern-hero__quick" aria-label="{{ __('Support highlights') }}">
-                        <article class="contact-modern-hero__quick-card">
-                            <p class="contact-modern-hero__quick-value">15m</p>
-                            <p class="contact-modern-hero__quick-label">{{ __('Average response') }}</p>
-                        </article>
-                        <article class="contact-modern-hero__quick-card">
-                            <p class="contact-modern-hero__quick-value">24/7</p>
-                            <p class="contact-modern-hero__quick-label">{{ __('Customer support') }}</p>
-                        </article>
-                        <article class="contact-modern-hero__quick-card">
-                            <p class="contact-modern-hero__quick-value">45+</p>
-                            <p class="contact-modern-hero__quick-label">{{ __('Global branches') }}</p>
-                        </article>
-                    </div>
-                </div>
-            </div>
-        </section>
-    @endif
 
     {!! apply_filters(PAGE_FILTER_FRONT_PAGE_CONTENT, Html::tag('div', BaseHelper::clean($page->content), ['class' => $contentClasses])->toHtml(), $page) !!}
 </div>
