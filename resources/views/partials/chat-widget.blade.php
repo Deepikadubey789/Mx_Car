@@ -258,6 +258,7 @@
         font-size: 13px;
         outline: none;
         background: #f5f6f8;
+        color: #1a1a2e;
         font-family: 'DM Sans', sans-serif;
         transition: all 0.2s;
     }
