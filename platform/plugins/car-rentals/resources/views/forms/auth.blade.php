@@ -14,7 +14,7 @@
                 <p class="auth-brand-desc">Your trusted vehicle rental partner. Experience premium car rentals with unmatched service.</p>
                 <ul class="auth-features">
                     <li>Secure &amp; Trusted Platform</li>
-                <li>24/7 Customer Support</li>
+                    <li>24/7 Customer Support</li>
                     <li>Premium Vehicle Fleet</li>
                     <li>Nationwide Coverage</li>
                 </ul>
