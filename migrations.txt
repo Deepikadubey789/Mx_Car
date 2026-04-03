@@ -1,0 +1,5 @@
+
+  php artisan migrate --path=database/migrations/2026_04_03_000001_create_chat_tables.php
+  php artisan migrate --path=database/migrations/2026_04_03_000002_create_chat_settings_table.php
+
+

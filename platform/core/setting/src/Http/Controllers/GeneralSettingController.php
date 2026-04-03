@@ -81,7 +81,7 @@ class GeneralSettingController extends SettingController
                     $this
                         ->httpResponse()
                         ->setData([
-                        r    'html' => view('core/base::system.license-invalid')->render(),
+                            'html' => view('core/base::system.license-invalid')->render(),
                         ]);
                 }
 

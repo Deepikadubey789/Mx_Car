@@ -33,5 +33,7 @@
 {!! Theme::partial('footer') !!}
 
 {!! Theme::footer() !!}
+
+@include('partials.chat-widget')
 </body>
 </html>
