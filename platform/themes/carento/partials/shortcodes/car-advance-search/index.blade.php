@@ -215,13 +215,13 @@
         height: 20px !important;
     }
 
-    /* 7. The Square/Pill Search Button */
+    
     .custom-search-box .btn-brand-2 {
         border-radius: 50px !important; 
         border: none !important;
-        padding: 15px 30px !important; 
-        font-weight: 600 !important;
-        font-size: 1rem !important; 
+        padding: 10px 20px !important; 
+        font-weight: bold !important;
+        font-size: 1.0rem !important; 
         transition: background 0.2s ease;
         height: 100% !important;
         display: flex;
@@ -231,7 +231,7 @@
     }
     
     .custom-search-box .btn-brand-2 .btn-text {
-        display: none; 
+        /* display: none;  */
     }
     .custom-search-box .btn-brand-2 .icon {
         margin-right: 0 !important;
