@@ -10,6 +10,7 @@ use Botble\CarRentals\Http\Controllers\Settings\CustomerSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\GeneralSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\InvoiceSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\InvoiceTemplateSettingController;
+use Botble\CarRentals\Http\Controllers\Settings\PriceLockSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\ReviewSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\TaxSettingController;
 use Illuminate\Support\Facades\Route;
@@ -244,6 +245,9 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
             function (): void {
                 Route::get('general', [GeneralSettingController::class, 'edit'])->name('general');
                 Route::put('general', [GeneralSettingController::class, 'update'])->name('general.update');
+
+                Route::get('price-lock', [PriceLockSettingController::class, 'edit'])->name('price-lock');
+                Route::put('price-lock', [PriceLockSettingController::class, 'update'])->name('price-lock.update');
 
                 Route::get('customers', [CustomerSettingController::class, 'edit'])->name('customers');
                 Route::put('customers', [CustomerSettingController::class, 'update'])->name('customers.update');

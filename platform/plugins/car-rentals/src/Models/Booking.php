@@ -30,6 +30,14 @@ class Booking extends BaseModel
         'coupon_amount',
         'coupon_code',
         'tax_amount',
+        'price_lock_expires_at',
+        'price_snapshot',
+        'fee_name',
+        'fee_value',
+        'fee_amount',
+        'deposit_amount',
+        'deposit_type',
+        'deposit_rate',
         'currency_id',
         'payment_id',
         'note',
@@ -45,6 +53,8 @@ class Booking extends BaseModel
         'status' => BookingStatusEnum::class,
         'completion_damage_images' => 'array',
         'completed_at' => 'datetime',
+        'price_lock_expires_at' => 'datetime',
+        'price_snapshot' => 'array',
     ];
 
     public function car(): HasOne

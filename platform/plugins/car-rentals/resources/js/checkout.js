@@ -141,6 +141,45 @@ try {
         $(this).find('i').remove();
     });
 
+    $(document).on('submit', '.booking-form form', function (event) {
+        const $priceLockWrapper = $('#price-lock-wrapper');
+        const $priceLockMessage = $('#price-lock-message');
+
+        if (!$priceLockWrapper.length) {
+            return;
+        }
+
+        const expiresAt = $priceLockWrapper.data('expires-at');
+
+        if (!expiresAt) {
+            return;
+        }
+
+        const endTime = new Date(expiresAt).getTime();
+
+        if (Number.isNaN(endTime) || Date.now() < endTime) {
+            return;
+        }
+
+        event.preventDefault();
+
+        const expiredMessage = $priceLockWrapper.data('expired-message')
+            || window.trans?.['Price lock expired or quote changed. We refreshed your total. Please review and try again.']
+            || 'Price lock expired or quote changed. We refreshed your total. Please review and try again.';
+
+        if ($priceLockMessage.length) {
+            $priceLockMessage
+                .removeClass('alert-success')
+                .addClass('alert-warning')
+                .text(expiredMessage)
+                .show();
+        }
+
+        updateBookingInformation();
+
+        return false;
+    });
+
     $(document).on('change', 'input[name="service_ids[]"]', function(e) {
         let selectedValues = [];
         $('input[name="service_ids[]"][type="checkbox"]:checked').each(function() {
@@ -179,6 +218,7 @@ try {
 
     function updateBookingInformation () {
         const $bookingInformation = $('#booking-information-block');
+        const $priceLockMessage = $('#price-lock-message');
 
         if ($bookingInformation.length) {
             $.ajax({
@@ -186,6 +226,12 @@ try {
                 type: 'GET',
                 success: (res) => {
                     $bookingInformation.html(res.data);
+
+                    if (res.message) {
+                        $priceLockMessage.text(res.message).show();
+                    } else {
+                        $priceLockMessage.hide().text('');
+                    }
                 },
                 error: (res) => {
                     console.error(res);

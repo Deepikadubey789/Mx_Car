@@ -44,4 +44,76 @@
 
 @push('footer')
     <script type="text/javascript" src="{{ asset('vendor/core/core/js-validation/js/js-validation.js') }}?v=1.0.1"></script>
+    <script>
+        (function () {
+            function formatTime(totalSeconds) {
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+
+                return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }
+
+            function initPriceLockCountdown() {
+                const wrapper = document.getElementById('price-lock-wrapper');
+                const countdown = document.getElementById('price-lock-countdown');
+
+                if (!wrapper || !countdown) {
+                    return;
+                }
+
+                const expiresAt = wrapper.dataset.expiresAt;
+
+                if (!expiresAt) {
+                    countdown.textContent = '--:--';
+
+                    return;
+                }
+
+                if (window.priceLockCountdownTimer) {
+                    clearInterval(window.priceLockCountdownTimer);
+                }
+
+                const endTime = new Date(expiresAt).getTime();
+
+                function tick() {
+                    const now = Date.now();
+                    const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
+
+                    if (remainingSeconds <= 0) {
+                        countdown.classList.remove('bg-warning', 'text-dark');
+                        countdown.classList.add('bg-danger', 'text-white');
+                        countdown.textContent = '{{ __('Expired') }}';
+
+                        return;
+                    }
+
+                    countdown.classList.remove('bg-danger', 'text-white');
+                    countdown.classList.add('bg-warning', 'text-dark');
+                    countdown.textContent = formatTime(remainingSeconds);
+                }
+
+                tick();
+                window.priceLockCountdownTimer = setInterval(tick, 1000);
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                initPriceLockCountdown();
+
+                const bookingBlock = document.getElementById('booking-information-block');
+
+                if (!bookingBlock) {
+                    return;
+                }
+
+                const observer = new MutationObserver(function () {
+                    initPriceLockCountdown();
+                });
+
+                observer.observe(bookingBlock, {
+                    childList: true,
+                    subtree: false,
+                });
+            });
+        })();
+    </script>
 @endpush

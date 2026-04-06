@@ -20,6 +20,12 @@
 @endpush
 
 @section('content')
+    @php
+        $bookingReference = $invoice->reference instanceof \Botble\CarRentals\Models\Booking
+            ? $invoice->reference
+            : null;
+    @endphp
+
     <x-core::card size="lg">
         <x-core::card.body>
             <div class="row">
@@ -92,13 +98,32 @@
                             <strong>{{ format_price($invoice->sub_total, $invoice->currency_id) }}</strong>
                         </x-core::table.body.cell>
                     </x-core::table.body.row>
-                    @if ($invoice->tax_amount > 0)
+                    <x-core::table.body.row>
+                        <x-core::table.body.cell class="text-end" colspan="2">
+                            {{ trans('plugins/car-rentals::invoice.tax_amount') }}:
+                        </x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center">
+                            <strong>{{ format_price($invoice->tax_amount, $invoice->currency_id) }}</strong>
+                        </x-core::table.body.cell>
+                    </x-core::table.body.row>
+                    @if ($bookingReference && $bookingReference->fee_amount > 0)
                         <x-core::table.body.row>
                             <x-core::table.body.cell class="text-end" colspan="2">
-                                {{ trans('plugins/car-rentals::invoice.tax_amount') }}:
+                                {{ $bookingReference->fee_name ?: __('Service Fee') }}:
                             </x-core::table.body.cell>
                             <x-core::table.body.cell class="text-center">
-                                <strong>{{ format_price($invoice->tax_amount, $invoice->currency_id) }}</strong>
+                                <strong>{{ format_price($bookingReference->fee_amount, $invoice->currency_id) }}</strong>
+                            </x-core::table.body.cell>
+                        </x-core::table.body.row>
+                    @endif
+                    @if ($bookingReference && $bookingReference->deposit_amount > 0)
+                        <x-core::table.body.row>
+                            <x-core::table.body.cell class="text-end" colspan="2">
+                                {{ __('Refundable Deposit') }}
+                                {{ $bookingReference->deposit_type === 'fixed' ? '(' . __('Fixed') . ')' : '(' . (float) ($bookingReference->deposit_rate ?? 0) . '%)' }}:
+                            </x-core::table.body.cell>
+                            <x-core::table.body.cell class="text-center">
+                                <strong>{{ format_price($bookingReference->deposit_amount, $invoice->currency_id) }}</strong>
                             </x-core::table.body.cell>
                         </x-core::table.body.row>
                     @endif

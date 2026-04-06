@@ -128,7 +128,7 @@ class CheckoutForm extends FormFront
                         view(
                             'plugins/car-rentals::checkouts.partials.payment-methods',
                             [
-                                'totalAmount' => $this->model['totalAmount'],
+                                'totalAmount' => $this->model['finalPayableAmount'] ?? $this->model['totalAmount'],
                                 'taxAmount' => $this->model['taxAmount'] ?? 0,
                                 'taxTitle' => $this->model['taxTitle'] ?? '',
                                 'subtotal' => $this->model['amount'] ?? 0,

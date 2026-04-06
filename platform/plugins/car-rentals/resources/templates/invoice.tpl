@@ -312,13 +312,38 @@
     </tr>
     {% endif %}
 
-    {% if invoice.tax_amount %}
+    <tr>
+        <td colspan="3" class="right">
+            {{ 'plugins/car-rentals::invoice.tax'|trans }}
+        </td>
+        <td class="bold">
+            {{ invoice.tax_amount|price_format }}
+        </td>
+    </tr>
+
+    {% if booking and booking.fee_amount and booking.fee_amount > 0 %}
         <tr>
             <td colspan="3" class="right">
-                {{ 'plugins/car-rentals::invoice.tax'|trans }}
+                {{ booking.fee_name ?: 'Service Fee' }}
             </td>
             <td class="bold">
-                {{ invoice.tax_amount|price_format }}
+                {{ booking.fee_amount|price_format }}
+            </td>
+        </tr>
+    {% endif %}
+
+    {% if booking and booking.deposit_amount and booking.deposit_amount > 0 %}
+        <tr>
+            <td colspan="3" class="right">
+                {{ 'Refundable Deposit'|trans }}
+                {% if booking.deposit_type == 'fixed' %}
+                    ({{ 'Fixed'|trans }})
+                {% else %}
+                    ({{ booking.deposit_rate }}%)
+                {% endif %}
+            </td>
+            <td class="bold">
+                {{ booking.deposit_amount|price_format }}
             </td>
         </tr>
     {% endif %}

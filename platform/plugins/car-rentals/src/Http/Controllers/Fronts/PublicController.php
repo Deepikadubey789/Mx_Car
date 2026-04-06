@@ -30,6 +30,7 @@ use Botble\CarRentals\Models\Service;
 use Botble\CarRentals\Repositories\Interfaces\CarInterface;
 use Botble\CarRentals\Services\BookingService;
 use Botble\CarRentals\Services\CouponService;
+use Botble\CarRentals\Services\PriceLockService;
 use Botble\Location\Models\City;
 use Botble\Location\Repositories\Interfaces\CityInterface;
 use Botble\Location\Repositories\Interfaces\CountryInterface;
@@ -338,6 +339,26 @@ class PublicController extends BaseController
             }
         }
 
+        $discountAmount = 0;
+
+        if ($couponCode = Arr::get($sessionData, 'coupon_code')) {
+            $couponService = new CouponService();
+
+            $coupon = $couponService->getCouponByCode($couponCode);
+
+            if ($coupon !== null) {
+                $discountAmount = $couponService->getDiscountAmount(
+                    $coupon->type->getValue(),
+                    $coupon->value,
+                    $amount
+                );
+
+                BookingHelper::saveCheckoutData([
+                    'coupon_amount' => $discountAmount,
+                ]);
+            }
+        }
+
         $totalBeforeTax = $amount + $serviceAmount;
 
         // Calculate tax amount using the Car model method
@@ -346,7 +367,54 @@ class PublicController extends BaseController
         // Get tax information for display
         $taxTitle = $car->getTaxInfo($taxAmount);
 
-        $totalAmount = $totalBeforeTax + $taxAmount;
+        $priceLockService = app(PriceLockService::class);
+        $depositType = $priceLockService->getDepositType();
+        $depositRate = $priceLockService->getDepositRate();
+        $depositFixedAmount = $priceLockService->getDepositFixedAmount();
+        $feeName = $priceLockService->getFeeName();
+        $feeValue = $priceLockService->getFeeValue();
+        $feeAmount = $priceLockService->calculateFeeAmount($totalBeforeTax);
+        $depositAmount = $priceLockService->calculateDepositAmount($totalBeforeTax);
+        $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
+
+        $totalAmount = $totalBeforeTax + $taxAmount - $discountAmount + $feeAmount;
+
+        $finalPayableAmount = $totalAmount + $depositAmount;
+
+        $quote = [
+            'rental_amount' => $rentalCarAmount,
+            'service_amount' => $serviceAmount,
+            'subtotal' => $totalBeforeTax,
+            'tax_amount' => $taxAmount,
+            'coupon_code' => Arr::get($sessionData, 'coupon_code'),
+            'coupon_amount' => $discountAmount,
+            'fee_name' => $feeName,
+            'fee_value' => $feeValue,
+            'fee_amount' => $feeAmount,
+            'deposit_amount' => $depositAmount,
+            'deposit_type' => $depositType,
+            'deposit_rate' => $depositRate,
+            'deposit_fixed_amount' => $depositFixedAmount,
+            'total_amount' => $finalPayableAmount,
+            'currency_id' => $car->currency_id,
+            'tax_title' => $taxTitle,
+            'services' => ($services ?? collect())->map(fn (Service $service) => [
+                'id' => $service->id,
+                'name' => $service->name,
+                'price' => $service->price,
+                'price_type' => $service->price_type?->getValue(),
+            ])->values()->all(),
+        ];
+
+        $priceLock = Arr::get($sessionData, 'price_lock');
+
+        if (! $priceLock || $priceLockService->isExpired($priceLock) || ! $priceLockService->matchesSnapshot($priceLock, $quote)) {
+            $priceLock = $priceLockService->createLock($quote);
+
+            BookingHelper::saveCheckoutData([
+                'price_lock' => $priceLock,
+            ]);
+        }
 
         $data = [
             'car' => $car,
@@ -357,17 +425,31 @@ class PublicController extends BaseController
             'startDate' => $startDate,
             'endDate' => $endDate,
             'couponCode' => Arr::get($sessionData, 'coupon_code'),
-            'couponAmount' => Arr::get($sessionData, 'coupon_amount'),
+            'couponAmount' => $discountAmount,
             'token' => $token,
             'rentalCarAmount' => $rentalCarAmount,
             'serviceIds' => $serviceIds,
             'services' => $services ?? [],
+            'feeName' => $feeName,
+            'feeValue' => $feeValue,
+            'feeAmount' => $feeAmount,
+            'depositAmount' => $depositAmount,
+            'depositType' => $depositType,
+            'depositRate' => $depositRate,
+            'finalPayableAmount' => $finalPayableAmount,
+            'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
+            'priceLockExpiredMessage' => $priceLockExpiredMessage,
+        ];
+
+        $checkoutFormData = [
+            ...$data,
+            'totalAmount' => $finalPayableAmount,
         ];
 
         return view(
             'plugins/car-rentals::checkouts.index',
             [
-                'checkoutForm' => CheckoutForm::createFromArray($data),
+                'checkoutForm' => CheckoutForm::createFromArray($checkoutFormData),
                 ...$data,
             ],
         );
@@ -482,7 +564,50 @@ class PublicController extends BaseController
         // Get tax information for display
         $taxTitle = $car->getTaxInfo($taxAmount);
 
-        $totalAmount = $totalBeforeTax + $taxAmount - $discountAmount;
+        $priceLockService = app(PriceLockService::class);
+        $depositType = $priceLockService->getDepositType();
+        $depositRate = $priceLockService->getDepositRate();
+        $depositFixedAmount = $priceLockService->getDepositFixedAmount();
+        $feeName = $priceLockService->getFeeName();
+        $feeValue = $priceLockService->getFeeValue();
+        $feeAmount = $priceLockService->calculateFeeAmount($totalBeforeTax);
+        $depositAmount = $priceLockService->calculateDepositAmount($totalBeforeTax);
+        $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
+
+        $totalAmount = $totalBeforeTax + $taxAmount - $discountAmount + $feeAmount;
+
+        $finalPayableAmount = $totalAmount + $depositAmount;
+
+        $quote = [
+            'rental_amount' => $rentalCarAmount,
+            'service_amount' => $serviceAmount,
+            'subtotal' => $totalBeforeTax,
+            'tax_amount' => $taxAmount,
+            'coupon_code' => Arr::get($sessionData, 'coupon_code'),
+            'coupon_amount' => $discountAmount,
+            'fee_name' => $feeName,
+            'fee_value' => $feeValue,
+            'fee_amount' => $feeAmount,
+            'deposit_amount' => $depositAmount,
+            'deposit_type' => $depositType,
+            'deposit_rate' => $depositRate,
+            'deposit_fixed_amount' => $depositFixedAmount,
+            'total_amount' => $finalPayableAmount,
+            'currency_id' => $car->currency_id,
+            'tax_title' => $taxTitle,
+            'services' => ($services ?? collect())->map(fn (Service $service) => [
+                'id' => $service->id,
+                'name' => $service->name,
+                'price' => $service->price,
+                'price_type' => $service->price_type?->getValue(),
+            ])->values()->all(),
+        ];
+
+        $priceLock = $priceLockService->createLock($quote);
+
+        BookingHelper::saveCheckoutData([
+            'price_lock' => $priceLock,
+        ]);
 
         $data = [
             'car' => $car,
@@ -497,6 +622,15 @@ class PublicController extends BaseController
             'token' => $token,
             'services' => $services ?? [],
             'rentalCarAmount' => $rentalCarAmount,
+            'feeName' => $feeName,
+            'feeValue' => $feeValue,
+            'feeAmount' => $feeAmount,
+            'depositAmount' => $depositAmount,
+            'depositType' => $depositType,
+            'depositRate' => $depositRate,
+            'finalPayableAmount' => $finalPayableAmount,
+            'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
+            'priceLockExpiredMessage' => $priceLockExpiredMessage,
         ];
 
         return $this
@@ -507,6 +641,8 @@ class PublicController extends BaseController
     public function postCheckout(CheckoutRequest $request)
     {
         $sessionData = BookingHelper::getCheckoutData();
+        $priceLockService = app(PriceLockService::class);
+        $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
 
         if (! $carId = Arr::get($sessionData, 'car_id')) {
             return $this
@@ -589,7 +725,9 @@ class PublicController extends BaseController
 
         $taxAmount = $car->calculateTaxAmount($amount);
 
-        if ($couponCode = Arr::get($sessionData, 'coupon_code')) {
+        $couponCode = Arr::get($sessionData, 'coupon_code');
+
+        if ($couponCode) {
             $couponService = new CouponService();
 
             $coupon = $couponService->getCouponByCode($couponCode);
@@ -607,15 +745,99 @@ class PublicController extends BaseController
             }
         }
 
-        $totalAmount = ($amount + $taxAmount) - $discountAmount;
+        $depositType = $priceLockService->getDepositType();
+        $depositRate = $priceLockService->getDepositRate();
+        $depositFixedAmount = $priceLockService->getDepositFixedAmount();
+        $feeName = $priceLockService->getFeeName();
+        $feeValue = $priceLockService->getFeeValue();
+        $feeAmount = $priceLockService->calculateFeeAmount($amount);
+        $depositAmount = $priceLockService->calculateDepositAmount($amount);
+
+        $totalAmount = ($amount + $taxAmount) - $discountAmount + $feeAmount;
+
+        $finalPayableAmount = $totalAmount + $depositAmount;
+
+        $quote = [
+            'rental_amount' => $rentalCarAmount,
+            'service_amount' => $serviceAmount,
+            'subtotal' => $amount,
+            'tax_amount' => $taxAmount,
+            'coupon_code' => $couponCode,
+            'coupon_amount' => $discountAmount,
+            'fee_name' => $feeName,
+            'fee_value' => $feeValue,
+            'fee_amount' => $feeAmount,
+            'deposit_amount' => $depositAmount,
+            'deposit_type' => $depositType,
+            'deposit_rate' => $depositRate,
+            'deposit_fixed_amount' => $depositFixedAmount,
+            'total_amount' => $finalPayableAmount,
+            'currency_id' => $car->currency_id,
+            'tax_title' => $car->getTaxInfo($taxAmount),
+            'services' => $services->map(fn (Service $service) => [
+                'id' => $service->id,
+                'name' => $service->name,
+                'price' => $service->price,
+                'price_type' => $service->price_type?->getValue(),
+            ])->values()->all(),
+        ];
+
+        $priceLock = Arr::get($sessionData, 'price_lock');
+
+        if (! $priceLock || $priceLockService->isExpired($priceLock) || ! $priceLockService->matchesSnapshot($priceLock, $quote)) {
+            $priceLock = $priceLockService->createLock($quote);
+
+            BookingHelper::saveCheckoutData([
+                'coupon_amount' => $discountAmount,
+                'price_lock' => $priceLock,
+            ]);
+
+            $viewData = [
+                'car' => $car,
+                'amount' => $amount,
+                'totalAmount' => $totalAmount,
+                'taxTitle' => $car->getTaxInfo($taxAmount),
+                'taxAmount' => $taxAmount,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'couponCode' => $couponCode,
+                'couponAmount' => $discountAmount,
+                'token' => session('checkout_token'),
+                'services' => $services,
+                'rentalCarAmount' => $rentalCarAmount,
+                'feeName' => $feeName,
+                'feeValue' => $feeValue,
+                'feeAmount' => $feeAmount,
+                'depositAmount' => $depositAmount,
+                'depositType' => $depositType,
+                'depositRate' => $depositRate,
+                'finalPayableAmount' => $finalPayableAmount,
+                'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
+                'priceLockExpiredMessage' => $priceLockExpiredMessage,
+            ];
+
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setData(view('plugins/car-rentals::checkouts.partials.booking-information', $viewData)->render())
+                ->setMessage($priceLockExpiredMessage);
+        }
 
         $booking = new Booking($request->validated());
 
         $booking->sub_total = $amount;
         $booking->coupon_code = $couponCode;
         $booking->coupon_amount = $discountAmount;
-        $booking->amount = $totalAmount;
+        $booking->amount = $finalPayableAmount;
         $booking->tax_amount = $taxAmount;
+        $booking->price_lock_expires_at = Carbon::parse(Arr::get($priceLock, 'expires_at'));
+        $booking->price_snapshot = Arr::get($priceLock, 'snapshot');
+        $booking->fee_name = $feeName;
+        $booking->fee_value = $feeValue;
+        $booking->fee_amount = $feeAmount;
+        $booking->deposit_amount = $depositAmount;
+        $booking->deposit_type = $depositType;
+        $booking->deposit_rate = $depositRate;
         $booking->currency_id = $request->input('currency_id', strtoupper(get_application_currency()->id));
         $booking->booking_number = Booking::generateUniqueBookingNumber();
         $booking->transaction_id = Str::upper(Str::random(32));

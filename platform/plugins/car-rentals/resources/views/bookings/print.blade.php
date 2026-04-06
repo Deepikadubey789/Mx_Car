@@ -376,7 +376,7 @@
                     @foreach($booking->services as $service)
                     <tr>
                         <td>{{ $service->name }}</td>
-                        <td class="text-right"><strong>{{ format_price($service->price) }}</strong></td>
+                        <td class="text-right"><strong>{{ format_price($service->price, $booking->currency_id) }}</strong></td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -422,13 +422,36 @@
                 @if($booking->coupon_amount > 0)
                 <div class="total-row">
                     <span>{{ __('Discount Amount') }}:</span>
-                    <span>-{{ format_price($booking->coupon_amount) }}</span>
+                    <span>
+                        -{{ format_price($booking->coupon_amount) }}
+                        @if($booking->coupon_code)
+                            <small style="color: #6c757d;">({{ $booking->coupon_code }})</small>
+                        @endif
+                    </span>
                 </div>
                 @endif
-                @if($booking->tax_amount > 0)
                 <div class="total-row">
                     <span>{{ __('Tax Amount') }}:</span>
                     <span>{{ format_price($booking->tax_amount) }}</span>
+                </div>
+                @if($booking->fee_amount > 0)
+                <div class="total-row">
+                    <span>{{ $booking->fee_name ?: __('Service Fee') }}:</span>
+                    <span>{{ format_price($booking->fee_amount, $booking->currency_id) }}</span>
+                </div>
+                @endif
+                @if($booking->deposit_amount > 0)
+                <div class="total-row">
+                    <span>
+                        {{ __('Refundable Deposit') }}
+                        @if($booking->deposit_type === 'fixed')
+                            ({{ __('Fixed') }})
+                        @else
+                            ({{ (float) ($booking->deposit_rate ?? 0) }}%)
+                        @endif
+                        :
+                    </span>
+                    <span>{{ format_price($booking->deposit_amount, $booking->currency_id) }}</span>
                 </div>
                 @endif
                 <div class="total-row final">

@@ -1,6 +1,7 @@
 @php
     $route ??= 'invoices.generate';
     $buttonClass ??= 'btn-primary';
+    $displayBookingStatus ??= true;
 @endphp
 
 @if ($booking)
@@ -28,6 +29,20 @@
                 <strong>{{ __('Phone') }}:</strong> <a href="mailto:{{ $customerPhone }}">{{ $customerPhone }}</a>
             </div>
         @endif
+
+        <div class="col-lg-4">
+            <strong>{{ __('Vendor Name') }}:</strong>
+            {{ $booking->vendor->name ?: __('N/A') }}
+        </div>
+
+        <div class="col-lg-4">
+            <strong>{{ __('Vendor Email') }}:</strong>
+            @if ($booking->vendor->email)
+                <a href="mailto:{{ $booking->vendor->email }}">{{ $booking->vendor->email }}</a>
+            @else
+                {{ __('N/A') }}
+            @endif
+        </div>
     </div>
 
     <div class="row">
@@ -91,7 +106,7 @@
                     <x-core::table.body.cell
                         class="text-center"
                         style="vertical-align: middle !important;"
-                    ><strong>{{ format_price($booking->tax_amount) }}</strong></x-core::table.body.cell>
+                    ><strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong></x-core::table.body.cell>
                 </x-core::table.body.row>
             </x-core::table.body>
         </x-core::table>
@@ -118,10 +133,10 @@
                             {{ $service->name }}
                         </x-core::table.body.cell>
                         <x-core::table.body.cell class="text-center">
-                            {{ format_price($service->price) }}
+                            {{ format_price($service->price, $booking->currency_id) }}
                         </x-core::table.body.cell>
                         <x-core::table.body.cell class="text-center">
-                            {{ format_price($service->price) }}
+                            {{ format_price($service->price, $booking->currency_id) }}
                         </x-core::table.body.cell>
                     </x-core::table.body.row>
                 @endforeach
@@ -133,22 +148,43 @@
     <div class="row">
         <div class="col-lg-4">
             <strong>{{ __('Sub Total') }}:</strong>
-            {{ format_price($booking->sub_total) }}
+            {{ format_price($booking->sub_total, $booking->currency_id) }}
         </div>
 
         <div class="col-lg-4">
             <strong>{{ __('Discount Amount') }}:</strong>
-            {{ format_price($booking->coupon_amount) }}
+            {{ format_price($booking->coupon_amount, $booking->currency_id) }}
         </div>
 
         <div class="col-lg-4">
             <strong>{{ __('Tax Amount') }}:</strong>
-            {{ format_price($booking->tax_amount) }}
+            {{ format_price($booking->tax_amount, $booking->currency_id) }}
         </div>
+
+        @if ($booking->fee_amount > 0)
+            <div class="col-lg-4">
+                <strong>{{ $booking->fee_name ?: __('Service Fee') }}:</strong>
+                {{ format_price($booking->fee_amount, $booking->currency_id) }}
+            </div>
+        @endif
+
+        @if ($booking->deposit_amount > 0)
+            <div class="col-lg-4">
+                <strong>
+                    {{ __('Refundable Deposit') }}
+                    @if ($booking->deposit_type === 'fixed')
+                        ({{ __('Fixed') }})
+                    @else
+                        ({{ (float) ($booking->deposit_rate ?? 0) }}%)
+                    @endif:
+                </strong>
+                {{ format_price($booking->deposit_amount, $booking->currency_id) }}
+            </div>
+        @endif
 
         <div class="col-lg-4">
             <strong>{{ __('Total') }}:</strong>
-            {{ format_price($booking->amount) }}
+            {{ format_price($booking->amount, $booking->currency_id) }}
         </div>
 
         @if (is_plugin_active('payment') && $booking->payment->id)
@@ -178,13 +214,13 @@
                     {!! BaseHelper::clean(get_payment_setting('description', $booking->payment->payment_channel)) !!}
                 </div>
             @endif
+        @endif
 
-            @if ($displayBookingStatus ?? false)
-                <div class="col-lg-4">
-                    <strong>{{ __('Booking status') }}:</strong>
-                    {!! BaseHelper::clean($booking->status->toHtml()) !!}
-                </div>
-            @endif
+        @if ($displayBookingStatus)
+            <div class="col-lg-4">
+                <strong>{{ __('Booking status') }}:</strong>
+                {!! BaseHelper::clean($booking->status->toHtml()) !!}
+            </div>
         @endif
     </div>
 

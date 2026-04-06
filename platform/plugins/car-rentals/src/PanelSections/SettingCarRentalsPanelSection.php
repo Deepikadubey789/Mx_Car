@@ -26,6 +26,12 @@ class SettingCarRentalsPanelSection extends PanelSection
                     ->withDescription(trans('plugins/car-rentals::settings.car_filter.description'))
                     ->withPriority(20)
                     ->withRoute('car-rentals.settings.car-filters'),
+                PanelSectionItem::make('settings.car_rentals.price_lock_settings')
+                    ->setTitle(trans('plugins/car-rentals::settings.price_lock.title'))
+                    ->withIcon('ti ti-lock')
+                    ->withDescription(trans('plugins/car-rentals::settings.price_lock.description'))
+                    ->withPriority(25)
+                    ->withRoute('car-rentals.settings.price-lock'),
                 PanelSectionItem::make('settings.car_rentals.review_settings')
                     ->setTitle(trans('plugins/car-rentals::settings.review.title'))
                     ->withIcon('ti ti-settings')

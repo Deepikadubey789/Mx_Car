@@ -1,5 +1,7 @@
 <div class="my-3 bg-light">
     <div class="position-relative p-3" id="cart-item">
+        <div id="price-lock-message" class="alert alert-warning mb-3" style="display: none;"></div>
+
         <p>{{ __('Car Information:') }}</p>
         @if ($car)
             @include('plugins/car-rentals::checkouts.partials.car-booking-info', [
@@ -83,6 +85,19 @@
                 </div>
             @endif
 
+            @if (($feeAmount ?? 0) > 0)
+                <div class="row">
+                    <div class="col-6">
+                        <p>{{ ($feeName ?? __('Service fee')) }}:</p>
+                    </div>
+                    <div class="col-6 float-end">
+                        <p class="price-text tax-price-text">
+                            {{ format_price($feeAmount) }}
+                        </p>
+                    </div>
+                </div>
+            @endif
+
             <div class="row">
                 <div class="col-6">
                     <p><strong>{{ __('Total') }}</strong>:</p>
@@ -90,6 +105,46 @@
                 <div class="col-6 float-end">
                     <p class="total-text raw-total-text" data-price="{{ $totalAmount }}">
                         {!! format_price($totalAmount) !!}
+                    </p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-6">
+                    <p>
+                        {{ __('Refundable Deposit') }}
+                        @if (($depositType ?? 'percentage') === 'fixed')
+                            ({{ __('Fixed') }})
+                        @else
+                            ({{ (float) ($depositRate ?? 0) }}%)
+                        @endif:
+                    </p>
+                </div>
+                <div class="col-6 float-end">
+                    <p class="price-text text-end">
+                        {{ format_price($depositAmount ?? 0) }}
+                    </p>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-6">
+                    <p><strong>{{ __('Final payable before payment') }}</strong>:</p>
+                </div>
+                <div class="col-6 float-end">
+                    <p class="total-text text-end">
+                        {!! format_price($finalPayableAmount ?? ($totalAmount + ($depositAmount ?? 0))) !!}
+                    </p>
+                </div>
+            </div>
+
+            <div class="row" id="price-lock-wrapper" data-expires-at="{{ $priceLockExpiresAt ?? '' }}" data-expired-message="{{ $priceLockExpiredMessage ?? __('Price lock expired or quote changed. We refreshed your total. Please review and try again.') }}">
+                <div class="col-6">
+                    <p class="mb-0">{{ __('Price lock') }}:</p>
+                </div>
+                <div class="col-6 float-end">
+                    <p class="mb-0 text-end">
+                        <span id="price-lock-countdown" class="badge bg-warning text-dark">--:--</span>
                     </p>
                 </div>
             </div>

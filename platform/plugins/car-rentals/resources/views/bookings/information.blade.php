@@ -127,7 +127,7 @@
                     <x-core::table.body.cell
                             class="text-center"
                             style="vertical-align: middle !important;"
-                    ><strong>{{ format_price($booking->tax_amount) }}</strong></x-core::table.body.cell>
+                        ><strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong></x-core::table.body.cell>
                 </x-core::table.body.row>
             </x-core::table.body>
         </x-core::table>
@@ -170,7 +170,7 @@
                             <x-core::table.body.cell
                                 class="text-center"
                                 style="vertical-align: middle !important;"
-                            ><strong>{{ format_price($service->price) }}</strong></x-core::table.body.cell>
+                            ><strong>{{ format_price($service->price, $booking->currency_id) }}</strong></x-core::table.body.cell>
                         </x-core::table.body.row>
                     @endforeach
                 </x-core::table.body>
@@ -198,6 +198,17 @@
         <x-core::datagrid.item :title="__('Tax Amount')">
             {{ format_price($booking->tax_amount, $booking->currency_id) }}
         </x-core::datagrid.item>
+        @if ($booking->fee_amount > 0)
+            <x-core::datagrid.item :title="$booking->fee_name ?: __('Service Fee')">
+                {{ format_price($booking->fee_amount, $booking->currency_id) }}
+            </x-core::datagrid.item>
+        @endif
+
+        @if ($booking->deposit_amount > 0)
+            <x-core::datagrid.item :title="__('Refundable Deposit') . ' ' . ($booking->deposit_type === 'fixed' ? '(' . __('Fixed') . ')' : '(' . (float) ($booking->deposit_rate ?? 0) . '%)')">
+                {{ format_price($booking->deposit_amount, $booking->currency_id) }}
+            </x-core::datagrid.item>
+        @endif
 
         <x-core::datagrid.item :title="__('Total Amount')">
             {{ format_price($booking->amount, $booking->currency_id) }}
