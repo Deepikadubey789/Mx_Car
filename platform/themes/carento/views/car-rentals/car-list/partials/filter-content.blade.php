@@ -38,6 +38,30 @@
     </div>
 @endif
 
+{{-- ADDED: Keyword / Car Name Search Filter --}}
+<div class="filter-widget mb-4">
+    <div class="filter-widget-header">
+        <div class="filter-icon">
+            <x-core::icon name="ti ti-search" />
+        </div>
+        <h6 class="filter-title">{{ __('What') }}</h6>
+    </div>
+    <div class="filter-widget-content">
+        <div class="input-group">
+            <input 
+                type="text" 
+                name="keyword" 
+                class="form-control" 
+                placeholder="{{ __('Car name or brand') }}" 
+                value="{{ BaseHelper::clean(request()->input('keyword')) }}"
+                form="{{ $formId }}"
+            >
+            <button class="btn btn-primary" type="submit" form="{{ $formId }}" style="border-radius: 0 6px 6px 0;">
+                <x-core::icon name="ti ti-search" />
+            </button>
+        </div>
+    </div>
+</div>
 
 {{-- Vehicle Condition Filter --}}
 @if(CarRentalsHelper::isEnabledFilterCarsBy('vehicle_condition'))

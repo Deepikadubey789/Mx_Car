@@ -74,6 +74,17 @@ class PublicController extends BaseController
         $startDate = $request->filled('rental_start_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_start_date')) : null;
         $endDate = $request->filled('rental_end_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_end_date')) : null;
 
+        // =========================================================================
+        // FIX 1: FORCE A PARTIAL MATCH ON THE INITIAL PAGE LOAD 
+        // This guarantees that "Rolls" matches "Rolls-Royce" before the page renders
+        // =========================================================================
+        if ($keyword = $request->input('keyword')) {
+            Car::addGlobalScope('keyword_search', function ($builder) use ($keyword) {
+                $builder->where('cr_cars.name', 'LIKE', '%' . trim($keyword) . '%');
+            });
+        }
+        // =========================================================================
+
         $query = Car::query()->active();
 
         if ($startDate && $endDate) {
@@ -867,9 +878,34 @@ class PublicController extends BaseController
             ->setMessage(__('Added review successfully!'));
     }
 
-    public function ajaxGetCars(Request $request)
+   public function ajaxGetCars(Request $request)
     {
+        // =========================================================================
+        // 1. FORCE A PARTIAL MATCH ON ALL AJAX CALLS 
+        // =========================================================================
+        if ($keyword = $request->input('keyword')) {
+            Car::addGlobalScope('keyword_search', function ($builder) use ($keyword) {
+                $words = array_filter(explode(' ', $keyword));
+                foreach ($words as $word) {
+                    $builder->where('cr_cars.name', 'LIKE', '%' . trim($word) . '%');
+                }
+            });
+        }
+        // =========================================================================
+
         $requestQuery = CarListHelper::getCarFilters($request->input());
+
+        // =========================================================================
+        // 2. THE MAGIC FIX: HIDE KEYWORD FROM THE CORE REPOSITORY
+        // This stops Botble from secretly applying an "exact match" rule!
+        // =========================================================================
+        if (isset($requestQuery['keyword'])) {
+            unset($requestQuery['keyword']);
+        }
+        if (isset($requestQuery['q'])) {
+            unset($requestQuery['q']);
+        }
+        // =========================================================================
 
         $with = [
             'slugable',

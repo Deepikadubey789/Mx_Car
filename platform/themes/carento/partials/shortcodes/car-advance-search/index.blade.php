@@ -377,7 +377,7 @@
                                     type="text"
                                     class="search-input location-autocomplete ps-4"
                                     id="location-input"
-                                    placeholder="{{ __('City, airport, address or hotel') }}"
+                                    placeholder="{{ __('City, airport, or hotel') }}"
                                     value="{{ $selectedLocation }}"
                                     name="location"
                                     data-url="{{ route('public.ajax.cities') }}"
@@ -387,13 +387,29 @@
                                 <div class="location-suggestions" data-bb-toggle="data-suggestion"></div>
                             </div>
                         </div>
+
+                        {{-- ADDED: Car Name / Keyword Search --}}
+                        <div class="item-search">
+                            <label for="keyword">{{ __('What') }}</label>
+                            <div class="position-relative">
+                                <input
+                                    type="text"
+                                    name="keyword"
+                                    id="keyword"
+                                    class="search-input w-100"
+                                    placeholder="{{ __('Car name or brand') }}"
+                                    value="{{ is_string(request()->input('keyword')) ? request()->input('keyword') : '' }}"
+                                    autocomplete="off"
+                                >
+                            </div>
+                        </div>
                         
                         <div class="item-search">
-                            <label for="category-select">{{ __('From') }}</label>
+                            <label for="date-range-picker">{{ __('From') }}</label>
                             <div class="position-relative">
                                 <input type="text" class="search-input date-range-input w-100" id="date-range-picker" placeholder="{{ __('Add dates') }}" readonly />
-                                <input type="hidden" name="start_date" id="input-start-date" value="{{ $pickUpDateDefault }}" />
-                                <input type="hidden" name="end_date" id="input-end-date" value="{{ $returnDateDefault }}" />
+                                <input type="hidden" name="start_date" id="input-start-date" value="{{ $pickUpDateDefault ?? '' }}" />
+                                <input type="hidden" name="end_date" id="input-end-date" value="{{ $returnDateDefault ?? '' }}" />
                             </div>
                         </div>
                         
@@ -401,22 +417,23 @@
                             <label for="date-range-picker">{{ __('Until') }}</label>
                             <div class="position-relative">
                                 <input type="text" class="search-input date-range-input w-100" id="date-range-picker" placeholder="{{ __('Add dates') }}" readonly />
-                                <input type="hidden" name="start_date" id="input-start-date" value="{{ $pickUpDateDefault }}" />
-                                <input type="hidden" name="end_date" id="input-end-date" value="{{ $returnDateDefault }}" />
+                                <input type="hidden" name="start_date" id="input-start-date" value="{{ $pickUpDateDefault ?? '' }}" />
+                                <input type="hidden" name="end_date" id="input-end-date" value="{{ $returnDateDefault ?? '' }}" />
                             </div>
                         </div>
                     @else
                         {{-- Fallback Search if Location/Rental plugin is off --}}
                         <div class="item-search">
-                            <label for="keyword">{{ __('Where') }}</label>
+                            <label for="keyword">{{ __('What / Where') }}</label>
                             <div class="position-relative">
                                 <input
                                     type="text"
                                     name="keyword"
                                     id="keyword"
                                     class="search-input w-100"
-                                    placeholder="{{ __('City, airport, address or hotel') }}"
+                                    placeholder="{{ __('Car name, city, or address') }}"
                                     value="{{ is_string(request()->input('keyword')) ? request()->input('keyword') : '' }}"
+                                    autocomplete="off"
                                 >
                             </div>
                         </div>
