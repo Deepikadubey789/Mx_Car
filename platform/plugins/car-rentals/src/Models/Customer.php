@@ -25,6 +25,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Botble\CarRentals\Models\CustomerReview;
 
 class Customer extends BaseModel implements AuthenticatableContract, AuthorizableContract, CanResetPasswordContract
 {
@@ -166,5 +167,23 @@ class Customer extends BaseModel implements AuthenticatableContract, Authorizabl
                 File::deleteDirectory($folder);
             }
         });
+    }
+
+    // 1. Relationship to fetch reviews about this customer
+    public function receivedReviews(): HasMany
+    {
+        return $this->hasMany(CustomerReview::class, 'customer_id');
+    }
+
+    // 2. Helper to get the average rating quickly
+    public function getAverageRatingAttribute(): float
+    {
+        return (float) $this->receivedReviews()->where('status', 'published')->avg('star') ?: 0.0;
+    }
+
+    // 3. Helper to get total number of reviews
+    public function getTotalReviewsAttribute(): int
+    {
+        return $this->receivedReviews()->where('status', 'published')->count();
     }
 }

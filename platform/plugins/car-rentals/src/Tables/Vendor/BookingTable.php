@@ -32,18 +32,29 @@ class BookingTable extends BaseBookingTable
                     ->getValueUsing(function (FormattedColumn $column) {
                         $item = $column->getItem();
 
-                        if ($name = $item->customer_name) {
-                            return $name;
+                        // Eager load the customer and their reviews to prevent slow database queries
+                        $item->loadMissing(['customer.receivedReviews']);
+
+                        $name = $item->customer ? $item->customer->name : ($item->customer_name ?: '-');
+
+                        // If the customer has an account and has reviews, show the stars!
+                        if ($item->customer && $item->customer->total_reviews > 0) {
+                            $rating = number_format($item->customer->average_rating, 1);
+                            $reviewsCount = $item->customer->total_reviews;
+                            
+                            // Build a neat little star badge using Botble's native Tabler icons
+                            $starsHtml = '<div class="mt-1 d-flex align-items-center text-warning" style="font-size: 0.85rem;">
+                                            <i class="ti ti-star-filled me-1"></i> ' . $rating . ' 
+                                            <span class="text-muted ms-1">(' . $reviewsCount . ')</span>
+                                          </div>';
+                                          
+                            return '<strong>' . $name . '</strong>' . $starsHtml;
                         }
 
-                        if (! $item->customer_id) {
-                            return '-';
-                        }
-
-                        $item->loadMissing('customer');
-
-                        return $item->customer ? $item->customer->name : '-';
+                        return '<strong>' . $name . '</strong>';
                     }),
+
+                    
                 FormattedColumn::make('amount')
                     ->label(trans('plugins/car-rentals::booking.amount'))
                     ->getValueUsing(function (FormattedColumn $column) {

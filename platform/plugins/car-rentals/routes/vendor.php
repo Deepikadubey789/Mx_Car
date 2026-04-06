@@ -99,6 +99,20 @@ Route::group([
             'uses' => 'BookingController@cancel',
         ])->wherePrimaryKey('booking');
 
+        // ========================================================
+        // NEW RATE CUSTOMER ROUTE HERE
+        // ========================================================
+        Route::post('bookings/{booking}/rate-customer', [
+            'as' => 'bookings.rate-customer',
+            'uses' => 'BookingController@rateCustomer',
+        ])->wherePrimaryKey('booking');
+
+        Route::post('bookings/{booking}/delete-customer-review', [
+            'as' => 'bookings.delete-customer-review',
+            'uses' => 'BookingController@deleteCustomerReview',
+        ])->wherePrimaryKey('booking');
+        // ========================================================
+
         Route::group(['prefix' => 'invoices', 'as' => 'invoices.'], function (): void {
             Route::get('{invoice}/generate-invoice', 'InvoiceController@getGenerateInvoice')
                 ->name('generate')
