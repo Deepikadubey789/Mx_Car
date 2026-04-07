@@ -60,124 +60,93 @@
         <h4>{{ __('Car') }}</h4>
         <x-core::table>
             <x-core::table.header>
-                <x-core::table.header.cell class="text-center" style="width: 150px;">
-                    {{ __('Image') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell>
-                    {{ __('Name') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Rental Start Date') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Rental End Date') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Price') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Tax') }}
-                </x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center" style="width: 150px;">{{ __('Image') }}</x-core::table.header.cell>
+                <x-core::table.header.cell>{{ __('Name') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Rental Start Date') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Rental End Date') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Price') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Tax') }}</x-core::table.header.cell>
             </x-core::table.header>
             <x-core::table.body>
                 <x-core::table.body.row>
                     @if ($booking->car->car)
-                        <x-core::table.body.cell
-                                class="text-center"
-                                style="width: 150px; vertical-align: middle !important;"
-                        >
-                            <a
-                                    href="{{ $booking->car->car->url }}"
-                                    target="_blank"
-                            >
-                                <img
-                                        src="{{ RvMedia::getImageUrl($booking->car->car->image, 'thumb', false, RvMedia::getDefaultImage()) }}"
-                                        alt="{{ $booking->car->car_name }}"
-                                        width="140"
-                                >
+                        <x-core::table.body.cell class="text-center" style="width: 150px; vertical-align: middle !important;">
+                            <a href="{{ $booking->car->car->url }}" target="_blank">
+                                <img src="{{ RvMedia::getImageUrl($booking->car->car->image, 'thumb', false, RvMedia::getDefaultImage()) }}" alt="{{ $booking->car->car_name }}" width="140">
                             </a>
                         </x-core::table.body.cell>
-                        <x-core::table.body.cell style="vertical-align: middle !important;"><a
-                                    class="booking-information-link"
-                                    href="{{ $booking->car->car->url }}"
-                                    target="_blank"
-                            >{{ $booking->car->car_name }}</a></x-core::table.body.cell>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">
+                            <a class="booking-information-link" href="{{ $booking->car->car->url }}" target="_blank">{{ $booking->car->car_name }}</a>
+                        </x-core::table.body.cell>
                     @else
                         <x-core::table.body.cell>
-                            <img
-                                src="{{ RvMedia::getImageUrl($booking->car->car_image, 'thumb', false, RvMedia::getDefaultImage()) }}"
-                                alt="{{ $booking->car->car_name }}"
-                                width="140"
-                            >
+                            <img src="{{ RvMedia::getImageUrl($booking->car->car_image, 'thumb', false, RvMedia::getDefaultImage()) }}" alt="{{ $booking->car->car_name }}" width="140">
                         </x-core::table.body.cell>
                         <x-core::table.body.cell style="vertical-align: middle !important;">{{ $booking->car->car_name }}</x-core::table.body.cell>
                     @endif
-                    <x-core::table.body.cell
-                            class="text-center"
-                            style="vertical-align: middle !important;"
-                    >{{ $booking->car->rental_start_date_formatted }}</x-core::table.body.cell>
-                    <x-core::table.body.cell
-                            class="text-center"
-                            style="vertical-align: middle !important;"
-                    >{{ $booking->car->rental_end_date_formatted }}</x-core::table.body.cell>
-                    <x-core::table.body.cell
-                            class="text-center"
-                            style="vertical-align: middle !important;"
-                    ><strong>{{ format_price($booking->car->price, $booking->currency_id) }}</strong></x-core::table.body.cell>
-                    <x-core::table.body.cell
-                            class="text-center"
-                            style="vertical-align: middle !important;"
-                        ><strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong></x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">{{ $booking->car->rental_start_date_formatted }}</x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">{{ $booking->car->rental_end_date_formatted }}</x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;"><strong>{{ format_price($booking->car->price, $booking->currency_id) }}</strong></x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;"><strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong></x-core::table.body.cell>
                 </x-core::table.body.row>
             </x-core::table.body>
         </x-core::table>
     </div>
 
     @if($services = $booking->services)
-        <div class="mb-4">
-            <h4>{{ __('Services') }}</h4>
-            <x-core::table>
-                <x-core::table.header>
-                    <x-core::table.header.cell class="text-center" style="width: 150px;">
-                        {{ __('Image') }}
-                    </x-core::table.header.cell>
-                    <x-core::table.header.cell>
-                        {{ __('Name') }}
-                    </x-core::table.header.cell>
-                    <x-core::table.header.cell class="text-center">
-                        {{ __('Price') }}
-                    </x-core::table.header.cell>
-                </x-core::table.header>
-                <x-core::table.body>
-                    @foreach($services as $service)
-                        <x-core::table.body.row>
-                            <x-core::table.body.cell
-                                class="text-center"
-                                style="width: 150px; vertical-align: middle !important;"
-                            >
-                                <a
-                                    href="{{ $service->url }}"
-                                    target="_blank"
-                                >
-                                    <img
-                                        src="{{ RvMedia::getImageUrl($service->logo, 'thumb', false, RvMedia::getDefaultImage()) }}"
-                                        alt="{{ $service->name }}"
-                                        width="140"
-                                    >
-                                </a>
-                            </x-core::table.body.cell>
-                            <x-core::table.body.cell style="vertical-align: middle !important;">{{ $service->name }}</x-core::table.body.cell>
-                            <x-core::table.body.cell
-                                class="text-center"
-                                style="vertical-align: middle !important;"
-                            ><strong>{{ format_price($service->price, $booking->currency_id) }}</strong></x-core::table.body.cell>
-                        </x-core::table.body.row>
-                    @endforeach
-                </x-core::table.body>
-            </x-core::table>
-        </div>
+        @if($services->isNotEmpty())
+            <div class="mb-4">
+                <h4>{{ __('Services') }}</h4>
+                <x-core::table>
+                    <x-core::table.header>
+                        <x-core::table.header.cell class="text-center" style="width: 150px;">{{ __('Image') }}</x-core::table.header.cell>
+                        <x-core::table.header.cell>{{ __('Name') }}</x-core::table.header.cell>
+                        <x-core::table.header.cell class="text-center">{{ __('Price') }}</x-core::table.header.cell>
+                    </x-core::table.header>
+                    <x-core::table.body>
+                        @foreach($services as $service)
+                            <x-core::table.body.row>
+                                <x-core::table.body.cell class="text-center" style="width: 150px; vertical-align: middle !important;">
+                                    <a href="{{ $service->url }}" target="_blank">
+                                        <img src="{{ RvMedia::getImageUrl($service->logo, 'thumb', false, RvMedia::getDefaultImage()) }}" alt="{{ $service->name }}" width="140">
+                                    </a>
+                                </x-core::table.body.cell>
+                                <x-core::table.body.cell style="vertical-align: middle !important;">{{ $service->name }}</x-core::table.body.cell>
+                                <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;"><strong>{{ format_price($service->price, $booking->currency_id) }}</strong></x-core::table.body.cell>
+                            </x-core::table.body.row>
+                        @endforeach
+                    </x-core::table.body>
+                </x-core::table>
+            </div>
+        @endif
     @endif
 
+    {{-- THE NEW INSURANCE TABLE (Visible to everyone so the math is correct) --}}
+    @if($insurances = $booking->insurances)
+        @if($insurances->isNotEmpty())
+            <div class="mb-4">
+                <h4>{{ __('Insurances') }}</h4>
+                <x-core::table>
+                    <x-core::table.header>
+                        <x-core::table.header.cell>{{ __('Coverage Plan') }}</x-core::table.header.cell>
+                        <x-core::table.header.cell class="text-center" style="width: 200px;">{{ __('Price') }}</x-core::table.header.cell>
+                    </x-core::table.header>
+                    <x-core::table.body>
+                        @foreach($insurances as $insurance)
+                            <x-core::table.body.row>
+                                <x-core::table.body.cell style="vertical-align: middle !important;">
+                                    <i class="ti ti-shield-check text-success me-2"></i> {{ $insurance->name }}
+                                </x-core::table.body.cell>
+                                <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
+                                    <strong>{{ format_price($insurance->price, $booking->currency_id) }}</strong>
+                                </x-core::table.body.cell>
+                            </x-core::table.body.row>
+                        @endforeach
+                    </x-core::table.body>
+                </x-core::table>
+            </div>
+        @endif
+    @endif
 
     <x-core::datagrid>
         <x-core::datagrid.item :title="__('Sub Total')">
@@ -198,6 +167,7 @@
         <x-core::datagrid.item :title="__('Tax Amount')">
             {{ format_price($booking->tax_amount, $booking->currency_id) }}
         </x-core::datagrid.item>
+        
         @if ($booking->fee_amount > 0)
             <x-core::datagrid.item :title="$booking->fee_name ?: __('Service Fee')">
                 {{ format_price($booking->fee_amount, $booking->currency_id) }}
@@ -259,22 +229,10 @@
 
     <div class="btn-list mt-5">
         @if ((auth()->check() || $booking->customer_id) && ($invoiceId = $booking->invoice->id) && $route)
-            <x-core::button
-                    tag="a"
-                    :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])"
-                    target="_blank"
-                    icon="ti ti-printer"
-                    :class="$buttonClass ?? ''"
-            >
+            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])" target="_blank" icon="ti ti-printer" :class="$buttonClass ?? ''">
                 {{ __('View Invoice') }}
             </x-core::button>
-            <x-core::button
-                    tag="a"
-                    :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])"
-                    target="_blank"
-                    icon="ti ti-download"
-                    :class="$buttonClass ?? ''"
-            >
+            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])" target="_blank" icon="ti ti-download" :class="$buttonClass ?? ''">
                 {{ __('Download Invoice') }}
             </x-core::button>
         @endif
@@ -283,14 +241,7 @@
             $printRoute = $printBookingRoute ?? (auth()->check() ? 'car-rentals.bookings.print' : 'customer.bookings.print');
         @endphp
 
-        <x-core::button
-                tag="a"
-                :href="route($printRoute, $booking->id)"
-                target="_blank"
-                icon="ti ti-file-text"
-                color="info"
-                :class="$buttonClass ?? ''"
-        >
+        <x-core::button tag="a" :href="route($printRoute, $booking->id)" target="_blank" icon="ti ti-file-text" color="info" :class="$buttonClass ?? ''">
             {{ __('plugins/car-rentals::booking.print_booking_info') }}
         </x-core::button>
     </div>

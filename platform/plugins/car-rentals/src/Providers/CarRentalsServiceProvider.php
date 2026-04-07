@@ -386,7 +386,18 @@ class CarRentalsServiceProvider extends ServiceProvider
                     'name' => __('Cars'),
                     'url' => fn () => route('car-rentals.vendor.cars.index'),
                     'icon' => 'ti ti-car',
+                ])
+                // ========================================================
+                // NEW: INSURANCES MENU ITEM
+                // ========================================================
+                ->registerItem([
+                    'id' => 'car-rentals.vendor.insurances',
+                    'priority' => 15,
+                    'name' => __('Insurances'),
+                    'url' => fn () => route('car-rentals.vendor.insurances.index'),
+                    'icon' => 'ti ti-shield-check',
                 ]);
+                // ========================================================
 
             // Only show rental-related menu items when car rental is enabled
             if (CarRentalsHelper::isRentalBookingEnabled()) {

@@ -17,18 +17,32 @@
             ])
         @endif
 
-        @if(isset($services) && $services)
+        @if(isset($services) && count($services) > 0)
             <p>{{ __('Services:') }}</p>
-
             @foreach($services as $service)
                 <div class="row cart-item">
                     <div class="col">
-                        <p class="mb-2">
-                            <strong>{{ $service->name }}</strong>
-                        </p>
+                        <p class="mb-2"><strong>{{ $service->name }}</strong></p>
                     </div>
                     <div class="col-auto text-end">
                         <p class="mb-2">{{ format_price($service->price) }}</p>
+                    </div>
+                </div>
+            @endforeach
+        @endif
+
+        {{-- NEW: Insurances Section --}}
+        @if(isset($insurances) && count($insurances) > 0)
+            <p class="mt-2">{{ __('Insurance Coverage:') }}</p>
+            @foreach($insurances as $insurance)
+                <div class="row cart-item">
+                    <div class="col">
+                        <p class="mb-2 text-success">
+                            <i class="ti ti-shield-check me-1"></i> <strong>{{ $insurance->name }}</strong>
+                        </p>
+                    </div>
+                    <div class="col-auto text-end">
+                        <p class="mb-2 text-success">{{ format_price($insurance->price) }}</p>
                     </div>
                 </div>
             @endforeach
@@ -63,38 +77,19 @@
 
             @if ($couponCode && isset($couponAmount))
                 <div class="row">
-                    <div class="col-6">
-                        <p>{{ __('Coupon code') }}:</p>
-                    </div>
-                    <div class="col-6 float-end">
-                        <p class="price-text tax-price-text">
-                            {{ $couponCode }}
-                        </p>
-                    </div>
+                    <div class="col-6"><p>{{ __('Coupon code') }}:</p></div>
+                    <div class="col-6 float-end"><p class="price-text tax-price-text">{{ $couponCode }}</p></div>
                 </div>
-
                 <div class="row">
-                    <div class="col-6">
-                        <p>{{ __('Coupon code discount amount') }}:</p>
-                    </div>
-                    <div class="col-6 float-end">
-                        <p class="price-text tax-price-text">
-                            {{ format_price($couponAmount) }}
-                        </p>
-                    </div>
+                    <div class="col-6"><p>{{ __('Coupon code discount amount') }}:</p></div>
+                    <div class="col-6 float-end"><p class="price-text tax-price-text">{{ format_price($couponAmount) }}</p></div>
                 </div>
             @endif
 
             @if (($feeAmount ?? 0) > 0)
                 <div class="row">
-                    <div class="col-6">
-                        <p>{{ ($feeName ?? __('Service fee')) }}:</p>
-                    </div>
-                    <div class="col-6 float-end">
-                        <p class="price-text tax-price-text">
-                            {{ format_price($feeAmount) }}
-                        </p>
-                    </div>
+                    <div class="col-6"><p>{{ ($feeName ?? __('Service fee')) }}:</p></div>
+                    <div class="col-6 float-end"><p class="price-text tax-price-text">{{ format_price($feeAmount) }}</p></div>
                 </div>
             @endif
 
@@ -121,9 +116,7 @@
                     </p>
                 </div>
                 <div class="col-6 float-end">
-                    <p class="price-text text-end">
-                        {{ format_price($depositAmount ?? 0) }}
-                    </p>
+                    <p class="price-text text-end">{{ format_price($depositAmount ?? 0) }}</p>
                 </div>
             </div>
 
@@ -139,9 +132,7 @@
             </div>
 
             <div class="row" id="price-lock-wrapper" data-expires-at="{{ $priceLockExpiresAt ?? '' }}" data-expired-message="{{ $priceLockExpiredMessage ?? __('Price lock expired or quote changed. We refreshed your total. Please review and try again.') }}">
-                <div class="col-6">
-                    <p class="mb-0">{{ __('Price lock') }}:</p>
-                </div>
+                <div class="col-6"><p class="mb-0">{{ __('Price lock') }}:</p></div>
                 <div class="col-6 float-end">
                     <p class="mb-0 text-end">
                         <span id="price-lock-countdown" class="badge bg-warning text-dark">--:--</span>
@@ -153,9 +144,7 @@
 </div>
 <div class="mt-3 mb-5">
     <div class="checkout-discount-section">
-        <a class="btn-open-coupon-form" href="#">
-            {{ __('You have a coupon code?') }}
-        </a>
+        <a class="btn-open-coupon-form" href="#">{{ __('You have a coupon code?') }}</a>
     </div>
     <div class="coupon-wrapper mt-2" @if(! $couponCode) style="display: none;" @endif>
         @if(! $couponCode)

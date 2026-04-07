@@ -42,6 +42,8 @@ Route::group([
 
         Route::resource('cars', 'CarController')->parameters(['' => 'car']);
 
+        Route::resource('insurances', 'InsuranceController')->parameters(['' => 'insurance']);
+
         Route::get('car-availability-calendar', [
             'as' => 'car-availability.calendar',
             'uses' => 'DashboardController@carAvailabilityCalendar',

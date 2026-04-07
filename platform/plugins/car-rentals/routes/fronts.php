@@ -18,27 +18,38 @@ if (defined('THEME_MODULE_SCREEN_NAME')) {
         Route::get('booking/external/{slug}', [PublicController::class, 'redirectToExternalBooking'])->name('public.car.external-booking');
         Route::get(SlugHelper::getPrefix(Service::class, 'services') . '/{slug}', [PublicController::class, 'getService']);
         Route::get(SlugHelper::getPrefix(Car::class, 'cars'), [PublicController::class, 'getCars'])->name('public.cars');
+        
         Route::get('ajax/cars', [PublicController::class, 'ajaxGetCars'])->name('public.ajax.cars');
         Route::get('ajax/car-makes', [PublicController::class, 'ajaxGetCarsMake'])->name('public.ajax.car_makes');
         Route::get('ajax/locations', [PublicController::class, 'ajaxGetLocation'])->name('public.ajax.locations');
         Route::get('ajax/combined-locations', [PublicController::class, 'ajaxGetCombinedLocations'])->name('public.ajax.combined-locations');
+        
         Route::post('booking', [PublicController::class, 'postBooking'])->name('public.booking');
         Route::get('booking/{token}', [PublicController::class, 'getBooking'])->name('public.booking.form');
+        
         Route::get('ajax/booking/{token}/update', [PublicController::class, 'updateGetBooking'])->name(
             'public.ajax.booking.update'
         );
         Route::post('ajax/booking/{token}/services/update', [ServiceController::class, 'store'])->name(
             'public.ajax.booking.services.update'
         );
+        
         Route::post('checkout', [PublicController::class, 'postCheckout'])->name('public.checkout.post');
         Route::get('checkout/{transactionId}/success', [PublicController::class, 'getCheckoutSuccess'])
             ->name('public.checkout.success');
+            
         Route::get(SlugHelper::getPrefix(CarMake::class, 'makes') . '/{slug}', [PublicController::class, 'getMake']);
         Route::get(SlugHelper::getPrefix(CarTag::class, 'car-tags') . '/{slug}', [PublicController::class, 'getTag']);
 
         Route::post('ajax/booking/estimate', [PublicController::class, 'estimateBooking'])->name(
             'public.ajax.booking.estimate'
         );
+
+        // =========================================================================
+        // NEW: AJAX CAR REVIEWS ROUTE (For the Booking Information page Modal)
+        // =========================================================================
+        Route::post('ajax/car-reviews', [PublicController::class, 'postCarReviews'])->name('public.ajax.car-reviews');
+        // =========================================================================
 
         Route::post('car-review/create', [PublicController::class, 'postCarReviews'])->name('public.car-reviews.create');
 

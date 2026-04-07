@@ -20,6 +20,7 @@ class CarReview extends BaseModel
         'star',
         'content',
         'status',
+        'booking_id',
     ];
 
     protected $casts = [

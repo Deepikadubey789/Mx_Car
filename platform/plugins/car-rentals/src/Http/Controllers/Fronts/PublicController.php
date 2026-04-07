@@ -27,7 +27,7 @@ use Botble\CarRentals\Models\CarTag;
 use Botble\CarRentals\Models\Currency;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Models\Service;
-use Botble\CarRentals\Repositories\Interfaces\CarInterface;
+use Botble\CarRentals\Models\Insurance; // NEW IMPORT
 use Botble\CarRentals\Services\BookingService;
 use Botble\CarRentals\Services\CouponService;
 use Botble\CarRentals\Services\PriceLockService;
@@ -51,6 +51,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Botble\CarRentals\Repositories\Interfaces\CarInterface;
+use Botble\Location\Repositories\Eloquent\CityRepository;
+use Botble\Location\Repositories\Eloquent\StateRepository;
 
 class PublicController extends BaseController
 {
@@ -75,16 +78,11 @@ class PublicController extends BaseController
         $startDate = $request->filled('rental_start_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_start_date')) : null;
         $endDate = $request->filled('rental_end_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_end_date')) : null;
 
-        // =========================================================================
-        // FIX 1: FORCE A PARTIAL MATCH ON THE INITIAL PAGE LOAD 
-        // This guarantees that "Rolls" matches "Rolls-Royce" before the page renders
-        // =========================================================================
         if ($keyword = $request->input('keyword')) {
             Car::addGlobalScope('keyword_search', function ($builder) use ($keyword) {
                 $builder->where('cr_cars.name', 'LIKE', '%' . trim($keyword) . '%');
             });
         }
-        // =========================================================================
 
         $query = Car::query()->active();
 
@@ -149,6 +147,12 @@ class PublicController extends BaseController
             ->where('status', BaseStatusEnum::PUBLISHED)
             ->paginate(CarRentalsHelper::getCarsPerPage());
 
+        // FETCH INSURANCES FOR THIS CAR'S VENDOR
+        $insurances = Insurance::query()
+            ->where('vendor_id', $car->author_id)
+            ->where('status', BaseStatusEnum::PUBLISHED)
+            ->get();
+
         SeoHelper::setTitle($car->name)->setDescription(Str::words($car->description ?? '', 120));
 
         $meta = new SeoOpenGraph();
@@ -169,7 +173,7 @@ class PublicController extends BaseController
             admin_bar()->registerLink(__('Edit this car'), route('car-rentals.cars.edit', $car->getKey()));
         }
 
-        return Theme::scope('car-rentals.car', compact('car', 'reviews'), 'plugins/car-rentals::themes.car')->render();
+        return Theme::scope('car-rentals.car', compact('car', 'reviews', 'insurances'), 'plugins/car-rentals::themes.car')->render();
     }
 
     public function getService(string $slug)
@@ -297,7 +301,6 @@ class PublicController extends BaseController
         $startTime = Arr::get($sessionData, 'rental_start_time', '09:00');
         $endTime = Arr::get($sessionData, 'rental_end_time', '09:00');
 
-        // Combine date and time
         if ($startDate && $startTime) {
             $startDate = Carbon::parse($startDate->toDateString() . ' ' . $startTime);
         }
@@ -320,16 +323,12 @@ class PublicController extends BaseController
         }
 
         $rentalCarAmount = $car->getCarRentalPrice($startDate->toDateString(), $endDate->toDateString());
-
         $amount = $rentalCarAmount;
-
         $days = max(1, $startDate->diffInDays($endDate));
 
         $serviceAmount = 0;
-
         if ($serviceIds = Arr::get($sessionData, 'service_ids', [])) {
             $services = Service::query()->whereIn('id', $serviceIds)->get();
-
             foreach ($services as $service) {
                 if ($service->price_type == ServicePriceTypeEnum::PER_DAY) {
                     $serviceAmount += $service->price * $days;
@@ -339,117 +338,41 @@ class PublicController extends BaseController
             }
         }
 
-        $discountAmount = 0;
-
-        if ($couponCode = Arr::get($sessionData, 'coupon_code')) {
-            $couponService = new CouponService();
-
-            $coupon = $couponService->getCouponByCode($couponCode);
-
-            if ($coupon !== null) {
-                $discountAmount = $couponService->getDiscountAmount(
-                    $coupon->type->getValue(),
-                    $coupon->value,
-                    $amount
-                );
-
-                BookingHelper::saveCheckoutData([
-                    'coupon_amount' => $discountAmount,
-                ]);
+        $insuranceAmount = 0;
+        if ($insuranceIds = Arr::get($sessionData, 'insurance_ids', [])) {
+            $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
+            foreach ($insurances as $insurance) {
+                $insuranceAmount += $insurance->price;
             }
         }
 
-        $totalBeforeTax = $amount + $serviceAmount;
+        $totalBeforeTax = $amount + $serviceAmount + $insuranceAmount;
 
-        // Calculate tax amount using the Car model method
         $taxAmount = $car->calculateTaxAmount($totalBeforeTax);
-
-        // Get tax information for display
         $taxTitle = $car->getTaxInfo($taxAmount);
-
-        $priceLockService = app(PriceLockService::class);
-        $depositType = $priceLockService->getDepositType();
-        $depositRate = $priceLockService->getDepositRate();
-        $depositFixedAmount = $priceLockService->getDepositFixedAmount();
-        $feeName = $priceLockService->getFeeName();
-        $feeValue = $priceLockService->getFeeValue();
-        $feeAmount = $priceLockService->calculateFeeAmount($totalBeforeTax);
-        $depositAmount = $priceLockService->calculateDepositAmount($totalBeforeTax);
-        $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
-
-        $totalAmount = $totalBeforeTax + $taxAmount - $discountAmount + $feeAmount;
-
-        $finalPayableAmount = $totalAmount + $depositAmount;
-
-        $quote = [
-            'rental_amount' => $rentalCarAmount,
-            'service_amount' => $serviceAmount,
-            'subtotal' => $totalBeforeTax,
-            'tax_amount' => $taxAmount,
-            'coupon_code' => Arr::get($sessionData, 'coupon_code'),
-            'coupon_amount' => $discountAmount,
-            'fee_name' => $feeName,
-            'fee_value' => $feeValue,
-            'fee_amount' => $feeAmount,
-            'deposit_amount' => $depositAmount,
-            'deposit_type' => $depositType,
-            'deposit_rate' => $depositRate,
-            'deposit_fixed_amount' => $depositFixedAmount,
-            'total_amount' => $finalPayableAmount,
-            'currency_id' => $car->currency_id,
-            'tax_title' => $taxTitle,
-            'services' => ($services ?? collect())->map(fn (Service $service) => [
-                'id' => $service->id,
-                'name' => $service->name,
-                'price' => $service->price,
-                'price_type' => $service->price_type?->getValue(),
-            ])->values()->all(),
-        ];
-
-        $priceLock = Arr::get($sessionData, 'price_lock');
-
-        if (! $priceLock || $priceLockService->isExpired($priceLock) || ! $priceLockService->matchesSnapshot($priceLock, $quote)) {
-            $priceLock = $priceLockService->createLock($quote);
-
-            BookingHelper::saveCheckoutData([
-                'price_lock' => $priceLock,
-            ]);
-        }
+        $totalAmount = $totalBeforeTax + $taxAmount;
 
         $data = [
             'car' => $car,
-            'amount' => $amount + $serviceAmount,
+            'amount' => $amount + $serviceAmount + $insuranceAmount,
             'totalAmount' => $totalAmount,
             'taxTitle' => $taxTitle,
             'taxAmount' => $taxAmount,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'couponCode' => Arr::get($sessionData, 'coupon_code'),
-            'couponAmount' => $discountAmount,
+            'couponAmount' => Arr::get($sessionData, 'coupon_amount'),
             'token' => $token,
             'rentalCarAmount' => $rentalCarAmount,
             'serviceIds' => $serviceIds,
             'services' => $services ?? [],
-            'feeName' => $feeName,
-            'feeValue' => $feeValue,
-            'feeAmount' => $feeAmount,
-            'depositAmount' => $depositAmount,
-            'depositType' => $depositType,
-            'depositRate' => $depositRate,
-            'finalPayableAmount' => $finalPayableAmount,
-            'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
-            'priceLockExpiredMessage' => $priceLockExpiredMessage,
-        ];
-
-        $checkoutFormData = [
-            ...$data,
-            'totalAmount' => $finalPayableAmount,
+            'insurances' => $insurances ?? [],
         ];
 
         return view(
             'plugins/car-rentals::checkouts.index',
             [
-                'checkoutForm' => CheckoutForm::createFromArray($checkoutFormData),
+                'checkoutForm' => CheckoutForm::createFromArray($data),
                 ...$data,
             ],
         );
@@ -494,7 +417,6 @@ class PublicController extends BaseController
         $startTime = Arr::get($sessionData, 'rental_start_time', '09:00');
         $endTime = Arr::get($sessionData, 'rental_end_time', '09:00');
 
-        // Combine date and time
         if ($startDate && $startTime) {
             $startDate = Carbon::parse($startDate->toDateString() . ' ' . $startTime);
         }
@@ -517,16 +439,11 @@ class PublicController extends BaseController
         }
 
         $rentalCarAmount = $car->getCarRentalPrice($startDate->toDateString(), $endDate->toDateString());
-
-        $amount = $rentalCarAmount;
-
         $days = max(1, $startDate->diffInDays($endDate));
 
         $serviceAmount = 0;
-
         if ($serviceIds = Arr::get($sessionData, 'service_ids', [])) {
             $services = Service::query()->whereIn('id', $serviceIds)->get();
-
             foreach ($services as $service) {
                 if ($service->price_type == ServicePriceTypeEnum::PER_DAY) {
                     $serviceAmount += $service->price * $days;
@@ -536,54 +453,53 @@ class PublicController extends BaseController
             }
         }
 
+        $insuranceAmount = 0;
+        if ($insuranceIds = Arr::get($sessionData, 'insurance_ids', [])) {
+            $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
+            foreach ($insurances as $insurance) {
+                $insuranceAmount += $insurance->price;
+            }
+        }
+
+        $amount = $rentalCarAmount + $serviceAmount + $insuranceAmount;
         $discountAmount = 0;
+        $couponCode = Arr::get($sessionData, 'coupon_code');
 
-        if ($couponCode = Arr::get($sessionData, 'coupon_code')) {
+        if ($couponCode) {
             $couponService = new CouponService();
-
             $coupon = $couponService->getCouponByCode($couponCode);
-
             if ($coupon !== null) {
                 $discountAmount = $couponService->getDiscountAmount(
                     $coupon->type->getValue(),
                     $coupon->value,
                     $amount
                 );
-
                 BookingHelper::saveCheckoutData([
                     'coupon_amount' => $discountAmount,
                 ]);
             }
         }
 
-        $totalBeforeTax = $amount + $serviceAmount;
-
-        // Calculate tax amount using the Car model method
-        $taxAmount = $car->calculateTaxAmount($totalBeforeTax);
-
-        // Get tax information for display
-        $taxTitle = $car->getTaxInfo($taxAmount);
-
+        $taxAmount = $car->calculateTaxAmount($amount);
         $priceLockService = app(PriceLockService::class);
         $depositType = $priceLockService->getDepositType();
         $depositRate = $priceLockService->getDepositRate();
         $depositFixedAmount = $priceLockService->getDepositFixedAmount();
         $feeName = $priceLockService->getFeeName();
         $feeValue = $priceLockService->getFeeValue();
-        $feeAmount = $priceLockService->calculateFeeAmount($totalBeforeTax);
-        $depositAmount = $priceLockService->calculateDepositAmount($totalBeforeTax);
-        $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
+        $feeAmount = $priceLockService->calculateFeeAmount($amount);
+        $depositAmount = $priceLockService->calculateDepositAmount($amount);
 
-        $totalAmount = $totalBeforeTax + $taxAmount - $discountAmount + $feeAmount;
-
+        $totalAmount = ($amount + $taxAmount) - $discountAmount + $feeAmount;
         $finalPayableAmount = $totalAmount + $depositAmount;
+        $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
 
         $quote = [
             'rental_amount' => $rentalCarAmount,
             'service_amount' => $serviceAmount,
-            'subtotal' => $totalBeforeTax,
+            'subtotal' => $amount,
             'tax_amount' => $taxAmount,
-            'coupon_code' => Arr::get($sessionData, 'coupon_code'),
+            'coupon_code' => $couponCode,
             'coupon_amount' => $discountAmount,
             'fee_name' => $feeName,
             'fee_value' => $feeValue,
@@ -594,7 +510,7 @@ class PublicController extends BaseController
             'deposit_fixed_amount' => $depositFixedAmount,
             'total_amount' => $finalPayableAmount,
             'currency_id' => $car->currency_id,
-            'tax_title' => $taxTitle,
+            'tax_title' => $car->getTaxInfo($taxAmount),
             'services' => ($services ?? collect())->map(fn (Service $service) => [
                 'id' => $service->id,
                 'name' => $service->name,
@@ -603,39 +519,167 @@ class PublicController extends BaseController
             ])->values()->all(),
         ];
 
-        $priceLock = $priceLockService->createLock($quote);
+        $priceLock = Arr::get($sessionData, 'price_lock');
+        if (! $priceLock || $priceLockService->isExpired($priceLock) || ! $priceLockService->matchesSnapshot($priceLock, $quote)) {
+            $priceLock = $priceLockService->createLock($quote);
+            BookingHelper::saveCheckoutData([
+                'coupon_amount' => $discountAmount,
+                'price_lock' => $priceLock,
+            ]);
 
-        BookingHelper::saveCheckoutData([
-            'price_lock' => $priceLock,
+            $viewData = [
+                'car' => $car,
+                'amount' => $amount,
+                'totalAmount' => $totalAmount,
+                'taxTitle' => $car->getTaxInfo($taxAmount),
+                'taxAmount' => $taxAmount,
+                'startDate' => $startDate,
+                'endDate' => $endDate,
+                'couponCode' => $couponCode,
+                'couponAmount' => $discountAmount,
+                'token' => session('checkout_token'),
+                'services' => $services ?? collect(),
+                'insurances' => $insurances ?? collect(),
+                'rentalCarAmount' => $rentalCarAmount,
+                'feeName' => $feeName,
+                'feeValue' => $feeValue,
+                'feeAmount' => $feeAmount,
+                'depositAmount' => $depositAmount,
+                'depositType' => $depositType,
+                'depositRate' => $depositRate,
+                'finalPayableAmount' => $finalPayableAmount,
+                'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
+                'priceLockExpiredMessage' => $priceLockExpiredMessage,
+            ];
+
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setData(view('plugins/car-rentals::checkouts.partials.booking-information', $viewData)->render())
+                ->setMessage($priceLockExpiredMessage);
+        }
+
+        $booking = new Booking($request->validated());
+
+        $booking->sub_total = $amount;
+        $booking->coupon_code = $couponCode;
+        $booking->coupon_amount = $discountAmount;
+        $booking->amount = $finalPayableAmount;
+        $booking->tax_amount = $taxAmount;
+        $booking->price_lock_expires_at = Carbon::parse(Arr::get($priceLock, 'expires_at'));
+        $booking->price_snapshot = Arr::get($priceLock, 'snapshot');
+        $booking->fee_name = $feeName;
+        $booking->fee_value = $feeValue;
+        $booking->fee_amount = $feeAmount;
+        $booking->deposit_amount = $depositAmount;
+        $booking->deposit_type = $depositType;
+        $booking->deposit_rate = $depositRate;
+        $booking->currency_id = $request->input('currency_id', strtoupper(get_application_currency()->id));
+        $booking->booking_number = Booking::generateUniqueBookingNumber();
+        $booking->transaction_id = Str::upper(Str::random(32));
+        $booking->vendor_id = $car->author_type == Customer::class && $car->author->is_vendor ? $car->author_id : null;
+
+        if (Auth::guard('customer')->check()) {
+            $booking->customer_id = Auth::guard('customer')->id();
+        }
+
+        $booking->save();
+        session()->put('booking_transaction_id', $booking->transaction_id);
+
+        $rentalStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime);
+        $rentalEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime);
+
+        BookingCar::query()->create([
+            'booking_id' => $booking->id,
+            'car_id' => $car->id,
+            'car_image' => $car->image,
+            'car_name' => $car->name,
+            'rental_start_date' => $rentalStartDateTime,
+            'rental_end_date' => $rentalEndDateTime,
+            'price' => $rentalCarAmount,
+            'pickup_city_id' => null,  
+            'return_city_id' => null,
+            'currency_id' => $request->input('currency_id', strtoupper(get_application_currency()->id)),
+        ]);
+
+        if (isset($services) && $services->isNotEmpty()) {
+            $booking->services()->attach($services->pluck('id')->all());
+        }
+
+        if (isset($insurances) && $insurances->isNotEmpty()) {
+            $booking->insurances()->attach($insurances->pluck('id')->all());
+        }
+
+        $request->merge([
+            'order_id' => $booking->getKey(),
         ]);
 
         $data = [
-            'car' => $car,
-            'amount' => $amount + $serviceAmount,
-            'totalAmount' => $totalAmount,
-            'taxTitle' => $taxTitle,
-            'taxAmount' => $taxAmount,
-            'startDate' => $startDate,
-            'endDate' => $endDate,
-            'couponCode' => Arr::get($sessionData, 'coupon_code'),
-            'couponAmount' => $discountAmount,
-            'token' => $token,
-            'services' => $services ?? [],
-            'rentalCarAmount' => $rentalCarAmount,
-            'feeName' => $feeName,
-            'feeValue' => $feeValue,
-            'feeAmount' => $feeAmount,
-            'depositAmount' => $depositAmount,
-            'depositType' => $depositType,
-            'depositRate' => $depositRate,
-            'finalPayableAmount' => $finalPayableAmount,
-            'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
-            'priceLockExpiredMessage' => $priceLockExpiredMessage,
+            'error' => false,
+            'message' => false,
+            'amount' => $booking->amount,
+            'currency' => strtoupper(get_application_currency()->title),
+            'type' => $request->input('payment_method'),
+            'charge_id' => null,
         ];
+
+        if (is_plugin_active('payment')) {
+            session()->put('selected_payment_method', $data['type']);
+            $paymentData = apply_filters(PAYMENT_FILTER_PAYMENT_DATA, [], $request);
+
+            switch ($request->input('payment_method')) {
+                case PaymentMethodEnum::COD:
+                    $codPaymentService = app(CodPaymentService::class);
+                    $data['charge_id'] = $codPaymentService->execute($paymentData);
+                    $data['message'] = trans('plugins/payment::payment.payment_pending');
+                    break;
+                case PaymentMethodEnum::BANK_TRANSFER:
+                    $bankTransferPaymentService = app(BankTransferPaymentService::class);
+                    $data['charge_id'] = $bankTransferPaymentService->execute($paymentData);
+                    $data['message'] = trans('plugins/payment::payment.payment_pending');
+                    break;
+                default:
+                    $data = apply_filters(PAYMENT_FILTER_AFTER_POST_CHECKOUT, $data, $request);
+                    break;
+            }
+
+            if ($checkoutUrl = Arr::get($data, 'checkoutUrl')) {
+                return $this
+                    ->httpResponse()
+                    ->setError($data['error'])
+                    ->setNextUrl($checkoutUrl)
+                    ->setData(['checkoutUrl' => $checkoutUrl])
+                    ->withInput()
+                    ->setMessage($data['message']);
+            }
+
+            if ($data['error'] || ! $data['charge_id']) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setNextUrl(PaymentHelper::getCancelURL())
+                    ->withInput()
+                    ->setMessage($data['message'] ?: __('Checkout error!'));
+            }
+
+            $bookingService = new BookingService();
+            $bookingService->processBooking($booking->getKey(), $data['charge_id']);
+            BookingCreated::dispatch($booking);
+            $redirectUrl = PaymentHelper::getRedirectURL();
+        } else {
+            BookingCreated::dispatch($booking);
+            $redirectUrl = route('public.booking.information', $booking->transaction_id);
+        }
+
+        if ($token = $request->input('token')) {
+            session()->forget($token);
+            session()->forget('checkout_token');
+        }
 
         return $this
             ->httpResponse()
-            ->setData(view('plugins/car-rentals::checkouts.partials.booking-information', $data)->render());
+            ->setNextUrl($redirectUrl)
+            ->setMessage(__('Booking successfully!'));
     }
 
     public function postCheckout(CheckoutRequest $request)
@@ -691,6 +735,15 @@ class PublicController extends BaseController
             }
         }
 
+        $insuranceAmount = 0;
+        $insurances = collect();
+        if ($insuranceIds = Arr::get($sessionData, 'insurance_ids')) {
+            $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
+            foreach ($insurances as $insurance) {
+                $insuranceAmount += $insurance->price;
+            }
+        }
+
         if (! $car->isAvailableAt(['start_date' => $startDate, 'end_date' => $endDate])) {
             return $this
                 ->httpResponse()
@@ -721,13 +774,11 @@ class PublicController extends BaseController
 
         $rentalCarAmount = $car->getCarRentalPrice($startDate->toDateString(), $endDate->toDateString());
 
-        $amount = $rentalCarAmount + $serviceAmount;
+        $amount = $rentalCarAmount + $serviceAmount + $insuranceAmount;
 
         $taxAmount = $car->calculateTaxAmount($amount);
 
-        $couponCode = Arr::get($sessionData, 'coupon_code');
-
-        if ($couponCode) {
+        if ($couponCode = Arr::get($sessionData, 'coupon_code')) {
             $couponService = new CouponService();
 
             $coupon = $couponService->getCouponByCode($couponCode);
@@ -745,6 +796,7 @@ class PublicController extends BaseController
             }
         }
 
+        $priceLockService = app(PriceLockService::class);
         $depositType = $priceLockService->getDepositType();
         $depositRate = $priceLockService->getDepositRate();
         $depositFixedAmount = $priceLockService->getDepositFixedAmount();
@@ -754,74 +806,7 @@ class PublicController extends BaseController
         $depositAmount = $priceLockService->calculateDepositAmount($amount);
 
         $totalAmount = ($amount + $taxAmount) - $discountAmount + $feeAmount;
-
         $finalPayableAmount = $totalAmount + $depositAmount;
-
-        $quote = [
-            'rental_amount' => $rentalCarAmount,
-            'service_amount' => $serviceAmount,
-            'subtotal' => $amount,
-            'tax_amount' => $taxAmount,
-            'coupon_code' => $couponCode,
-            'coupon_amount' => $discountAmount,
-            'fee_name' => $feeName,
-            'fee_value' => $feeValue,
-            'fee_amount' => $feeAmount,
-            'deposit_amount' => $depositAmount,
-            'deposit_type' => $depositType,
-            'deposit_rate' => $depositRate,
-            'deposit_fixed_amount' => $depositFixedAmount,
-            'total_amount' => $finalPayableAmount,
-            'currency_id' => $car->currency_id,
-            'tax_title' => $car->getTaxInfo($taxAmount),
-            'services' => $services->map(fn (Service $service) => [
-                'id' => $service->id,
-                'name' => $service->name,
-                'price' => $service->price,
-                'price_type' => $service->price_type?->getValue(),
-            ])->values()->all(),
-        ];
-
-        $priceLock = Arr::get($sessionData, 'price_lock');
-
-        if (! $priceLock || $priceLockService->isExpired($priceLock) || ! $priceLockService->matchesSnapshot($priceLock, $quote)) {
-            $priceLock = $priceLockService->createLock($quote);
-
-            BookingHelper::saveCheckoutData([
-                'coupon_amount' => $discountAmount,
-                'price_lock' => $priceLock,
-            ]);
-
-            $viewData = [
-                'car' => $car,
-                'amount' => $amount,
-                'totalAmount' => $totalAmount,
-                'taxTitle' => $car->getTaxInfo($taxAmount),
-                'taxAmount' => $taxAmount,
-                'startDate' => $startDate,
-                'endDate' => $endDate,
-                'couponCode' => $couponCode,
-                'couponAmount' => $discountAmount,
-                'token' => session('checkout_token'),
-                'services' => $services,
-                'rentalCarAmount' => $rentalCarAmount,
-                'feeName' => $feeName,
-                'feeValue' => $feeValue,
-                'feeAmount' => $feeAmount,
-                'depositAmount' => $depositAmount,
-                'depositType' => $depositType,
-                'depositRate' => $depositRate,
-                'finalPayableAmount' => $finalPayableAmount,
-                'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
-                'priceLockExpiredMessage' => $priceLockExpiredMessage,
-            ];
-
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setData(view('plugins/car-rentals::checkouts.partials.booking-information', $viewData)->render())
-                ->setMessage($priceLockExpiredMessage);
-        }
 
         $booking = new Booking($request->validated());
 
@@ -830,8 +815,6 @@ class PublicController extends BaseController
         $booking->coupon_amount = $discountAmount;
         $booking->amount = $finalPayableAmount;
         $booking->tax_amount = $taxAmount;
-        $booking->price_lock_expires_at = Carbon::parse(Arr::get($priceLock, 'expires_at'));
-        $booking->price_snapshot = Arr::get($priceLock, 'snapshot');
         $booking->fee_name = $feeName;
         $booking->fee_value = $feeValue;
         $booking->fee_amount = $feeAmount;
@@ -851,7 +834,6 @@ class PublicController extends BaseController
 
         session()->put('booking_transaction_id', $booking->transaction_id);
 
-        // Combine date and time for rental start and end
         $rentalStartDateTime = Carbon::parse($startDate->toDateString() . ' ' . $startTime);
         $rentalEndDateTime = Carbon::parse($endDate->toDateString() . ' ' . $endTime);
 
@@ -863,12 +845,18 @@ class PublicController extends BaseController
             'rental_start_date' => $rentalStartDateTime,
             'rental_end_date' => $rentalEndDateTime,
             'price' => $rentalCarAmount,
-            'pickup_city_id' => null,  // These fields will be customer-selected during booking
+            'pickup_city_id' => null,
             'return_city_id' => null,
             'currency_id' => $request->input('currency_id', strtoupper(get_application_currency()->id)),
         ]);
 
-        $booking->services()->attach($services->pluck('id')->all());
+        if (isset($services) && $services->isNotEmpty()) {
+            $booking->services()->attach($services->pluck('id')->all());
+        }
+
+        if (isset($insurances) && $insurances->isNotEmpty()) {
+            $booking->insurances()->attach($insurances->pluck('id')->all());
+        }
 
         $request->merge([
             'order_id' => $booking->getKey(),
@@ -893,19 +881,14 @@ class PublicController extends BaseController
                     $codPaymentService = app(CodPaymentService::class);
                     $data['charge_id'] = $codPaymentService->execute($paymentData);
                     $data['message'] = trans('plugins/payment::payment.payment_pending');
-
                     break;
-
                 case PaymentMethodEnum::BANK_TRANSFER:
                     $bankTransferPaymentService = app(BankTransferPaymentService::class);
                     $data['charge_id'] = $bankTransferPaymentService->execute($paymentData);
                     $data['message'] = trans('plugins/payment::payment.payment_pending');
-
                     break;
-
                 default:
                     $data = apply_filters(PAYMENT_FILTER_AFTER_POST_CHECKOUT, $data, $request);
-
                     break;
             }
 
@@ -929,15 +912,11 @@ class PublicController extends BaseController
             }
 
             $bookingService = new BookingService();
-
             $bookingService->processBooking($booking->getKey(), $data['charge_id']);
-
             BookingCreated::dispatch($booking);
-
             $redirectUrl = PaymentHelper::getRedirectURL();
         } else {
             BookingCreated::dispatch($booking);
-
             $redirectUrl = route('public.booking.information', $booking->transaction_id);
         }
 
@@ -981,6 +960,7 @@ class PublicController extends BaseController
             'rental_end_date' => ['required', 'string', 'date'],
             'rental_end_time' => ['nullable', 'string', 'date_format:H:i'],
             'service_ids' => ['nullable', 'array'],
+            'insurance_ids' => ['nullable', 'array'],
         ]);
 
         $car = Car::query()
@@ -1030,7 +1010,15 @@ class PublicController extends BaseController
             }
         }
 
-        $totalBeforeTax = $amount + $serviceAmount;
+        $insuranceAmount = 0;
+        if ($insuranceIds = $request->input('insurance_ids', [])) {
+            $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
+            foreach ($insurances as $insurance) {
+                $insuranceAmount += $insurance->price;
+            }
+        }
+
+        $totalBeforeTax = $amount + $serviceAmount + $insuranceAmount;
 
         $taxAmount = $car->calculateTaxAmount($totalBeforeTax);
 
@@ -1039,7 +1027,7 @@ class PublicController extends BaseController
         $totalAmount = $totalBeforeTax + $taxAmount;
 
         $data = [
-            'subtotal' => $amount + $serviceAmount,
+            'subtotal' => $amount + $serviceAmount + $insuranceAmount,
             'total' => $totalAmount,
             'tax' => $taxAmount,
             'taxInfo' => $taxInfo,
@@ -1052,7 +1040,7 @@ class PublicController extends BaseController
             ->setData(view('plugins/car-rentals::cars.partials.booking-form-estimate', [...$data])->render());
     }
 
-    public function postCarReviews(ReviewRequest $request)
+   public function postCarReviews(ReviewRequest $request)
     {
         abort_unless(CarRentalsHelper::isEnabledCarReviews(), 404);
 
@@ -1062,7 +1050,7 @@ class PublicController extends BaseController
             return $this
                 ->httpResponse()
                 ->setError()
-                ->setMessage(__('Please login to add review!'));
+                ->setMessage(__('Please login to add a review!'));
         }
 
         $car = Car::query()
@@ -1076,35 +1064,40 @@ class PublicController extends BaseController
                 ->setMessage(__('Car not found!'));
         }
 
-        $isExistReview = CarReview::query()
-            ->where('car_id', $car->getKey())
-            ->where('customer_id', $customer->getKey())
-            ->exists();
+        $bookingId = $request->input('booking_id');
 
-        if ($isExistReview) {
+        // Build the query to check for existing reviews
+        $query = CarReview::query()
+            ->where('car_id', $car->getKey())
+            ->where('customer_id', $customer->getKey());
+
+        // If a booking_id was provided (from the booking info page), check against that specific booking
+        if ($bookingId) {
+            $query->where('booking_id', $bookingId);
+        }
+
+        if ($query->exists()) {
             return $this
                 ->httpResponse()
                 ->setError()
-                ->setMessage(__('You have already reviewed this car!'));
+                ->setMessage(__('You have already reviewed this car for this trip!'));
         }
 
+        // Save the review
         CarReview::query()->create([
             ...$request->validated(),
-            'customer_name' => $customer->name,
+            'booking_id'     => $bookingId, // Save the booking ID
+            'customer_name'  => $customer->name,
             'customer_email' => $customer->email,
-            'status' => BaseStatusEnum::PUBLISHED,
+            'status'         => BaseStatusEnum::PUBLISHED,
         ]);
 
         return $this
             ->httpResponse()
-            ->setMessage(__('Added review successfully!'));
+            ->setMessage(__('Thank you! Your review has been added successfully.'));
     }
-
-   public function ajaxGetCars(Request $request)
+    public function ajaxGetCars(Request $request)
     {
-        // =========================================================================
-        // 1. FORCE A PARTIAL MATCH ON ALL AJAX CALLS 
-        // =========================================================================
         if ($keyword = $request->input('keyword')) {
             Car::addGlobalScope('keyword_search', function ($builder) use ($keyword) {
                 $words = array_filter(explode(' ', $keyword));
@@ -1113,21 +1106,15 @@ class PublicController extends BaseController
                 }
             });
         }
-        // =========================================================================
 
         $requestQuery = CarListHelper::getCarFilters($request->input());
 
-        // =========================================================================
-        // 2. THE MAGIC FIX: HIDE KEYWORD FROM THE CORE REPOSITORY
-        // This stops Botble from secretly applying an "exact match" rule!
-        // =========================================================================
         if (isset($requestQuery['keyword'])) {
             unset($requestQuery['keyword']);
         }
         if (isset($requestQuery['q'])) {
             unset($requestQuery['q']);
         }
-        // =========================================================================
 
         $with = [
             'slugable',
@@ -1424,7 +1411,6 @@ class PublicController extends BaseController
         $keyword = BaseHelper::stringify($request->query('k'));
         $limit = (int) theme_option('limit_results_on_car_location_filter', 10) ?: 1000;
 
-        // Get location plugin data (states/cities)
         $locations = collect();
         if (is_plugin_active('location')) {
             if ($request->input('type', 'state') === 'state') {
@@ -1435,7 +1421,6 @@ class PublicController extends BaseController
             }
         }
 
-        // Get booking locations data (using cities instead of addresses)
         $bookingLocations = collect();
         if (CarRentalsHelper::isEnabledFilterCarsBy('addresses')) {
             $bookingLocations = City::query()

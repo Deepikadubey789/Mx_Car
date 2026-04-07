@@ -2,6 +2,7 @@
 
 namespace Botble\CarRentals\Forms\Fronts;
 
+use Botble\Base\Enums\BaseStatusEnum;
 use Botble\Base\Facades\BaseHelper;
 use Botble\Base\Forms\FieldOptions\ButtonFieldOption;
 use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
@@ -18,6 +19,7 @@ use Botble\CarRentals\Http\Requests\Fronts\BookingRequest;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\Service;
+use Botble\CarRentals\Models\Insurance; // NEW IMPORT
 use Botble\Theme\Facades\Theme;
 use Botble\Theme\FormFront;
 use Carbon\Carbon;
@@ -69,12 +71,22 @@ class BookingForm extends FormFront
         $taxInfo = $car->getTaxInfo($taxAmount);
         $totalAmount = $rentalPrice + $taxAmount;
 
+        // FETCH SERVICES
         $services = Service::query()->select(['id', 'name', 'price', 'currency_id'])->wherePublished()->get();
-
         $serviceOptions = [];
-
         foreach ($services as $service) {
             $serviceOptions[$service->id] = $service->name . ' - ' . $service->price_text;
+        }
+
+        // FETCH INSURANCES FOR THE CAR'S VENDOR
+        $insurances = Insurance::query()
+            ->where('vendor_id', $car->author_id)
+            ->where('status', BaseStatusEnum::PUBLISHED)
+            ->get();
+            
+        $insuranceOptions = [];
+        foreach ($insurances as $insurance) {
+            $insuranceOptions[$insurance->id] = $insurance->name . ' - ' . format_price($insurance->price);
         }
 
         // Generate time options (every 30 minutes)
@@ -86,6 +98,7 @@ class BookingForm extends FormFront
             }
         }
 
+        // Start building the form
         $this
             ->contentOnly()
             ->setUrl(route('public.booking'))
@@ -140,7 +153,22 @@ class BookingForm extends FormFront
                     ->label(__('Additional Services'))
                     ->choices($serviceOptions)
                     ->colspan(2)
-            )
+            );
+
+        // ONLY ADD THE INSURANCE FIELD IF THE VENDOR HAS INSURANCES CONFIGURED
+        if (!empty($insuranceOptions)) {
+            $this->add(
+                'insurance_ids[]',
+                MultiCheckListField::class,
+                MultiChecklistFieldOption::make()
+                    ->label(__('Insurance Coverage'))
+                    ->choices($insuranceOptions)
+                    ->colspan(2)
+            );
+        }
+
+        // Finish the form
+        $this
             ->add('border_wrapper_after', HtmlField::class, HtmlFieldOption::make()->content('<div class="border-wrapper-after"></div>')->colspan(2))
             ->add(
                 'total_estimate',
