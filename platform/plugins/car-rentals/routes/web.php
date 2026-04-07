@@ -133,6 +133,22 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                     'uses' => 'BookingController@updateCompletion',
                     'permission' => 'car-rentals.bookings.edit',
                 ]);
+
+                Route::get('{booking}/messages', [
+                    'as' => 'messages.index',
+                    'uses' => 'TripMessageController@index',
+                    'permission' => 'car-rentals.bookings.edit',
+                ]);
+                Route::post('{booking}/messages', [
+                    'as' => 'messages.store',
+                    'uses' => 'TripMessageController@store',
+                    'permission' => 'car-rentals.bookings.edit',
+                ]);
+                Route::post('{booking}/messages/deescalate', [
+                    'as' => 'messages.deescalate',
+                    'uses' => 'TripMessageController@deescalate',
+                    'permission' => 'car-rentals.bookings.edit',
+                ]);
             });
             Route::resource('invoices', 'InvoiceController')
                 ->parameters(['' => 'invoices'])

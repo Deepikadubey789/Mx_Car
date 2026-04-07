@@ -59,6 +59,7 @@ use Botble\Theme\FormFrontManager;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Broadcast;
 use Botble\CarRentals\Commands\SendTripReminderCommand;
 use Botble\CarRentals\Commands\SendReturnAlertCommand;
 class CarRentalsServiceProvider extends ServiceProvider
@@ -138,6 +139,26 @@ class CarRentalsServiceProvider extends ServiceProvider
 
             SlugHelper::registerModule(CarMake::class, 'Car Makes');
             SlugHelper::setPrefix(CarMake::class, 'makes');
+        });
+
+        $this->app->booted(function () {
+            Broadcast::routes(['middleware' => ['web']]);
+            Broadcast::channel('trip-messaging.{bookingId}', function ($user, $bookingId) {
+                $booking = Booking::find($bookingId);
+                if (!$booking) {
+                    return false;
+                }
+                
+                if (get_class($user) === \Botble\ACL\Models\User::class) {
+                    return true;
+                }
+                
+                if (get_class($user) === \Botble\CarRentals\Models\Customer::class) {
+                    return $user->id == $booking->customer_id || $user->id == $booking->vendor_id;
+                }
+                
+                return false;
+            }, ['guards' => ['web', 'customer', 'admin']]);
         });
 
         DashboardMenu::default()->beforeRetrieving(function (): void {

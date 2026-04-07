@@ -103,6 +103,17 @@
         </div>
     </div>
 
+    <div class="row mt-4">
+        <div class="col-md-12">
+            @include('plugins/car-rentals::partials.trip-messaging', [
+                'booking' => $booking,
+                'fetchUrl' => route('car-rentals.vendor.bookings.messages.index', $booking->id),
+                'storeUrl' => route('car-rentals.vendor.bookings.messages.store', $booking->id),
+                'escalateUrl' => route('car-rentals.vendor.bookings.messages.escalate', $booking->id)
+            ])
+        </div>
+    </div>
+
     @if ($booking->canBeApproved())
         <div class="modal fade" id="approveBookingModal" tabindex="-1" aria-labelledby="approveBookingModalLabel" aria-hidden="true">
             <div class="modal-dialog">

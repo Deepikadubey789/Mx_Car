@@ -7,3 +7,6 @@
   php artisan migrate --path=/database/migrations/2026_04_06_052648_create_cr_customer_reviews_table.php
 
 
+
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134719_create_cr_trip_messages_table.php
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134722_add_is_escalated_to_cr_bookings_table.php

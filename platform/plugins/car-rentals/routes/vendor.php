@@ -99,6 +99,21 @@ Route::group([
             'uses' => 'BookingController@cancel',
         ])->wherePrimaryKey('booking');
 
+        Route::get('bookings/{booking}/messages', [
+            'as' => 'bookings.messages.index',
+            'uses' => 'TripMessageController@index',
+        ])->wherePrimaryKey('booking');
+        
+        Route::post('bookings/{booking}/messages', [
+            'as' => 'bookings.messages.store',
+            'uses' => 'TripMessageController@store',
+        ])->wherePrimaryKey('booking');
+
+        Route::post('bookings/{booking}/messages/escalate', [
+            'as' => 'bookings.messages.escalate',
+            'uses' => 'TripMessageController@escalate',
+        ])->wherePrimaryKey('booking');
+
         // ========================================================
         // NEW RATE CUSTOMER ROUTE HERE
         // ========================================================

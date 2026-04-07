@@ -60,6 +60,10 @@ Theme::registerRoutes(function (): void {
 
         Route::get('bookings/{booking}/print', 'PublicController@printBooking')->name('bookings.print');
 
+        Route::get('bookings/{booking}/messages', 'TripMessageController@index')->name('bookings.messages.index');
+        Route::post('bookings/{booking}/messages', 'TripMessageController@store')->name('bookings.messages.store');
+        Route::post('bookings/{booking}/messages/escalate', 'TripMessageController@escalate')->name('bookings.messages.escalate');
+
         Route::put('bookings/{booking}/completion', 'PublicController@updateBookingCompletion')->name('bookings.update-completion');
 
         Route::get('invoices/{invoice}/generate-invoice', 'PublicController@getGenerateInvoice')

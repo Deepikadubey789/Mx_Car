@@ -11,6 +11,7 @@ use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 
@@ -47,6 +48,7 @@ class Booking extends BaseModel
         'completion_damage_images',
         'completion_notes',
         'completed_at',
+        'is_escalated',
     ];
 
     protected $casts = [
@@ -55,11 +57,17 @@ class Booking extends BaseModel
         'completed_at' => 'datetime',
         'price_lock_expires_at' => 'datetime',
         'price_snapshot' => 'array',
+        'is_escalated' => 'boolean',
     ];
 
     public function car(): HasOne
     {
         return $this->hasOne(BookingCar::class, 'booking_id')->withDefault();
+    }
+
+    public function tripMessages(): HasMany
+    {
+        return $this->hasMany(TripMessage::class, 'booking_id')->oldest('id');
     }
 
     public function payment(): BelongsTo

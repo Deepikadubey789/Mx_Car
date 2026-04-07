@@ -246,4 +246,13 @@
             </x-core::button>
         </div>
     @endif
+
+    <div class="mt-5">
+        @include('plugins/car-rentals::partials.trip-messaging', [
+            'booking' => $booking,
+            'fetchUrl' => route('customer.bookings.messages.index', $booking->id),
+            'storeUrl' => route('customer.bookings.messages.store', $booking->id),
+            'escalateUrl' => route('customer.bookings.messages.escalate', $booking->id)
+        ])
+    </div>
 @endif
