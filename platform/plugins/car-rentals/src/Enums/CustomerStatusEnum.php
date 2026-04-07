@@ -9,12 +9,15 @@ use Illuminate\Support\HtmlString;
 /**
  * @method static CustomerStatusEnum ACTIVATED()
  * @method static CustomerStatusEnum LOCKED()
+ * @method static CustomerStatusEnum PUBLISHED()
  */
 class CustomerStatusEnum extends Enum
 {
     public const ACTIVATED = 'activated';
 
     public const LOCKED = 'locked';
+
+    public const PUBLISHED = 'published';
 
     public static $langPath = 'plugins/car-rentals::enums.customer_statuses';
 
@@ -23,6 +26,7 @@ class CustomerStatusEnum extends Enum
         $color = match ($this->value) {
             self::ACTIVATED => 'green',
             self::LOCKED => 'orange',
+            self::PUBLISHED => 'green',
             default => 'cyan',
         };
 

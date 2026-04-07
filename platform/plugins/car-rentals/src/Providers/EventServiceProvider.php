@@ -12,6 +12,7 @@ use Botble\CarRentals\Listeners\BookingCompletedListener;
 use Botble\CarRentals\Listeners\GenerateInvoiceListener;
 use Botble\CarRentals\Listeners\RegisterBookingReportsWidget;
 use Botble\CarRentals\Listeners\SaveCarFaqListener;
+use Botble\CarRentals\Listeners\SendBookingAdminNotificationListener;
 use Botble\CarRentals\Listeners\SendBookingConfirmationEmailListener;
 use Botble\CarRentals\Listeners\SendStatusChangedNotificationListener;
 use Botble\CarRentals\Listeners\UpdateCarViewListener;
@@ -26,6 +27,7 @@ class EventServiceProvider extends ServiceProvider
         BookingCreated::class => [
             GenerateInvoiceListener::class,
             SendBookingConfirmationEmailListener::class,
+            SendBookingAdminNotificationListener::class,
         ],
         CarViewed::class => [
             UpdateCarViewListener::class,
