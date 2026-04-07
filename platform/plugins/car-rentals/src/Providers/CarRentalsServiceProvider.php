@@ -59,7 +59,8 @@ use Botble\Theme\FormFrontManager;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Routing\Events\RouteMatched;
 use Illuminate\Support\Facades\Route;
-
+use Botble\CarRentals\Commands\SendTripReminderCommand;
+use Botble\CarRentals\Commands\SendReturnAlertCommand;
 class CarRentalsServiceProvider extends ServiceProvider
 {
     use LoadAndPublishDataTrait;
@@ -553,6 +554,17 @@ class CarRentalsServiceProvider extends ServiceProvider
             $this->commands([
                 UpdateExchangeRatesCommand::class,
                 SeedCurrenciesCommand::class,
+            ]);
+            $this->commands([
+                UpdateExchangeRatesCommand::class,
+                SeedCurrenciesCommand::class,
+                SendTripReminderCommand::class,
+            ]);
+            $this->commands([
+                UpdateExchangeRatesCommand::class,
+                SeedCurrenciesCommand::class,
+                SendTripReminderCommand::class,
+                SendReturnAlertCommand::class, // ← Yeh add karo
             ]);
         }
     }

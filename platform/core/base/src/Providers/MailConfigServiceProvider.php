@@ -69,7 +69,7 @@ class MailConfigServiceProvider extends ServiceProvider
                                 'host' => $setting->get('email_host', $config->get('mail.mailers.smtp.host')),
                                 'port' => (int) $setting->get('email_port', $config->get('mail.mailers.smtp.port')),
                                 'username' => $setting->get('email_username', $config->get('mail.mailers.smtp.username')),
-                                'password' => $setting->get('email_password', $config->get('mail.mailers.smtp.password')),
+                                 'password' => $setting->get('email_password') ?: env('MAIL_PASSWORD', $config->get('mail.mailers.smtp.password')),
                                 'local_domain' => $setting->get('email_local_domain') ?: null,
                                 'auth_mode' => null,
                                 'verify_peer' => false,
