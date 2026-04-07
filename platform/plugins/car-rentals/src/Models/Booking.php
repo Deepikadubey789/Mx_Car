@@ -137,4 +137,9 @@ class Booking extends BaseModel
     {
         return ! in_array($this->status, [BookingStatusEnum::COMPLETED, BookingStatusEnum::CANCELLED]);
     }
+
+    public function insurances(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    {
+        return $this->belongsToMany(Insurance::class, 'cr_booking_insurances', 'booking_id', 'insurance_id');
+    }
 }

@@ -145,6 +145,34 @@
         <br>
     @endif
 
+    {{-- NEW: Insurances Table --}}
+    @if ($booking->insurances->isNotEmpty())
+        <h6>{{ __('Insurances') }}</h6>
+        <x-core::table>
+            <x-core::table.header>
+                <x-core::table.header.cell>
+                    {{ __('Coverage Plan') }}
+                </x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">
+                    {{ __('Price') }}
+                </x-core::table.header.cell>
+            </x-core::table.header>
+            <x-core::table.body>
+                @foreach ($booking->insurances->unique() as $insurance)
+                    <x-core::table.body.row>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">
+                            <i class="ti ti-shield-check text-success me-2"></i> {{ $insurance->name }}
+                        </x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center">
+                            {{ format_price($insurance->price, $booking->currency_id) }}
+                        </x-core::table.body.cell>
+                    </x-core::table.body.row>
+                @endforeach
+            </x-core::table.body>
+        </x-core::table>
+        <br>
+    @endif
+
     <div class="row">
         <div class="col-lg-4">
             <strong>{{ __('Sub Total') }}:</strong>
@@ -224,8 +252,8 @@
         @endif
     </div>
 
-    @if ((auth()->check() || $booking->customer_id) && ($invoiceId = $booking->invoice->id) && $route)
-        <div class="btn-list d-flex gap-2 mt-4">
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        @if ((auth()->check() || $booking->customer_id) && ($invoiceId = $booking->invoice->id) && $route)
             <x-core::button
                 tag="a"
                 :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])"
@@ -244,6 +272,111 @@
             >
                 {{ __('Download Invoice') }}
             </x-core::button>
+        @endif
+
+        {{-- NEW: Rate Car Button (Customer Only) --}}
+        @if ($booking->status == \Botble\CarRentals\Enums\BookingStatusEnum::COMPLETED && ! \Botble\CarRentals\Models\CarReview::where('booking_id', $booking->id)->exists())
+            <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#rateCarModal" icon="ti ti-star" color="warning" :class="$buttonClass ?? ''">
+                {{ __('Rate Car') }}
+            </x-core::button>
+        @endif
+    </div>
+
+   {{-- NEW: Rate Car Modal (Customer Only) --}}
+    @if ($booking->status == \Botble\CarRentals\Enums\BookingStatusEnum::COMPLETED && ! \Botble\CarRentals\Models\CarReview::where('booking_id', $booking->id)->exists())
+        <div class="modal fade" id="rateCarModal" tabindex="-1" aria-labelledby="rateCarModalLabel" aria-hidden="true">
+            {{-- Added modal-dialog-centered and fallback styles for perfect centering --}}
+            <div class="modal-dialog modal-dialog-centered" style="max-width: 500px; margin: 3rem auto;">
+                <div class="modal-content border-0 shadow-lg rounded-4" style="background: #fff;">
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fs-5 fw-bold" id="rateCarModalLabel">
+                            <i class="ti ti-star-filled text-warning me-2"></i>{{ __('Rate') }} {{ $booking->car->car_name }}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ Route::has('public.ajax.car-reviews') ? route('public.ajax.car-reviews') : '#' }}" method="POST" class="customer-review-form">
+                        @csrf
+                        <input type="hidden" name="car_id" value="{{ $booking->car->car_id }}">
+                        <input type="hidden" name="booking_id" value="{{ $booking->id }}">
+                        <input type="hidden" name="customer_id" value="{{ auth('customer')->id() }}">
+                        
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ __('Rating') }}</label>
+                                <select name="star" class="form-select rounded-3" required>
+                                    <option value="5">5 {{ __('Stars') }} - {{ __('Excellent') }}</option>
+                                    <option value="4">4 {{ __('Stars') }} - {{ __('Good') }}</option>
+                                    <option value="3">3 {{ __('Stars') }} - {{ __('Average') }}</option>
+                                    <option value="2">2 {{ __('Stars') }} - {{ __('Poor') }}</option>
+                                    <option value="1">1 {{ __('Star') }} - {{ __('Terrible') }}</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">{{ __('Review') }}</label>
+                                <textarea name="content" class="form-control rounded-3" rows="4" required placeholder="{{ __('Share your experience with this car...') }}"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-top-0 pt-0">
+                            <button type="button" class="btn btn-light rounded-3" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                            <button type="submit" class="btn btn-primary rounded-3 px-4">{{ __('Submit Review') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // FIX: Move the modal to the absolute body level to escape CSS stacking traps!
+                const modalEl = document.getElementById('rateCarModal');
+                if (modalEl) {
+                    document.body.appendChild(modalEl);
+                }
+
+                const form = document.querySelector('.customer-review-form');
+                if (!form) return;
+
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    
+                    if (form.getAttribute('action') === '#') {
+                        alert('Review route is missing!');
+                        return;
+                    }
+
+                    const btn = form.querySelector('button[type="submit"]');
+                    const originalText = btn.innerHTML;
+                    btn.disabled = true;
+                    btn.innerHTML = '{{ __('Submitting...') }}';
+                    
+                    const formData = new FormData(form);
+
+                    fetch(form.getAttribute('action'), {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(res => {
+                        if (res.error) {
+                            alert(res.message);
+                            btn.disabled = false;
+                            btn.innerHTML = originalText;
+                        } else {
+                            alert(res.message);
+                            location.reload();
+                        }
+                    })
+                    .catch(error => {
+                        alert('{{ __('An error occurred. Please try again.') }}');
+                        btn.disabled = false;
+                        btn.innerHTML = originalText;
+                    });
+                });
+            });
+        </script>
     @endif
 @endif

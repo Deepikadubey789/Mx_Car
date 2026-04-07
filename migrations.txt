@@ -1,9 +1,9 @@
 
   php artisan migrate --path=database/migrations/2026_04_03_000001_create_chat_tables.php
   php artisan migrate --path=database/migrations/2026_04_03_000002_create_chat_settings_table.php
-  php artisan migrate --path=database/migrations/2026_04_06_090000_add_price_lock_and_deposit_to_cr_bookings_table.php
-  php artisan migrate --path=database/migrations/2026_04_06_130000_add_fee_fields_to_cr_bookings_table.php
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_06_090000_add_price_lock_and_deposit_to_cr_bookings_table.php
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_06_130000_add_fee_fields_to_cr_bookings_table.php
 
   php artisan migrate --path=/database/migrations/2026_04_06_052648_create_cr_customer_reviews_table.php
-
-
+  php artisan migrate --path=/database/migrations/2026_04_07_053910_create_cr_insurances_table.php
+  php artisan migrate --path=/database/migrations/2026_04_07_062534_create_cr_booking_insurances_table.php
