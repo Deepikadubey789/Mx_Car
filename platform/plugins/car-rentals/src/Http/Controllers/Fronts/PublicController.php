@@ -51,6 +51,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
+use Botble\CarRentals\Repositories\Interfaces\CarInterface;
+use Botble\Location\Repositories\Eloquent\CityRepository;
+use Botble\Location\Repositories\Eloquent\StateRepository;
 
 class PublicController extends BaseController
 {
