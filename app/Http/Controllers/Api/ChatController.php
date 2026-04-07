@@ -175,7 +175,7 @@ PROMPT;
             $maxPrice = $pricing->max('rental_rate');
             $avgPrice = round($pricing->avg('rental_rate'), 2);
 
-            return "LIVE PRICING: Minimum=${minPrice}/day | Average=${avgPrice}/day | Premium=${maxPrice}/day";
+            return "LIVE PRICING: Minimum={$minPrice}/day | Average={$avgPrice}/day | Premium={$maxPrice}/day";
         });
     }
 

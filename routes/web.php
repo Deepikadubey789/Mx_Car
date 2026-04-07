@@ -13,3 +13,17 @@ Route::middleware(['web', 'auth'])->prefix('admin')->name('admin.')->group(funct
         Route::post('reset', [ChatSettingController::class, 'reset'])->name('reset');
     });
 });
+
+// Front-end Chat API routes (bypassing the Botble API disabled middleware by grouping under web)
+Route::group(['prefix' => 'api/chat', 'as' => 'chat.'], function () {
+    Route::post('/send', [\App\Http\Controllers\Api\ChatController::class, 'send'])
+        ->middleware('throttle:50,1440')
+        ->name('send');
+
+    Route::get('/history', [\App\Http\Controllers\Api\ChatController::class, 'history'])
+        ->middleware('throttle:1000,1440')
+        ->name('history');
+
+    Route::get('/suggested-questions', [\App\Http\Controllers\Api\ChatController::class, 'suggestedQuestions'])
+        ->name('suggested-questions');
+});
