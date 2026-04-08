@@ -37,6 +37,8 @@ function submitCompletionForm() {
     const modalGasLevel = document.getElementById('completion_gas_level')?.value || '';
     const modalNotes = document.getElementById('completion_notes')?.value || '';
     const modalFileInput = document.getElementById('completion_damage_images');
+    const settlementAction = document.getElementById('deposit_settlement_action')?.value || '';
+    const captureAmount = document.getElementById('deposit_capture_amount')?.value || '';
 
     // Check if modal elements exist
     if (!modalFileInput) {
@@ -47,6 +49,17 @@ function submitCompletionForm() {
     if (modalMiles) formData.append('completion_miles', modalMiles);
     if (modalGasLevel) formData.append('completion_gas_level', modalGasLevel);
     if (modalNotes) formData.append('completion_notes', modalNotes);
+
+    if (settlementAction === 'capture_partial') {
+        const parsedAmount = parseFloat(captureAmount);
+
+        if (!captureAmount || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+            throw new Error('{{ trans('plugins/car-rentals::booking.validation.deposit_capture_amount_required') }}');
+        }
+    }
+
+    if (settlementAction) formData.append('deposit_settlement_action', settlementAction);
+    if (captureAmount) formData.append('deposit_capture_amount', captureAmount);
 
     // Add file uploads
     if (modalFileInput.files.length > 0) {
@@ -74,15 +87,21 @@ function submitCompletionForm() {
             'X-Requested-With': 'XMLHttpRequest'
         }
     })
-    .then(response => {
-        if (response.ok) {
-            // Success - reload the page to show updated data
-            window.location.reload();
-        } else {
-            return response.json().then(data => {
-                throw new Error(data.message || 'An error occurred while saving completion details.');
-            });
+    .then(async (response) => {
+        let data = null;
+
+        try {
+            data = await response.json();
+        } catch (e) {
+            data = null;
         }
+
+        if (! response.ok || (data && data.error)) {
+            throw new Error(data?.message || 'An error occurred while saving completion details.');
+        }
+
+        // Success - reload the page to show updated data
+        window.location.reload();
     })
     .catch(error => {
         console.error('Error:', error);

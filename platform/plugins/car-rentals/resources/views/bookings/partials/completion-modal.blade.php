@@ -107,7 +107,7 @@
                                                     <button
                                                         type="button"
                                                         class="btn btn-sm btn-danger position-absolute top-0 end-0"
-                                                        onclick="removeExistingImage({{ $index }})"
+                                                        onclick="removeExistingImage({{ $index }}, event)"
                                                         style="padding: 2px 6px; font-size: 10px;"
                                                     >
                                                         <x-core::icon name="ti ti-x" />
@@ -135,6 +135,47 @@
                             {{ trans('plugins/car-rentals::booking.completion_notes_help') }}
                         </x-core::form.helper-text>
                     </div>
+
+                    @if ($booking->deposit_hold_status === 'authorized')
+                        <div class="border rounded p-3 mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <x-core::form.label :value="trans('plugins/car-rentals::booking.deposit_authorized_amount')" />
+                                    <p class="mb-2 fw-semibold">{{ format_price($booking->deposit_hold_amount ?: $booking->deposit_amount, $booking->currency_id) }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <x-core::form.label for="deposit_settlement_action" :value="trans('plugins/car-rentals::booking.deposit_settlement_action')" />
+                                    <x-core::form.select name="deposit_settlement_action" id="deposit_settlement_action">
+                                        <option value="">{{ trans('plugins/car-rentals::booking.deposit_settlement_action') }}</option>
+                                        <option value="release">{{ trans('plugins/car-rentals::booking.deposit_settlement_release') }}</option>
+                                        <option value="capture_partial">{{ trans('plugins/car-rentals::booking.deposit_settlement_capture_partial') }}</option>
+                                        <option value="capture_full">{{ trans('plugins/car-rentals::booking.deposit_settlement_capture_full') }}</option>
+                                    </x-core::form.select>
+                                    <x-core::form.helper-text>
+                                        {{ trans('plugins/car-rentals::booking.deposit_settlement_action_help') }}
+                                    </x-core::form.helper-text>
+                                </div>
+                            </div>
+
+                            <div class="row mt-2 d-none" id="deposit-capture-amount-wrapper">
+                                <div class="col-md-6">
+                                    <x-core::form.label for="deposit_capture_amount" :value="trans('plugins/car-rentals::booking.deposit_capture_amount')" />
+                                    <x-core::form.text-input
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        :max="(float) ($booking->deposit_hold_amount ?: $booking->deposit_amount)"
+                                        name="deposit_capture_amount"
+                                        id="deposit_capture_amount"
+                                        :placeholder="trans('plugins/car-rentals::booking.deposit_capture_amount_placeholder')"
+                                    />
+                                    <x-core::form.helper-text>
+                                        {{ trans('plugins/car-rentals::booking.deposit_capture_amount_help') }}
+                                    </x-core::form.helper-text>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
             <div class="modal-footer">
@@ -150,37 +191,65 @@
 </div>
 
 <script>
-function removeExistingImage(index) {
-    const imageContainer = event.target.closest('.col-md-3');
-    const hiddenInput = imageContainer.querySelector('input[name="existing_damage_images[]"]');
+document.addEventListener('DOMContentLoaded', function () {
+    // Move modal out of nested containers to avoid backdrop/stacking freeze issues.
+    const modalEl = document.getElementById('completion-modal');
+    if (modalEl && modalEl.parentNode !== document.body) {
+        document.body.appendChild(modalEl);
+    }
 
-    // Remove the image from the form
-    imageContainer.remove();
-}
+    const saveBtn = document.getElementById('save-completion-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-document.getElementById('save-completion-btn').addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
+            const submitBtn = this;
+            const originalText = submitBtn.innerHTML;
 
-    const submitBtn = this;
-    const originalText = submitBtn.innerHTML;
+            // Disable button and show loading state
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>{{ trans("core/base::forms.save") }}';
 
-    // Disable button and show loading state
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>{{ trans("core/base::forms.save") }}';
+            // Call the external form submission function
+            try {
+                if (typeof submitCompletionForm === 'function') {
+                    submitCompletionForm();
+                } else {
+                    throw new Error('Form submission function not found.');
+                }
+            } catch (error) {
+                console.error('Completion form error:', error);
+                alert(error.message || 'An error occurred. Please refresh the page and try again.');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalText;
+            }
+        });
+    }
 
-    // Call the external form submission function
-    try {
-        if (typeof submitCompletionForm === 'function') {
-            submitCompletionForm();
-        } else {
-            throw new Error('Form submission function not found.');
-        }
-    } catch (error) {
-        console.error('Completion form error:', error);
-        alert(error.message || 'An error occurred. Please refresh the page and try again.');
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
+    const settlementAction = document.getElementById('deposit_settlement_action');
+    const captureAmountWrapper = document.getElementById('deposit-capture-amount-wrapper');
+
+    if (settlementAction && captureAmountWrapper) {
+        settlementAction.addEventListener('change', function () {
+            if (this.value === 'capture_partial') {
+                captureAmountWrapper.classList.remove('d-none');
+
+                return;
+            }
+
+            captureAmountWrapper.classList.add('d-none');
+        });
     }
 });
+
+function removeExistingImage(index, event) {
+    const imageContainer = event?.target?.closest('.col-md-3');
+
+    if (! imageContainer) {
+        return;
+    }
+
+    imageContainer.remove();
+}
 </script>

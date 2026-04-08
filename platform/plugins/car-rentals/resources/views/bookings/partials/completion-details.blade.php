@@ -1,7 +1,81 @@
 @php
     $canEditCompletion = is_in_admin(true) && auth()->check() && auth()->user()->hasPermission('car-rentals.bookings.edit');
     $hasCompletionData = $booking->completion_miles || $booking->completion_gas_level || $booking->completion_damage_images || $booking->completion_notes;
+    $hasDepositHoldData = $booking->deposit_hold_status || (float) $booking->deposit_hold_amount > 0;
+    
+    // Helper function to get status badge class and label
+    $getStatusBadge = function($status) {
+        $statusMap = [
+            'pending_authorization' => ['warning', 'Pending Authorization'],
+            'authorized' => ['warning', 'Authorized Hold'],
+            'release_pending_provider_expiry' => ['info', 'Release Pending'],
+            'released' => ['success', 'Released'],
+            'captured' => ['success', 'Captured'],
+            'captured_directly' => ['success', 'Captured (No Hold)'],
+        ];
+        return $statusMap[$status] ?? ['secondary', ucwords(str_replace('_', ' ', $status))];
+    };
 @endphp
+
+@if ($hasDepositHoldData)
+    <fieldset class="form-fieldset mb-4 mt-4" style="border-left: 4px solid #f0ad4e;">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 style="margin-bottom: 0;">
+                <i class="ti ti-lock"></i> {{ trans('plugins/car-rentals::booking.deposit_hold_information') }}
+            </h4>
+        </div>
+
+        <x-core::datagrid>
+            @if ($booking->deposit_hold_status)
+                @php
+                    [$badgeColor, $statusLabel] = $getStatusBadge($booking->deposit_hold_status);
+                @endphp
+                <x-core::datagrid.item :title="trans('plugins/car-rentals::booking.deposit_hold_status')">
+                    <span class="label label-{{ $badgeColor }}">{{ $statusLabel }}</span>
+                </x-core::datagrid.item>
+            @endif
+
+            @if ((float) $booking->deposit_hold_amount > 0)
+                @php
+                    $amountTitle = $booking->deposit_hold_status === 'captured_directly'
+                        ? trans('plugins/car-rentals::booking.deposit_captured_amount')
+                        : trans('plugins/car-rentals::booking.deposit_authorized_amount');
+                @endphp
+                <x-core::datagrid.item :title="$amountTitle">
+                    <strong style="font-size: 1.1em; color: #d9534f;">{{ format_price($booking->deposit_hold_amount, $booking->currency_id) }}</strong>
+                </x-core::datagrid.item>
+            @endif
+
+            @if ((float) $booking->deposit_captured_amount > 0)
+                <x-core::datagrid.item :title="trans('plugins/car-rentals::booking.deposit_captured_amount')">
+                    <span class="text-success" style="font-weight: 600;">
+                        <i class="ti ti-check-circle"></i> {{ format_price($booking->deposit_captured_amount, $booking->currency_id) }}
+                    </span>
+                </x-core::datagrid.item>
+            @endif
+
+            @if ((float) $booking->deposit_released_amount > 0)
+                <x-core::datagrid.item :title="trans('plugins/car-rentals::booking.deposit_released_amount')">
+                    <span class="text-info" style="font-weight: 600;">
+                        <i class="ti ti-arrow-back-up"></i> {{ format_price($booking->deposit_released_amount, $booking->currency_id) }}
+                    </span>
+                </x-core::datagrid.item>
+            @endif
+
+            @if ($booking->deposit_authorized_at)
+                <x-core::datagrid.item :title="trans('plugins/car-rentals::booking.deposit_authorized_date')">
+                    <small>{{ $booking->deposit_authorized_at->format('M d, Y @ H:i') }}</small>
+                </x-core::datagrid.item>
+            @endif
+
+            @if ($booking->deposit_settled_at)
+                <x-core::datagrid.item :title="trans('plugins/car-rentals::booking.deposit_settlement_date')">
+                    <small>{{ $booking->deposit_settled_at->format('M d, Y @ H:i') }}</small>
+                </x-core::datagrid.item>
+            @endif
+        </x-core::datagrid>
+    </fieldset>
+@endif
 
 <fieldset class="form-fieldset mb-4 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">

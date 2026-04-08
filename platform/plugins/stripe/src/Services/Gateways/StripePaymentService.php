@@ -47,11 +47,13 @@ class StripePaymentService extends StripePaymentAbstract
             }
 
             // The amount already includes the payment fee from the checkout controller
+            $isDepositHold = (bool) Arr::get($data, 'is_deposit_hold', false);
 
             $charge = Charge::create([
                 'amount' => $this->convertAmount($this->amount),
                 'currency' => $this->currency,
                 'source' => $this->token,
+                'capture' => ! $isDepositHold,
                 'description' => trans('plugins/payment::payment.payment_description', [
                     'order_id' => implode(', #', $data['order_id']),
                     'site_url' => $request->getHost(),
@@ -59,6 +61,9 @@ class StripePaymentService extends StripePaymentAbstract
                 'metadata' => [
                     'order_id' => json_encode($data['order_id']),
                     'payment_fee' => Arr::get($data, 'payment_fee', 0),
+                    'is_deposit_hold' => $isDepositHold ? 1 : 0,
+                    'deposit_hold_amount' => Arr::get($data, 'deposit_hold_amount', 0),
+                    'booking_total_amount' => Arr::get($data, 'booking_total_amount', 0),
                 ],
             ]);
 
@@ -171,6 +176,9 @@ class StripePaymentService extends StripePaymentAbstract
     {
         $paymentStatus = PaymentStatusEnum::FAILED;
         $actualChargedAmount = $data['amount'];
+        $isAuthorizedHold = false;
+        $authorizedAt = null;
+        $capturedAt = null;
 
         try {
             do_action('payment_before_making_api_request', STRIPE_PAYMENT_METHOD_NAME, ['id' => $chargeId]);
@@ -181,6 +189,9 @@ class StripePaymentService extends StripePaymentAbstract
 
             if ($payment && ($payment->paid || $payment->status == 'succeeded')) {
                 $paymentStatus = PaymentStatusEnum::COMPLETED;
+                $isAuthorizedHold = ! $payment->captured;
+                $authorizedAt = $isAuthorizedHold ? now()->toIso8601String() : null;
+                $capturedAt = $payment->captured ? now()->toIso8601String() : null;
 
                 $multiplier = StripeHelper::getStripeCurrencyMultiplier($this->currency);
                 $actualChargedAmount = $payment->amount;
@@ -203,6 +214,11 @@ class StripePaymentService extends StripePaymentAbstract
             'payment_channel' => STRIPE_PAYMENT_METHOD_NAME,
             'status' => $paymentStatus,
             'payment_fee' => Arr::get($data, 'payment_fee', 0),
+            'is_authorized_hold' => $isAuthorizedHold,
+            'authorized_amount' => $isAuthorizedHold ? $actualChargedAmount : null,
+            'captured_amount' => $isAuthorizedHold ? null : $actualChargedAmount,
+            'authorized_at' => $authorizedAt,
+            'captured_at' => $capturedAt,
         ]);
 
         return $chargeId;

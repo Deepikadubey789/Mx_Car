@@ -124,6 +124,25 @@ return [
 
     'completed_at' => 'Completed At',
 
+    // Deposit hold settlement
+    'deposit_hold_information' => 'Deposit Hold Information',
+    'deposit_hold_status' => 'Deposit Hold Status',
+    'deposit_authorized_amount' => 'Authorized Deposit Amount',
+    'deposit_authorized_date' => 'Authorized Date',
+    'deposit_captured_amount' => 'Captured Deposit Amount',
+    'deposit_released_amount' => 'Released Deposit Amount',
+    'deposit_settled_at' => 'Deposit Settled At',
+    'deposit_settlement_date' => 'Settlement Date',
+    'deposit_settlement_action' => 'Deposit settlement action',
+    'deposit_settlement_action_help' => 'Choose how to settle the authorized deposit hold after inspection.',
+    'deposit_settlement_action_required' => 'A deposit settlement action is required before saving completion details.',
+    'deposit_settlement_release' => 'Release full hold',
+    'deposit_settlement_capture_partial' => 'Capture partial amount for damages',
+    'deposit_settlement_capture_full' => 'Capture full hold amount',
+    'deposit_capture_amount' => 'Capture amount',
+    'deposit_capture_amount_placeholder' => 'Enter amount to capture from the hold',
+    'deposit_capture_amount_help' => 'Required when partial capture is selected. Must be less than or equal to authorized amount.',
+
     // Coupon fields
     'coupon_code' => 'Coupon Code',
     'coupon_amount' => 'Coupon Discount Amount',
@@ -139,6 +158,11 @@ return [
         'damage_image_invalid' => 'The uploaded file must be a valid image.',
         'damage_image_max_size' => 'The image size must not exceed 5MB.',
         'completion_notes_max' => 'The notes must not exceed 10,000 characters.',
+        'deposit_settlement_action_invalid' => 'Please select a valid deposit settlement action.',
+        'deposit_capture_amount_numeric' => 'The capture amount must be a valid number.',
+        'deposit_capture_amount_required' => 'Please provide a capture amount when partial capture is selected.',
+        'deposit_capture_amount_gt' => 'The capture amount must be greater than 0.',
+        'deposit_capture_amount_min' => 'The capture amount must be at least 0.',
     ],
 
     // Vendor booking actions

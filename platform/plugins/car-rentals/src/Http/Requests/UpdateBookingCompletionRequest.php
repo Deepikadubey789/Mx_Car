@@ -16,6 +16,8 @@ class UpdateBookingCompletionRequest extends Request
             'existing_damage_images' => ['nullable', 'array'],
             'existing_damage_images.*' => ['string'],
             'completion_notes' => ['nullable', 'string', 'max:10000'],
+            'deposit_settlement_action' => ['nullable', 'string', 'in:release,capture_partial,capture_full'],
+            'deposit_capture_amount' => ['nullable', 'required_if:deposit_settlement_action,capture_partial', 'numeric', 'gt:0', 'min:0'],
         ];
     }
 
@@ -26,6 +28,8 @@ class UpdateBookingCompletionRequest extends Request
             'completion_gas_level' => trans('plugins/car-rentals::booking.completion_gas_level'),
             'completion_damage_images' => trans('plugins/car-rentals::booking.damage_images'),
             'completion_notes' => trans('plugins/car-rentals::booking.completion_notes'),
+            'deposit_settlement_action' => trans('plugins/car-rentals::booking.deposit_settlement_action'),
+            'deposit_capture_amount' => trans('plugins/car-rentals::booking.deposit_capture_amount'),
         ];
     }
 
@@ -38,6 +42,11 @@ class UpdateBookingCompletionRequest extends Request
             'completion_damage_images.*.image' => trans('plugins/car-rentals::booking.validation.damage_image_invalid'),
             'completion_damage_images.*.max' => trans('plugins/car-rentals::booking.validation.damage_image_max_size'),
             'completion_notes.max' => trans('plugins/car-rentals::booking.validation.completion_notes_max'),
+            'deposit_settlement_action.in' => trans('plugins/car-rentals::booking.validation.deposit_settlement_action_invalid'),
+            'deposit_capture_amount.numeric' => trans('plugins/car-rentals::booking.validation.deposit_capture_amount_numeric'),
+            'deposit_capture_amount.required_if' => trans('plugins/car-rentals::booking.validation.deposit_capture_amount_required'),
+            'deposit_capture_amount.gt' => trans('plugins/car-rentals::booking.validation.deposit_capture_amount_gt'),
+            'deposit_capture_amount.min' => trans('plugins/car-rentals::booking.validation.deposit_capture_amount_min'),
         ];
     }
 }

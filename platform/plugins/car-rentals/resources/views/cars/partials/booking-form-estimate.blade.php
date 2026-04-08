@@ -15,6 +15,18 @@
             <div class="col-lg-4 col-6 text-end"><strong>{{ format_price($discount, $currencyId ?? null) }}</strong></div>
         </div>
     @endif
+    @if (($feeAmount ?? 0) > 0)
+        <div class="row">
+            <div class="col-lg-8 col-6">{{ __('Service fee') }}</div>
+            <div class="col-lg-4 col-6 text-end"><strong>{{ format_price($feeAmount, $currencyId ?? null) }}</strong></div>
+        </div>
+    @endif
+    @if (($depositAmount ?? 0) > 0)
+        <div class="row">
+            <div class="col-lg-8 col-6">{{ __('Refundable Deposit (authorization hold)') }}</div>
+            <div class="col-lg-4 col-6 text-end"><strong>{{ format_price($depositAmount, $currencyId ?? null) }}</strong></div>
+        </div>
+    @endif
     <div class="row total">
         <div class="col-lg-8 col-6">{{ __('Total') }}</div>
         <div class="col-lg-4 col-6 text-end"><strong>{{ format_price($total ?? 0, $currencyId ?? null) }}</strong></div>

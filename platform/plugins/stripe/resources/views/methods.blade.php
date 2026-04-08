@@ -10,7 +10,7 @@
                     <div class="stripe-card-wrapper"></div>
                 </div>
 
-                <div @class(['form-group mb-3', 'has-error' => $errors->has('number') || $errors->has('expiry')])>
+                <div @class(['form-group mb-3', 'has-error' => (isset($errors) && $errors->has('number')) || (isset($errors) && $errors->has('expiry'))])>
                     <div class="row">
                         <div class="col-sm-8">
                             <input
@@ -34,7 +34,7 @@
                         </div>
                     </div>
                 </div>
-                <div @class(['form-group mb-3', 'has-error' => $errors->has('name') || $errors->has('cvc')])>
+                <div @class(['form-group mb-3', 'has-error' => (isset($errors) && $errors->has('name')) || (isset($errors) && $errors->has('cvc'))])>
                     <div class="row">
                         <div class="col-sm-8">
                             <input

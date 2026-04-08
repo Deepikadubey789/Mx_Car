@@ -208,6 +208,77 @@
                 </strong>
                 {{ format_price($booking->deposit_amount, $booking->currency_id) }}
             </div>
+
+            @if ($booking->deposit_risk_level)
+                <div class="col-lg-4">
+                    <strong>{{ __('Deposit risk tier') }}:</strong>
+                    <span class="text-capitalize">{{ $booking->deposit_risk_level }}</span>
+                </div>
+            @endif
+
+            @if ((float) $booking->deposit_risk_multiplier > 1)
+                <div class="col-lg-4">
+                    <strong>{{ __('Deposit multiplier') }}:</strong>
+                    x{{ number_format((float) $booking->deposit_risk_multiplier, 2) }}
+                </div>
+            @endif
+
+            @if ($booking->deposit_hold_status)
+                @php
+                    $statusMap = [
+                        'pending_authorization' => 'warning',
+                        'authorized' => 'warning',
+                        'release_pending_provider_expiry' => 'info',
+                        'released' => 'success',
+                        'captured' => 'success',
+                        'captured_directly' => 'success',
+                    ];
+                    $statusLabel = [
+                        'pending_authorization' => 'Pending Authorization',
+                        'authorized' => 'Authorized Hold',
+                        'release_pending_provider_expiry' => 'Release Pending',
+                        'released' => 'Released',
+                        'captured' => 'Captured',
+                        'captured_directly' => 'Captured (No Hold)',
+                    ];
+                    $badgeColor = $statusMap[$booking->deposit_hold_status] ?? 'secondary';
+                    $label = $statusLabel[$booking->deposit_hold_status] ?? ucwords(str_replace('_', ' ', $booking->deposit_hold_status));
+                @endphp
+                <div class="col-lg-4">
+                    <strong>{{ __('Deposit hold status') }}:</strong>
+                    <span class="label label-{{ $badgeColor }}">{{ $label }}</span>
+                </div>
+            @endif
+
+            @if ((float) $booking->deposit_captured_amount > 0)
+                <div class="col-lg-4">
+                    <strong>{{ __('Deposit captured') }}:</strong>
+                    <span style="color: #5cb85c; font-weight: 600;">
+                        <i class="fa fa-check-circle"></i> {{ format_price($booking->deposit_captured_amount, $booking->currency_id) }}
+                    </span>
+                </div>
+            @endif
+
+            @if ((float) $booking->deposit_released_amount > 0)
+                <div class="col-lg-4">
+                    <strong>{{ __('Deposit released') }}:</strong>
+                    <span style="color: #5bc0de; font-weight: 600;">
+                        <i class="fa fa-undo"></i> {{ format_price($booking->deposit_released_amount, $booking->currency_id) }}
+                    </span>
+                </div>
+            @endif
+
+            @if (is_array($booking->deposit_risk_reasons) && count($booking->deposit_risk_reasons))
+                <div class="col-lg-12">
+                    <small class="text-muted">
+                        {{ __('Deposit hold is adjusted by profile and vehicle risk factors: :reasons', ['reasons' => implode(', ', $booking->deposit_risk_reasons)]) }}
+                    </small>
+                </div>
+            @endif
+
+            <div class="col-lg-12">
+                <small class="text-muted">{{ __('Security deposit is processed as an authorization hold and settled after inspection.') }}</small>
+            </div>
         @endif
 
         <div class="col-lg-4">

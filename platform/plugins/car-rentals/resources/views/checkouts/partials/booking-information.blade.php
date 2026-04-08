@@ -120,6 +120,44 @@
                 </div>
             </div>
 
+            @if (! empty($depositRiskLevel ?? null))
+                <div class="row">
+                    <div class="col-6">
+                        <p>{{ __('Deposit risk tier') }}:</p>
+                    </div>
+                    <div class="col-6 float-end">
+                        <p class="price-text text-end text-capitalize">{{ $depositRiskLevel }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if (! empty($depositRiskMultiplier ?? null) && (float) $depositRiskMultiplier > 1)
+                <div class="row">
+                    <div class="col-6">
+                        <p>{{ __('Deposit multiplier') }}:</p>
+                    </div>
+                    <div class="col-6 float-end">
+                        <p class="price-text text-end">x{{ number_format((float) $depositRiskMultiplier, 2) }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if (! empty($depositRiskReasons ?? null) && is_array($depositRiskReasons))
+                <div class="row">
+                    <div class="col-12">
+                        <p class="small text-muted mb-0">{{ __('Deposit hold is adjusted by profile and vehicle risk factors: :reasons', ['reasons' => implode(', ', $depositRiskReasons)]) }}</p>
+                    </div>
+                </div>
+            @endif
+
+            @if (($depositAmount ?? 0) > 0)
+                <div class="row">
+                    <div class="col-12">
+                        <p class="small text-muted mb-0">{{ __('This amount is placed as an authorization hold and will be settled after trip inspection.') }}</p>
+                    </div>
+                </div>
+            @endif
+
             <div class="row">
                 <div class="col-6">
                     <p><strong>{{ __('Final payable before payment') }}</strong>:</p>

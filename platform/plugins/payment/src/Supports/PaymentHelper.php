@@ -8,6 +8,7 @@ use Botble\Payment\Enums\PaymentMethodEnum;
 use Botble\Payment\Enums\PaymentStatusEnum;
 use Botble\Payment\Models\Payment;
 use Botble\Payment\Models\PaymentLog;
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Request;
@@ -39,10 +40,21 @@ class PaymentHelper
             ->first();
 
         if ($payment) {
+            $payment->fill([
+                'is_authorized_hold' => (bool) Arr::get($data, 'is_authorized_hold', $payment->is_authorized_hold),
+                'authorized_amount' => Arr::get($data, 'authorized_amount', $payment->authorized_amount),
+                'captured_amount' => Arr::get($data, 'captured_amount', $payment->captured_amount),
+                'released_amount' => Arr::get($data, 'released_amount', $payment->released_amount),
+                'authorized_at' => Arr::has($data, 'authorized_at') ? Carbon::parse(Arr::get($data, 'authorized_at')) : $payment->authorized_at,
+                'captured_at' => Arr::has($data, 'captured_at') ? Carbon::parse(Arr::get($data, 'captured_at')) : $payment->captured_at,
+                'released_at' => Arr::has($data, 'released_at') ? Carbon::parse(Arr::get($data, 'released_at')) : $payment->released_at,
+            ]);
+
             if ($payment->status != $data['status']) {
                 $payment->status = $data['status'];
-                $payment->save();
             }
+
+            $payment->save();
 
             return false;
         }
@@ -67,6 +79,13 @@ class PaymentHelper
                 'customer_type' => Arr::get($data, 'customer_type'),
                 'payment_channel' => $paymentChannel,
                 'status' => Arr::get($data, 'status', PaymentStatusEnum::PENDING),
+                'is_authorized_hold' => (bool) Arr::get($data, 'is_authorized_hold', false),
+                'authorized_amount' => Arr::get($data, 'authorized_amount'),
+                'captured_amount' => Arr::get($data, 'captured_amount'),
+                'released_amount' => Arr::get($data, 'released_amount'),
+                'authorized_at' => Arr::has($data, 'authorized_at') ? Carbon::parse(Arr::get($data, 'authorized_at')) : null,
+                'captured_at' => Arr::has($data, 'captured_at') ? Carbon::parse(Arr::get($data, 'captured_at')) : null,
+                'released_at' => Arr::has($data, 'released_at') ? Carbon::parse(Arr::get($data, 'released_at')) : null,
             ]);
     }
 

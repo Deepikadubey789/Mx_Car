@@ -180,6 +180,18 @@
             </x-core::datagrid.item>
         @endif
 
+        @if ($booking->deposit_risk_level)
+            <x-core::datagrid.item :title="__('Deposit Risk Tier')">
+                <span class="text-capitalize badge badge-warning">{{ $booking->deposit_risk_level }}</span>
+            </x-core::datagrid.item>
+        @endif
+
+        @if ((float) $booking->deposit_risk_multiplier > 1)
+            <x-core::datagrid.item :title="__('Deposit Multiplier')">
+                x{{ number_format((float) $booking->deposit_risk_multiplier, 2) }}
+            </x-core::datagrid.item>
+        @endif
+
         <x-core::datagrid.item :title="__('Total Amount')">
             {{ format_price($booking->amount, $booking->currency_id) }}
         </x-core::datagrid.item>

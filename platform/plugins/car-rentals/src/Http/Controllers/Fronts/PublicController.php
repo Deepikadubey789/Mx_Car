@@ -31,6 +31,7 @@ use Botble\CarRentals\Models\Insurance; // NEW IMPORT
 use Botble\CarRentals\Services\BookingService;
 use Botble\CarRentals\Services\CouponService;
 use Botble\CarRentals\Services\PriceLockService;
+use Botble\CarRentals\Services\RiskBasedDepositService;
 use Botble\Location\Models\City;
 use Botble\Location\Repositories\Interfaces\CityInterface;
 use Botble\Location\Repositories\Interfaces\CountryInterface;
@@ -350,23 +351,50 @@ class PublicController extends BaseController
 
         $taxAmount = $car->calculateTaxAmount($totalBeforeTax);
         $taxTitle = $car->getTaxInfo($taxAmount);
-        $totalAmount = $totalBeforeTax + $taxAmount;
+
+        $priceLockService = app(PriceLockService::class);
+        $feeName = $priceLockService->getFeeName();
+        $feeValue = $priceLockService->getFeeValue();
+        $feeAmount = $priceLockService->calculateFeeAmount($totalBeforeTax);
+        $depositType = $priceLockService->getDepositType();
+        $depositRate = $priceLockService->getDepositRate();
+        $discountAmount = (float) Arr::get($sessionData, 'coupon_amount', 0);
+        $baseDepositAmount = $priceLockService->calculateDepositAmount($totalBeforeTax);
+        $depositRisk = app(RiskBasedDepositService::class)->assess(
+            $baseDepositAmount,
+            $car,
+            Auth::guard('customer')->user()
+        );
+        $depositAmount = (float) $depositRisk['final_amount'];
+        $totalAmount = ($totalBeforeTax + $taxAmount) - $discountAmount + $feeAmount;
+        $finalPayableAmount = $totalAmount + $depositAmount;
 
         $data = [
             'car' => $car,
-            'amount' => $amount + $serviceAmount + $insuranceAmount,
+            'amount' => $totalBeforeTax,
             'totalAmount' => $totalAmount,
             'taxTitle' => $taxTitle,
             'taxAmount' => $taxAmount,
             'startDate' => $startDate,
             'endDate' => $endDate,
             'couponCode' => Arr::get($sessionData, 'coupon_code'),
-            'couponAmount' => Arr::get($sessionData, 'coupon_amount'),
+            'couponAmount' => $discountAmount,
             'token' => $token,
             'rentalCarAmount' => $rentalCarAmount,
             'serviceIds' => $serviceIds,
             'services' => $services ?? [],
             'insurances' => $insurances ?? [],
+            'feeName' => $feeName,
+            'feeValue' => $feeValue,
+            'feeAmount' => $feeAmount,
+            'depositBaseAmount' => $baseDepositAmount,
+            'depositAmount' => $depositAmount,
+            'depositType' => $depositType,
+            'depositRate' => $depositRate,
+            'depositRiskLevel' => $depositRisk['risk_level'],
+            'depositRiskMultiplier' => (float) $depositRisk['multiplier'],
+            'depositRiskReasons' => $depositRisk['reasons'],
+            'finalPayableAmount' => $finalPayableAmount,
         ];
 
         return view(
@@ -488,7 +516,13 @@ class PublicController extends BaseController
         $feeName = $priceLockService->getFeeName();
         $feeValue = $priceLockService->getFeeValue();
         $feeAmount = $priceLockService->calculateFeeAmount($amount);
-        $depositAmount = $priceLockService->calculateDepositAmount($amount);
+        $baseDepositAmount = $priceLockService->calculateDepositAmount($amount);
+        $depositRisk = app(RiskBasedDepositService::class)->assess(
+            $baseDepositAmount,
+            $car,
+            Auth::guard('customer')->user()
+        );
+        $depositAmount = (float) $depositRisk['final_amount'];
 
         $totalAmount = ($amount + $taxAmount) - $discountAmount + $feeAmount;
         $finalPayableAmount = $totalAmount + $depositAmount;
@@ -505,9 +539,13 @@ class PublicController extends BaseController
             'fee_value' => $feeValue,
             'fee_amount' => $feeAmount,
             'deposit_amount' => $depositAmount,
+            'deposit_base_amount' => $baseDepositAmount,
             'deposit_type' => $depositType,
             'deposit_rate' => $depositRate,
             'deposit_fixed_amount' => $depositFixedAmount,
+            'deposit_risk_multiplier' => (float) $depositRisk['multiplier'],
+            'deposit_risk_level' => $depositRisk['risk_level'],
+            'deposit_risk_reasons' => $depositRisk['reasons'],
             'total_amount' => $finalPayableAmount,
             'currency_id' => $car->currency_id,
             'tax_title' => $car->getTaxInfo($taxAmount),
@@ -545,8 +583,12 @@ class PublicController extends BaseController
                 'feeValue' => $feeValue,
                 'feeAmount' => $feeAmount,
                 'depositAmount' => $depositAmount,
+                'depositBaseAmount' => $baseDepositAmount,
                 'depositType' => $depositType,
                 'depositRate' => $depositRate,
+                'depositRiskLevel' => $depositRisk['risk_level'],
+                'depositRiskMultiplier' => (float) $depositRisk['multiplier'],
+                'depositRiskReasons' => $depositRisk['reasons'],
                 'finalPayableAmount' => $finalPayableAmount,
                 'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
                 'priceLockExpiredMessage' => $priceLockExpiredMessage,
@@ -571,9 +613,15 @@ class PublicController extends BaseController
         $booking->fee_name = $feeName;
         $booking->fee_value = $feeValue;
         $booking->fee_amount = $feeAmount;
+        $booking->deposit_base_amount = $baseDepositAmount;
         $booking->deposit_amount = $depositAmount;
         $booking->deposit_type = $depositType;
         $booking->deposit_rate = $depositRate;
+        $booking->deposit_risk_multiplier = (float) $depositRisk['multiplier'];
+        $booking->deposit_risk_level = $depositRisk['risk_level'];
+        $booking->deposit_risk_reasons = $depositRisk['reasons'];
+        $booking->deposit_hold_status = $depositAmount > 0 ? 'pending_authorization' : null;
+        $booking->deposit_hold_amount = $depositAmount;
         $booking->currency_id = $request->input('currency_id', strtoupper(get_application_currency()->id));
         $booking->booking_number = Booking::generateUniqueBookingNumber();
         $booking->transaction_id = Str::upper(Str::random(32));
@@ -803,7 +851,13 @@ class PublicController extends BaseController
         $feeName = $priceLockService->getFeeName();
         $feeValue = $priceLockService->getFeeValue();
         $feeAmount = $priceLockService->calculateFeeAmount($amount);
-        $depositAmount = $priceLockService->calculateDepositAmount($amount);
+        $baseDepositAmount = $priceLockService->calculateDepositAmount($amount);
+        $depositRisk = app(RiskBasedDepositService::class)->assess(
+            $baseDepositAmount,
+            $car,
+            Auth::guard('customer')->user()
+        );
+        $depositAmount = (float) $depositRisk['final_amount'];
 
         $totalAmount = ($amount + $taxAmount) - $discountAmount + $feeAmount;
         $finalPayableAmount = $totalAmount + $depositAmount;
@@ -818,9 +872,15 @@ class PublicController extends BaseController
         $booking->fee_name = $feeName;
         $booking->fee_value = $feeValue;
         $booking->fee_amount = $feeAmount;
+        $booking->deposit_base_amount = $baseDepositAmount;
         $booking->deposit_amount = $depositAmount;
         $booking->deposit_type = $depositType;
         $booking->deposit_rate = $depositRate;
+        $booking->deposit_risk_multiplier = (float) $depositRisk['multiplier'];
+        $booking->deposit_risk_level = $depositRisk['risk_level'];
+        $booking->deposit_risk_reasons = $depositRisk['reasons'];
+        $booking->deposit_hold_status = $depositAmount > 0 ? 'pending_authorization' : null;
+        $booking->deposit_hold_amount = $depositAmount;
         $booking->currency_id = $request->input('currency_id', strtoupper(get_application_currency()->id));
         $booking->booking_number = Booking::generateUniqueBookingNumber();
         $booking->transaction_id = Str::upper(Str::random(32));
@@ -1024,15 +1084,28 @@ class PublicController extends BaseController
 
         $taxInfo = $car->getTaxInfo($taxAmount);
 
-        $totalAmount = $totalBeforeTax + $taxAmount;
+        $priceLockService = app(PriceLockService::class);
+        $feeAmount = $priceLockService->calculateFeeAmount($totalBeforeTax);
+        $baseDepositAmount = $priceLockService->calculateDepositAmount($totalBeforeTax);
+        $depositRisk = app(RiskBasedDepositService::class)->assess(
+            $baseDepositAmount,
+            $car,
+            Auth::guard('customer')->user()
+        );
+        $depositAmount = (float) $depositRisk['final_amount'];
+
+        $totalAmount = $totalBeforeTax + $taxAmount + $feeAmount;
+        $finalPayableAmount = $totalAmount + $depositAmount;
 
         $data = [
             'subtotal' => $amount + $serviceAmount + $insuranceAmount,
-            'total' => $totalAmount,
+            'total' => $finalPayableAmount,
             'tax' => $taxAmount,
             'taxInfo' => $taxInfo,
             'discount' => 0,
             'currencyId' => $car->currency_id,
+            'depositAmount' => $depositAmount,
+            'feeAmount' => $feeAmount,
         ];
 
         return $this

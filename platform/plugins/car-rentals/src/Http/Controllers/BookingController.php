@@ -22,6 +22,7 @@ use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Models\Service;
 use Botble\CarRentals\Services\CouponService;
+use Botble\CarRentals\Services\DepositHoldSettlementService;
 use Botble\CarRentals\Tables\BookingTable;
 use Botble\Media\Facades\RvMedia;
 use Botble\Payment\Enums\PaymentMethodEnum;
@@ -85,6 +86,14 @@ class BookingController extends BaseController
     public function updateCompletion(Booking $booking, UpdateBookingCompletionRequest $request)
     {
         $data = $request->validated();
+        $settlementMessage = null;
+
+        if ($booking->deposit_hold_status === 'authorized' && empty($data['deposit_settlement_action'])) {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage(trans('plugins/car-rentals::booking.deposit_settlement_action_required'));
+        }
 
         // Handle damage images upload
         if ($request->hasFile('completion_damage_images')) {
@@ -111,9 +120,30 @@ class BookingController extends BaseController
 
         $booking->update($data);
 
+        if ($booking->deposit_hold_status === 'authorized' && ! empty($data['deposit_settlement_action'])) {
+            $settlement = app(DepositHoldSettlementService::class)->settle(
+                $booking,
+                $data['deposit_settlement_action'],
+                Arr::get($data, 'deposit_capture_amount')
+            );
+
+            if (! $settlement['ok']) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setMessage($settlement['message']);
+            }
+
+            $settlementMessage = $settlement['message'] ?? null;
+        }
+
         return $this
             ->httpResponse()
-            ->setMessage(trans('plugins/car-rentals::booking.completion_details_updated_successfully'));
+            ->setMessage(
+                $settlementMessage
+                    ? trans('plugins/car-rentals::booking.completion_details_updated_successfully') . ' ' . $settlementMessage
+                    : trans('plugins/car-rentals::booking.completion_details_updated_successfully')
+            );
     }
 
     public function create()

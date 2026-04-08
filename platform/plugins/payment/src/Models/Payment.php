@@ -59,12 +59,23 @@ class Payment extends BaseModel
         'customer_type',
         'refunded_amount',
         'refund_note',
+        'is_authorized_hold',
+        'authorized_amount',
+        'captured_amount',
+        'released_amount',
+        'authorized_at',
+        'captured_at',
+        'released_at',
     ];
 
     protected $casts = [
         'payment_channel' => PaymentMethodEnum::class,
         'status' => PaymentStatusEnum::class,
         'metadata' => 'array',
+        'is_authorized_hold' => 'boolean',
+        'authorized_at' => 'datetime',
+        'captured_at' => 'datetime',
+        'released_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

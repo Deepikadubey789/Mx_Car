@@ -39,9 +39,12 @@ class PriceLockServiceTest extends TestCase
             'fee_value' => 15,
             'fee_amount' => 15,
             'deposit_amount' => 25,
+            'deposit_base_amount' => 20,
             'deposit_type' => 'percentage',
             'deposit_rate' => 20,
             'deposit_fixed_amount' => 0,
+            'deposit_risk_multiplier' => 1.25,
+            'deposit_risk_level' => 'medium',
             'total_amount' => 152.5,
             'currency_id' => 1,
             'tax_title' => 'VAT',
@@ -57,7 +60,10 @@ class PriceLockServiceTest extends TestCase
         $this->assertSame(15.0, $lock['snapshot']['fee_amount']);
         $this->assertSame('percentage', $lock['snapshot']['deposit_type']);
         $this->assertSame(20.0, $lock['snapshot']['deposit_rate']);
+        $this->assertSame(20.0, $lock['snapshot']['deposit_base_amount']);
         $this->assertSame(25.0, $lock['snapshot']['deposit_amount']);
+        $this->assertSame(1.25, $lock['snapshot']['deposit_risk_multiplier']);
+        $this->assertSame('medium', $lock['snapshot']['deposit_risk_level']);
         $this->assertSame(152.5, $lock['snapshot']['total_amount']);
     }
 
@@ -74,9 +80,12 @@ class PriceLockServiceTest extends TestCase
             'coupon_amount' => 0,
             'fee_amount' => 0,
             'deposit_amount' => 20,
+            'deposit_base_amount' => 20,
             'deposit_type' => 'percentage',
             'deposit_rate' => 20,
             'deposit_fixed_amount' => 0,
+            'deposit_risk_multiplier' => 1,
+            'deposit_risk_level' => 'low',
             'total_amount' => 130,
             'currency_id' => 1,
             'services' => [],
@@ -106,9 +115,12 @@ class PriceLockServiceTest extends TestCase
             'fee_value' => 15,
             'fee_amount' => 15,
             'deposit_amount' => 25,
+            'deposit_base_amount' => 20,
             'deposit_type' => 'percentage',
             'deposit_rate' => 20,
             'deposit_fixed_amount' => 0,
+            'deposit_risk_multiplier' => 1.25,
+            'deposit_risk_level' => 'medium',
             'total_amount' => 152.5,
             'currency_id' => 1,
             'tax_title' => 'VAT',

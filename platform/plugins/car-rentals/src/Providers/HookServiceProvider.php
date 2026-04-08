@@ -10,6 +10,7 @@ use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Rules\OnOffRule;
 use Botble\CarRentals\Enums\BookingStatusEnum;
 use Botble\CarRentals\Events\BookingProcessingEvent;
+use Botble\CarRentals\Facades\CarRentalsHelper;
 use Botble\CarRentals\Forms\CustomerForm;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\Car;
@@ -87,7 +88,28 @@ class HookServiceProvider extends ServiceProvider
                     $orderIds = $data['order_id'];
                     $orderId = Arr::first($orderIds);
 
-                    PaymentHelper::storeLocalPayment($data);
+                    $payment = PaymentHelper::storeLocalPayment($data);
+
+                    $booking = Booking::query()->find($orderId);
+
+                    if ($booking && Arr::get($data, 'is_authorized_hold')) {
+                        $booking->update([
+                            'deposit_hold_status' => 'authorized',
+                            'deposit_authorized_at' => Carbon::now(),
+                            'deposit_hold_amount' => Arr::get($data, 'authorized_amount', $booking->deposit_amount),
+                        ]);
+                    }
+
+                    if (
+                        $booking
+                        && ! Arr::get($data, 'is_authorized_hold')
+                        && $booking->deposit_amount > 0
+                        && Arr::get($data, 'status') == PaymentStatusEnum::COMPLETED
+                    ) {
+                        $booking->update([
+                            'deposit_hold_status' => 'captured_directly',
+                        ]);
+                    }
 
                     return $this->app->make(BookingService::class)->processBooking($orderId, $data['charge_id']);
                 });
@@ -106,13 +128,19 @@ class HookServiceProvider extends ServiceProvider
                     }
 
                     $bookingCar = $booking->car;
+                    $stripeMethod = defined('STRIPE_PAYMENT_METHOD_NAME') ? STRIPE_PAYMENT_METHOD_NAME : 'stripe';
+                    $isStripeMethod = $request->input('payment_method') === $stripeMethod;
+                    $isStripeApiCharge = get_payment_setting('payment_type', $stripeMethod, 'stripe_api_charge') === 'stripe_api_charge';
+                    $isDepositHoldEnabled = (bool) CarRentalsHelper::getSetting('deposit_risk_enabled', false);
+                    $isDepositHold = $isStripeMethod && $isStripeApiCharge && $isDepositHoldEnabled && (float) $booking->deposit_amount > 0;
+                    $amount = $isDepositHold ? (float) $booking->deposit_amount : (float) $booking->amount;
 
                     $cars = [
                         [
                             'id' => $bookingCar->getKey(),
                             'name' => $bookingCar->car_name,
                             'image' => $bookingCar->car_mage,
-                            'price' => $booking->amount,
+                            'price' => $amount,
                             'price_per_order' => $bookingCar->price,
                             'qty' => 1,
                         ],
@@ -130,7 +158,7 @@ class HookServiceProvider extends ServiceProvider
                     ];
 
                     return [
-                        'amount' => (float) $booking->amount,
+                        'amount' => $amount,
                         'shipping_amount' => 0,
                         'shipping_method' => null,
                         'tax_amount' => $booking->tax_amount,
@@ -146,6 +174,9 @@ class HookServiceProvider extends ServiceProvider
                         'orders' => [$booking],
                         'address' => $address,
                         'checkout_token' => session('checkout_token'),
+                        'is_deposit_hold' => $isDepositHold,
+                        'booking_total_amount' => (float) $booking->amount,
+                        'deposit_hold_amount' => (float) $booking->deposit_amount,
                     ];
                 }, 120, 2);
             }
