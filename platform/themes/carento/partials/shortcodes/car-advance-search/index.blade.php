@@ -377,11 +377,10 @@
                                     type="text"
                                     class="search-input location-autocomplete ps-4"
                                     id="location-input"
-                                    placeholder="{{ __('City, airport, or hotel') }}"
+                                    placeholder="{{ __('City, state, or country') }}"
                                     value="{{ $selectedLocation }}"
                                     name="location"
-                                    data-url="{{ route('public.ajax.cities') }}"
-                                    autocomplete="off"
+                                    data-url="{{ route('public.ajax.locations') }}" autocomplete="off"
                                 />
                                 <input type="hidden" name="city_id" id="city_id_hidden" value="{{ $selectedCityId }}">
                                 <div class="location-suggestions" data-bb-toggle="data-suggestion"></div>

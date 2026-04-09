@@ -7,38 +7,43 @@
         $selectedLocation = BaseHelper::stringify(request()->input('location', ''));
         $selectedCityId = BaseHelper::stringify(request()->input('city_id', ''));
     @endphp
-    <div class="filter-widget mb-4" style="overflow: unset !important;">
+    <div class="filter-widget mb-4" style="overflow: visible !important;">
         <div class="filter-widget-header">
             <div class="filter-icon">
                 <x-core::icon name="ti ti-map-pin" />
             </div>
             <h6 class="filter-title">{{ __('Location') }}</h6>
         </div>
-        <div class="filter-widget-content" data-bb-toggle="search-suggestion">
-            <div class="position-relative">
+        <div class="filter-widget-content">
+            {{-- ADDED: Input Group to place Search button beside the input --}}
+            <div class="input-group position-relative">
                 <input
                     type="text"
-                    class="form-control location-autocomplete submit-form-filter"
-                    id="location-filter-input"
+                    class="form-control custom-sidebar-loc-input"
                     placeholder="{{ __('Search for location...') }}"
                     value="{{ $selectedLocation }}"
                     name="location"
                     form="{{ $formId }}"
-                    data-url="{{ route('public.ajax.cities') }}"
+                    data-url="{{ route('public.ajax.locations') }}"
                     autocomplete="off"
                     style="padding-left: 35px !important;"
                 />
-                <span class="position-absolute top-50 start-0 translate-middle-y" style="z-index: 10;">
+                <span class="position-absolute top-50 start-0 translate-middle-y ms-2" style="z-index: 10; pointer-events: none;">
                     <img src="{{ Theme::asset()->url('images/icons/location.svg') }}" alt="Location" width="20" height="20" />
                 </span>
-                <input type="hidden" name="city_id" id="city_id_filter_hidden" form="{{ $formId }}" value="{{ $selectedCityId }}">
-                <div class="location-suggestions" data-bb-toggle="data-suggestion"></div>
+                
+                {{-- NEW: Search Button --}}
+                <button class="btn btn-primary" type="submit" form="{{ $formId }}" style="border-radius: 0 6px 6px 0; z-index: 1;">
+                    <x-core::icon name="ti ti-search" />
+                </button>
+
+                <input type="hidden" name="city_id" class="sidebar-city-hidden-input" form="{{ $formId }}" value="{{ $selectedCityId }}">
             </div>
         </div>
     </div>
 @endif
 
-{{-- ADDED: Keyword / Car Name Search Filter --}}
+{{-- Keyword / Car Name Search Filter --}}
 <div class="filter-widget mb-4">
     <div class="filter-widget-header">
         <div class="filter-icon">
@@ -617,7 +622,7 @@
                                 <div class="custom-filter-check">
                                     <input
                                         type="checkbox"
-                                        class="form-check-input submit-form-filter"
+                                        class="form-check-input submit-form-filter d-none"
                                         value="{{ $carType->id }}"
                                         name="car_types[]"
                                         id="check-car-type-{{ $carType->id }}"
@@ -754,41 +759,6 @@
     </div>
 @endif
 
-{{-- Fuel Types Filter --}}
-@if($carFuelTypes->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('fuels'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-gas-station" />
-            </div>
-            <h6 class="filter-title">{{ __('Fuel Type') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($carFuelTypes as $carFuelType)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carFuelType->id }}"
-                                name="car_fuel_types[]"
-                                id="check-car-fuel-type-{{ $carFuelType->id }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carFuelType->id, (array) request()->input('car_fuel_types', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-fuel-type-{{ $carFuelType->id }}">
-                                <span class="filter-option-text">{{ $carFuelType->name }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carFuelType->cars_count ?: 0 }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-@endif
-
 {{-- Review Score Filter --}}
 @if($carReviewScores->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('review_scores'))
     <div class="filter-widget mb-4">
@@ -825,3 +795,153 @@
         </div>
     </div>
 @endif
+
+{{-- SIDEBAR PORTAL DROPDOWN SCRIPT --}}
+<script>
+    // To ensure this script only runs once even if the file is loaded multiple times via AJAX
+    if (!window.sidebarLocationScriptLoaded) {
+        window.sidebarLocationScriptLoaded = true;
+        
+        // Create the global dropdown container attached directly to the body
+        let sidebarDropdown = document.getElementById('custom-sidebar-location-dropdown');
+        if (!sidebarDropdown) {
+            sidebarDropdown = document.createElement('div');
+            sidebarDropdown.id = 'custom-sidebar-location-dropdown';
+            
+            // CSS to ensure it floats on top of everything, including offcanvas menus
+            sidebarDropdown.style.cssText = `
+                position: absolute;
+                background: #ffffff;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+                z-index: 2147483647;
+                max-height: 300px;
+                overflow-y: auto;
+                display: none;
+            `;
+            
+            // Basic dark mode handling
+            if(document.documentElement.getAttribute('data-bs-theme') === 'dark') {
+                sidebarDropdown.style.background = '#1b2736';
+                sidebarDropdown.style.borderColor = '#30455d';
+            }
+            
+            document.body.appendChild(sidebarDropdown);
+        }
+
+        let sidebarLocationTimeout = null;
+        let activeSidebarInput = null;
+
+        // Function to perfectly align the dropdown directly under the input box
+        function updateSidebarDropdownPosition() {
+            if (!activeSidebarInput || sidebarDropdown.style.display === 'none') return;
+            const rect = activeSidebarInput.getBoundingClientRect();
+            sidebarDropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            sidebarDropdown.style.left = (rect.left + window.scrollX) + 'px';
+            sidebarDropdown.style.width = activeSidebarInput.offsetWidth + 'px';
+        }
+
+        // Keep dropdown aligned if user scrolls or resizes
+        window.addEventListener('resize', updateSidebarDropdownPosition);
+        window.addEventListener('scroll', updateSidebarDropdownPosition);
+
+        document.addEventListener('input', function(e) {
+            if (e.target && e.target.classList.contains('custom-sidebar-loc-input')) {
+                activeSidebarInput = e.target;
+                clearTimeout(sidebarLocationTimeout);
+                
+                const query = activeSidebarInput.value;
+                const url = activeSidebarInput.getAttribute('data-url');
+
+                if (!url || query.length < 2) {
+                    sidebarDropdown.style.display = 'none';
+                    return;
+                }
+
+                sidebarLocationTimeout = setTimeout(() => {
+                    fetch(`${url}?location=${encodeURIComponent(query)}`, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(res => {
+                        sidebarDropdown.innerHTML = '';
+                        
+                        let dataArray = [];
+                        if (res.data && Array.isArray(res.data)) dataArray = res.data;
+                        else if (res.data && res.data.data && Array.isArray(res.data.data)) dataArray = res.data.data;
+                        else if (Array.isArray(res)) dataArray = res;
+
+                        if (dataArray.length > 0) {
+                            dataArray.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'location-suggestion-item';
+                                
+                                div.style.cssText = `
+                                    padding: 12px 16px;
+                                    cursor: pointer;
+                                    border-bottom: 1px solid #f3f4f6;
+                                    color: #374151;
+                                    font-size: 0.9rem;
+                                    text-align: left;
+                                `;
+                                
+                                if(document.documentElement.getAttribute('data-bs-theme') === 'dark') {
+                                    div.style.color = '#e6eef8';
+                                    div.style.borderBottomColor = '#30455d';
+                                }
+
+                                div.onmouseover = () => { div.style.background = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#23354b' : '#fef2f2'; div.style.color = '#dc2626'; }
+                                div.onmouseout = () => { div.style.background = 'transparent'; div.style.color = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#e6eef8' : '#374151'; }
+                                
+                                const displayName = item.city_name || item.name;
+                                let extraInfo = '';
+                                if (item.state_name) extraInfo += item.state_name;
+                                if (item.country_name) extraInfo += (extraInfo ? ', ' : '') + item.country_name;
+
+                                if (extraInfo && extraInfo !== displayName) {
+                                    div.innerHTML = `<strong>${displayName}</strong> <small style="display:block; opacity:0.7; margin-top:2px;">${extraInfo}</small>`;
+                                } else {
+                                    div.innerHTML = `<strong>${displayName}</strong>`;
+                                }
+
+                                div.onmousedown = function (ev) {
+                                    ev.preventDefault(); 
+                                    activeSidebarInput.value = item.name; 
+                                    const hiddenId = activeSidebarInput.parentElement.querySelector('.sidebar-city-hidden-input');
+                                    if (hiddenId) hiddenId.value = item.id;
+                                    sidebarDropdown.style.display = 'none';
+                                    
+                                    // Trigger the form submit automatically when a location is selected!
+                                    const formId = activeSidebarInput.getAttribute('form');
+                                    if(formId) {
+                                        const form = document.getElementById(formId);
+                                        if(form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+                                    }
+                                };
+
+                                sidebarDropdown.appendChild(div);
+                            });
+                            
+                            updateSidebarDropdownPosition();
+                            sidebarDropdown.style.display = 'block';
+                        } else {
+                            sidebarDropdown.style.display = 'none';
+                        }
+                    })
+                    .catch(err => console.error('Location fetch error:', err));
+                }, 300);
+            }
+        });
+
+        // Hide when clicking anywhere else
+        document.addEventListener('mousedown', function (e) {
+            if (activeSidebarInput && !activeSidebarInput.contains(e.target) && !sidebarDropdown.contains(e.target)) {
+                sidebarDropdown.style.display = 'none';
+            }
+        });
+    }
+</script>

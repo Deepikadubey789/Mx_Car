@@ -911,6 +911,7 @@ class PublicController extends BaseController
     }
     public function ajaxGetCars(Request $request)
     {
+        // 1. Keyword Search (Existing)
         if ($keyword = $request->input('keyword')) {
             Car::addGlobalScope('keyword_search', function ($builder) use ($keyword) {
                 $words = array_filter(explode(' ', $keyword));
@@ -920,13 +921,44 @@ class PublicController extends BaseController
             });
         }
 
+        // 2. NEW: Advanced Location Search (Country, State, City, Address)
+        if ($location = $request->input('location')) {
+            Car::addGlobalScope('location_search', function ($builder) use ($location) {
+                // If a user types "Texas, United States", we split by comma and search "Texas"
+                // to ensure a broader, more accurate database match.
+                $searchTerm = trim(explode(',', $location)[0]);
+
+                $builder->where(function ($query) use ($searchTerm) {
+                    $query->whereHas('country', function ($q) use ($searchTerm) {
+                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('state', function ($q) use ($searchTerm) {
+                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                    })
+                    ->orWhereHas('city', function ($q) use ($searchTerm) {
+                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                    })
+                    ->orWhere('cr_cars.address', 'LIKE', '%' . $searchTerm . '%');
+                });
+            });
+        }
+
         $requestQuery = CarListHelper::getCarFilters($request->input());
 
+        // 3. Prevent Botble's core repository from overriding our custom scopes
         if (isset($requestQuery['keyword'])) {
             unset($requestQuery['keyword']);
         }
         if (isset($requestQuery['q'])) {
             unset($requestQuery['q']);
+        }
+        
+        // NEW: Hide the location and city_id from the core repository so our scope does the work
+        if (isset($requestQuery['location'])) {
+            unset($requestQuery['location']);
+        }
+        if ($request->filled('location') && isset($requestQuery['city_id'])) {
+            unset($requestQuery['city_id']);
         }
 
         $with = [
@@ -945,7 +977,7 @@ class PublicController extends BaseController
 
         $currentPage = $requestQuery['page'] ?? 1;
 
-        $cars = app(CarInterface::class)->getCars(
+        $cars = app(\Botble\CarRentals\Repositories\Interfaces\CarInterface::class)->getCars(
             $requestQuery,
             [
                 'with' => $with,
@@ -1027,70 +1059,47 @@ class PublicController extends BaseController
             ->setNextUrl($url);
     }
 
-    public function ajaxGetLocation(
-        Request $request,
-        BaseHttpResponse $response
-    ) {
+  public function ajaxGetLocation(Request $request, BaseHttpResponse $response)
+    {
         if (! is_plugin_active('location')) {
             return $response->setData([[], 'total' => 0]);
         }
 
-        $cityRepository = app()->make(CityInterface::class);
-        $stateRepository = app()->make(StateInterface::class);
-        $countryRepository = app()->make(CountryInterface::class);
-
-        $request->validate([
-            'k' => ['nullable', 'string'],
-            'type' => ['required', 'string', 'in:state,city'],
-        ]);
-
-        $keyword = BaseHelper::stringify($request->query('k'));
+        // Get the keyword from either 'location' or 'k'
+        $keyword = BaseHelper::stringify($request->input('location') ?: $request->query('k'));
         $limit = (int) theme_option('limit_results_on_car_location_filter', 10) ?: 1000;
-        if ($request->input('type', 'state') === 'state') {
-            $locations = $stateRepository->filters($keyword, $limit);
 
-            $carsLocationAvailable = $stateRepository->getModel()::query()
-                ->wherePublished()
-                ->whereExists(function ($query): void {
-                    $query->select('id')
-                        ->from('cr_cars')
-                        ->whereColumn('state_id', 'states.id');
-                })
-                ->pluck('id')
-                ->all();
-        } else {
-            $locations = $cityRepository->filters($keyword, $limit);
-            $locations->loadMissing('state');
-
-            $carsLocationAvailable = $cityRepository->getModel()::query()
-                ->whereExists(function ($query): void {
-                    $query->select('id')
-                        ->from('cr_cars')
-                        ->whereColumn('city_id', 'cities.id');
-                })
-                ->wherePublished()
-                ->pluck('id')
-                ->all();
+        if (empty($keyword)) {
+            return $response->setData([[], 'total' => 0]);
         }
 
-        $countryIds = $countryRepository->getModel()::query()
+        // Query cities that match the keyword (City, State, or Country name)
+        $locations = City::query()
             ->wherePublished()
-            ->whereExists(function ($query): void {
+            ->where(function ($query) use ($keyword) {
+                $query->where('name', 'LIKE', '%' . $keyword . '%')
+                    ->orWhereHas('state', function ($q) use ($keyword) {
+                        $q->where('name', 'LIKE', '%' . $keyword . '%');
+                    })
+                    ->orWhereHas('country', function ($q) use ($keyword) {
+                        $q->where('name', 'LIKE', '%' . $keyword . '%');
+                    });
+            })
+            // Only return locations that actually have cars!
+            ->whereExists(function ($query) {
                 $query->select('id')
                     ->from('cr_cars')
-                    ->whereColumn('country_id', 'countries.id')
-                    ->whereNull('city_id')
-                    ->whereNull('state_id');
+                    ->whereColumn('city_id', 'cities.id');
             })
-            ->where('name', 'like', '%' . $keyword . '%')
-            ->pluck('id')
-            ->all();
+            ->with(['state', 'country'])
+            ->limit($limit)
+            ->get();
 
-        $locations = $locations->whereIn('id', array_values(array_unique($carsLocationAvailable)));
-
-        $locations = $locations->merge($countryRepository->getByWhereIn('id', $countryIds))->sort();
-
-        return $response->setData([LocationResource::collection($locations), 'total' => $locations->count()]);
+        // THE FIX: Return the data exactly how the original script did, using LocationResource!
+        return $response->setData([
+            LocationResource::collection($locations),
+            'total' => $locations->count()
+        ]);
     }
 
     public function redirectToExternalBooking(string $slug)
