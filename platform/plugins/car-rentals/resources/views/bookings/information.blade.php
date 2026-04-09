@@ -1,5 +1,7 @@
 @php
     $route ??= 'invoices.generate';
+    $buttonClass ??= 'btn-primary';
+    $displayBookingStatus ??= true;
 @endphp
 
 @if ($booking)
@@ -77,47 +79,17 @@
                         </x-core::table.body.cell>
                         <x-core::table.body.cell style="vertical-align: middle !important;">
                             <a class="booking-information-link" href="{{ $booking->car->car->url }}" target="_blank">{{ $booking->car->car_name }}</a>
-                        <x-core::table.body.cell
-                                class="text-center"
-                                style="width: 150px; vertical-align: middle !important;"
-                        >
-                            <a href="{{ $booking->car->car->url }}" target="_blank">
-                                <img
-                                    src="{{ RvMedia::getImageUrl($booking->car->car->image, 'thumb', false, RvMedia::getDefaultImage()) }}"
-                                    alt="{{ $booking->car->car_name }}"
-                                    width="140"
-                                >
-                            </a>
-                        </x-core::table.body.cell>
-                        <x-core::table.body.cell style="vertical-align: middle !important;">
-                            <a class="booking-information-link" href="{{ $booking->car->car->url }}" target="_blank">
-                                {{ $booking->car->car_name }}
-                            </a>
                         </x-core::table.body.cell>
                     @else
                         <x-core::table.body.cell>
                             <img src="{{ RvMedia::getImageUrl($booking->car->car_image, 'thumb', false, RvMedia::getDefaultImage()) }}" alt="{{ $booking->car->car_name }}" width="140">
                         </x-core::table.body.cell>
-                        <x-core::table.body.cell style="vertical-align: middle !important;">
-                            {{ $booking->car->car_name }}
-                        </x-core::table.body.cell>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">{{ $booking->car->car_name }}</x-core::table.body.cell>
                     @endif
                     <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">{{ $booking->car->rental_start_date_formatted }}</x-core::table.body.cell>
                     <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">{{ $booking->car->rental_end_date_formatted }}</x-core::table.body.cell>
                     <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;"><strong>{{ format_price($booking->car->price, $booking->currency_id) }}</strong></x-core::table.body.cell>
                     <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;"><strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong></x-core::table.body.cell>
-                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
-                        {{ $booking->car->rental_start_date_formatted }}
-                    </x-core::table.body.cell>
-                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
-                        {{ $booking->car->rental_end_date_formatted }}
-                    </x-core::table.body.cell>
-                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
-                        <strong>{{ format_price($booking->car->price, $booking->currency_id) }}</strong>
-                    </x-core::table.body.cell>
-                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
-                        <strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong>
-                    </x-core::table.body.cell>
                 </x-core::table.body.row>
             </x-core::table.body>
         </x-core::table>
@@ -151,7 +123,7 @@
         @endif
     @endif
 
-    {{-- THE NEW INSURANCE TABLE (Visible to everyone so the math is correct) --}}
+    {{-- THE NEW INSURANCE TABLE --}}
     @if($insurances = $booking->insurances)
         @if($insurances->isNotEmpty())
             <div class="mb-4">
@@ -178,45 +150,6 @@
         @endif
     @endif
 
-        <div class="mb-4">
-            <h4>{{ __('Services') }}</h4>
-            <x-core::table>
-                <x-core::table.header>
-                    <x-core::table.header.cell class="text-center" style="width: 150px;">
-                        {{ __('Image') }}
-                    </x-core::table.header.cell>
-                    <x-core::table.header.cell>
-                        {{ __('Name') }}
-                    </x-core::table.header.cell>
-                    <x-core::table.header.cell class="text-center">
-                        {{ __('Price') }}
-                    </x-core::table.header.cell>
-                </x-core::table.header>
-                <x-core::table.body>
-                    @foreach($services as $service)
-                        <x-core::table.body.row>
-                            <x-core::table.body.cell class="text-center" style="width: 150px; vertical-align: middle !important;">
-                                <a href="{{ $service->url }}" target="_blank">
-                                    <img
-                                        src="{{ RvMedia::getImageUrl($service->logo, 'thumb', false, RvMedia::getDefaultImage()) }}"
-                                        alt="{{ $service->name }}"
-                                        width="140"
-                                    >
-                                </a>
-                            </x-core::table.body.cell>
-                            <x-core::table.body.cell style="vertical-align: middle !important;">
-                                {{ $service->name }}
-                            </x-core::table.body.cell>
-                            <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
-                                <strong>{{ format_price($service->price, $booking->currency_id) }}</strong>
-                            </x-core::table.body.cell>
-                        </x-core::table.body.row>
-                    @endforeach
-                </x-core::table.body>
-            </x-core::table>
-        </div>
-    @endif
-
     <x-core::datagrid>
         <x-core::datagrid.item :title="__('Sub Total')">
             {{ format_price($booking->sub_total, $booking->currency_id) }}
@@ -236,7 +169,6 @@
         <x-core::datagrid.item :title="__('Tax Amount')">
             {{ format_price($booking->tax_amount, $booking->currency_id) }}
         </x-core::datagrid.item>
-        
 
         @if ($booking->fee_amount > 0)
             <x-core::datagrid.item :title="$booking->fee_name ?: __('Service Fee')">
@@ -303,78 +235,43 @@
         @endif
     </x-core::datagrid>
 
-    {{-- ✅ Before Photos (Pickup) Section --}}
-    @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
-    <div class="mt-4 mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h6 class="fw-bold mb-0">
-                <i class="ti ti-camera me-2"></i>Before Photos (Pickup)
-            </h6>
-            <button
-                type="button"
-                class="btn btn-sm btn-success"
-                onclick="document.getElementById('pickupPhotosModal').style.setProperty('display','flex','important');window.scrollTo(0,0);"
-            >
-                + Add Pickup Photos
-            </button>
-        </div>
-
-        @if($booking->pickup_photos && count($booking->pickup_photos) > 0)
-            <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                @foreach($booking->pickup_photos as $index => $photo)
-                    <div style="position:relative; width:100px; height:100px; flex-shrink:0;">
-                        <img
-                            src="{{ RvMedia::getImageUrl($photo, 'thumb') }}"
-                            style="width:100px; height:100px; object-fit:cover; border-radius:10px; display:block; border:1px solid #e2e8f0;"
-                        >
-                        <button
-                            type="button"
-                            onclick="deletePickupPhoto({{ $index }})"
-                            style="
-                                position: absolute;
-                                top: -8px;
-                                right: -8px;
-                                width: 24px;
-                                height: 24px;
-                                border-radius: 50%;
-                                background: #ffffff;
-                                border: 1.5px solid #cbd5e1;
-                                color: #64748b;
-                                font-size: 13px;
-                                font-weight: 700;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                cursor: pointer;
-                                padding: 0;
-                                line-height: 1;
-                                box-shadow: 0 1px 4px rgba(0,0,0,0.12);
-                                transition: all 0.2s ease;
-                            "
-                            onmouseover="this.style.background='#fee2e2';this.style.borderColor='#f87171';this.style.color='#ef4444';"
-                            onmouseout="this.style.background='#ffffff';this.style.borderColor='#cbd5e1';this.style.color='#64748b';"
-                        >✕</button>
-                    </div>
-                @endforeach
-            </div>
-
-            @if($booking->pickup_photos_uploaded_at)
-                <small class="text-muted mt-2 d-block">
-                    Uploaded: {{ $booking->pickup_photos_uploaded_at->format('M d, Y h:i A') }}
-                </small>
-            @endif
-
-        @else
-            <div class="alert alert-light border">
-                <i class="ti ti-info-circle me-1"></i> No pickup photos added yet.
-            </div>
-        @endif
-    </div>
-    @endif
-
     @if ($booking->status == \Botble\CarRentals\Enums\BookingStatusEnum::COMPLETED)
         @include('plugins/car-rentals::bookings.partials.completion-details', ['booking' => $booking])
         @include('plugins/car-rentals::bookings.partials.completion-form', ['booking' => $booking])
+    @endif
+
+    {{-- ✅ Before Photos (Pickup) Section --}}
+    @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
+        <div class="mt-4 mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h6 class="fw-bold mb-0">
+                    <i class="ti ti-camera me-2"></i>Before Photos (Pickup)
+                </h6>
+                <button type="button" class="btn btn-sm btn-success" onclick="document.getElementById('pickupPhotosModal').style.setProperty('display','flex','important');window.scrollTo(0,0);">
+                    + Add Pickup Photos
+                </button>
+            </div>
+
+            @if($booking->pickup_photos && count($booking->pickup_photos) > 0)
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                    @foreach($booking->pickup_photos as $index => $photo)
+                        <div style="position:relative; width:100px; height:100px; flex-shrink:0;">
+                            <img src="{{ RvMedia::getImageUrl($photo, 'thumb') }}" style="width:100px; height:100px; object-fit:cover; border-radius:10px; display:block; border:1px solid #e2e8f0;">
+                            <button type="button" onclick="deletePickupPhoto({{ $index }})" style="position: absolute; top: -8px; right: -8px; width: 24px; height: 24px; border-radius: 50%; background: #ffffff; border: 1.5px solid #cbd5e1; color: #64748b; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,0.12); transition: all 0.2s ease;" onmouseover="this.style.background='#fee2e2';this.style.borderColor='#f87171';this.style.color='#ef4444';" onmouseout="this.style.background='#ffffff';this.style.borderColor='#cbd5e1';this.style.color='#64748b';">✕</button>
+                        </div>
+                    @endforeach
+                </div>
+                @if($booking->pickup_photos_uploaded_at)
+                    <small class="text-muted mt-2 d-block">
+                        Uploaded: {{ $booking->pickup_photos_uploaded_at->format('M d, Y h:i A') }}
+                    </small>
+                @endif
+            @else
+                <div class="alert alert-light border">
+                    <i class="ti ti-info-circle me-1"></i> No pickup photos added yet.
+                </div>
+            @endif
+        </div>
     @endif
 
     <div class="btn-list mt-5">
@@ -383,22 +280,6 @@
                 {{ __('View Invoice') }}
             </x-core::button>
             <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])" target="_blank" icon="ti ti-download" :class="$buttonClass ?? ''">
-            <x-core::button
-                tag="a"
-                :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])"
-                target="_blank"
-                icon="ti ti-printer"
-                :class="$buttonClass ?? ''"
-            >
-                {{ __('View Invoice') }}
-            </x-core::button>
-            <x-core::button
-                tag="a"
-                :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])"
-                target="_blank"
-                icon="ti ti-download"
-                :class="$buttonClass ?? ''"
-            >
                 {{ __('Download Invoice') }}
             </x-core::button>
         @endif
@@ -408,25 +289,11 @@
         @endphp
 
         <x-core::button tag="a" :href="route($printRoute, $booking->id)" target="_blank" icon="ti ti-file-text" color="info" :class="$buttonClass ?? ''">
-        <x-core::button
-            tag="a"
-            :href="route($printRoute, $booking->id)"
-            target="_blank"
-            icon="ti ti-file-text"
-            color="info"
-            :class="$buttonClass ?? ''"
-        >
             {{ __('plugins/car-rentals::booking.print_booking_info') }}
         </x-core::button>
 
         @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
-            <x-core::button
-                type="button"
-                icon="ti ti-key"
-                color="warning"
-                onclick="const m=document.getElementById('keyInstructionsModal');m.classList.remove('d-none');m.style.setProperty('display','flex','important');window.scrollTo(0,0);"
-                :class="$buttonClass ?? ''"
-            >
+            <x-core::button type="button" icon="ti ti-key" color="warning" onclick="const m=document.getElementById('keyInstructionsModal');m.classList.remove('d-none');m.style.setProperty('display','flex','important');window.scrollTo(0,0);" :class="$buttonClass ?? ''">
                 {{ __('Send Key Instructions') }}
             </x-core::button>
         @endif
@@ -453,60 +320,6 @@
         </div>
     </div>
 
-    {{-- ✅ UPDATED SCRIPT: Upload + Delete --}}
-    <script>
-    document.getElementById('pickupPhotosForm')?.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const btn = this.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="ti ti-loader me-1"></i>Uploading...';
-        fetch('{{ route("car-rentals.bookings.upload-pickup-photos", $booking->id) }}', {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('pickupPhotosModal').style.setProperty('display','none','important');
-                window.onbeforeunload = null;
-                location.reload();
-            } else {
-                alert('Error uploading photos.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ti ti-upload me-1"></i>Upload Photos';
-            }
-        })
-        .catch(() => {
-            alert('Upload failed. Please try again.');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="ti ti-upload me-1"></i>Upload Photos';
-        });
-    });
-
-    function deletePickupPhoto(index) {
-    fetch('{{ route("car-rentals.bookings.delete-pickup-photo", $booking->id) }}', {
-        method: 'DELETE',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}',
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ index: index }),
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            location.reload();
-        } else {
-            alert('Could not delete photo.');
-        }
-    })
-    .catch(() => alert('Delete failed. Try again.'));
-    }
-    </script>
-
     {{-- Key Instructions Modal --}}
     <div id="keyInstructionsModal" class="modal d-none" tabindex="-1" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;">
         <div class="modal-dialog modal-lg" style="margin:30px auto;max-width:600px;position:relative;top:0;">
@@ -526,8 +339,7 @@
                         @endif
                         <div class="mb-3">
                             <label class="form-label fw-bold">{{ __('Key Instructions to Send') }} <span class="text-danger">*</span></label>
-                            <textarea name="key_instructions" class="form-control" rows="6" required
-                                placeholder="Enter pickup location, key/lock box code, and special instructions...">{{ $booking->key_instructions ?? $booking->car->default_pickup_instructions }}</textarea>
+                            <textarea name="key_instructions" class="form-control" rows="6" required placeholder="Enter pickup location, key/lock box code, and special instructions...">{{ $booking->key_instructions ?? $booking->car->default_pickup_instructions }}</textarea>
                             <small class="text-muted">{{ __('This will be emailed to') }}: <strong>{{ $booking->customer_email }}</strong></small>
                         </div>
                         @if($booking->key_instructions_sent_at)
@@ -552,41 +364,97 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const form = document.querySelector('#keyInstructionsModal form');
-        if (!form) return;
-        form.addEventListener('submit', function (e) {
-            e.preventDefault();
-            const formData = new FormData(form);
-            const action = form.getAttribute('action');
-            const btn = form.querySelector('button[type="submit"]');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="ti ti-loader me-1"></i> Sending...';
-            fetch(action, {
-                method: 'POST',
-                body: formData,
-                headers: { 'X-Requested-With': 'XMLHttpRequest' },
-            })
-            .then(res => {
-                const modal = document.getElementById('keyInstructionsModal');
-                modal.style.setProperty('display', 'none', 'important');
-                modal.classList.add('d-none');
-                const toast = document.createElement('div');
-                toast.innerHTML = `
-                    <div style="position:fixed;bottom:30px;right:30px;z-index:99999;background:#2fb344;color:#fff;padding:16px 24px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:flex;align-items:center;gap:10px;">
-                        <i class="ti ti-circle-check" style="font-size:20px;"></i>
-                        Key instructions sent successfully!
-                    </div>`;
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 4000);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
-            })
-            .catch(() => {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
+        // Pickup Photos Form Handler
+        const pickupForm = document.getElementById('pickupPhotosForm');
+        if(pickupForm) {
+            pickupForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const btn = this.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ti ti-loader me-1"></i>Uploading...';
+                fetch('{{ route("car-rentals.bookings.upload-pickup-photos", $booking->id) }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('pickupPhotosModal').style.setProperty('display','none','important');
+                        window.onbeforeunload = null;
+                        location.reload();
+                    } else {
+                        alert('Error uploading photos.');
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="ti ti-upload me-1"></i>Upload Photos';
+                    }
+                })
+                .catch(() => {
+                    alert('Upload failed. Please try again.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ti ti-upload me-1"></i>Upload Photos';
+                });
             });
-        });
-    });
-    </script>
+        }
 
+        // Key Instructions Form Handler
+        const keyForm = document.querySelector('#keyInstructionsModal form');
+        if(keyForm) {
+            keyForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                const formData = new FormData(keyForm);
+                const action = keyForm.getAttribute('action');
+                const btn = keyForm.querySelector('button[type="submit"]');
+                btn.disabled = true;
+                btn.innerHTML = '<i class="ti ti-loader me-1"></i> Sending...';
+                fetch(action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                })
+                .then(res => {
+                    const modal = document.getElementById('keyInstructionsModal');
+                    modal.style.setProperty('display', 'none', 'important');
+                    modal.classList.add('d-none');
+                    const toast = document.createElement('div');
+                    toast.innerHTML = `
+                        <div style="position:fixed;bottom:30px;right:30px;z-index:99999;background:#2fb344;color:#fff;padding:16px 24px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:flex;align-items:center;gap:10px;">
+                            <i class="ti ti-circle-check" style="font-size:20px;"></i>
+                            Key instructions sent successfully!
+                        </div>`;
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 4000);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
+                })
+                .catch(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
+                });
+            });
+        }
+    });
+
+    function deletePickupPhoto(index) {
+        fetch('{{ route("car-rentals.bookings.delete-pickup-photo", $booking->id) }}', {
+            method: 'DELETE',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ index: index }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Could not delete photo.');
+            }
+        })
+        .catch(() => alert('Delete failed. Try again.'));
+    }
+    </script>
 @endif

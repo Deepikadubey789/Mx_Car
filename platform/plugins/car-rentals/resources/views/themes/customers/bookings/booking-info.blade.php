@@ -459,7 +459,7 @@
             'escalateUrl' => route('customer.bookings.messages.escalate', $booking->id)
         ])
     </div>
-@endif
+
     @if($booking->status->getValue() === 'completed')
 
     <div class="mt-4 mb-2">
