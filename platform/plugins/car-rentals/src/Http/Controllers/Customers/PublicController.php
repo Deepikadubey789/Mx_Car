@@ -166,7 +166,9 @@ class PublicController extends BaseController
         $customer = Auth::guard('customer')->user();
 
         $bookings = Booking::query()
-            ->where('customer_id', $customer->id)->latest('id')
+            ->where('customer_id', $customer->id)
+            ->with(['car.car'])
+            ->latest('id')
             ->paginate();
 
         return Theme::scope('car-rentals.customers.bookings.list', compact('bookings'), 'plugins/car-rentals::themes.customers.bookings.list')

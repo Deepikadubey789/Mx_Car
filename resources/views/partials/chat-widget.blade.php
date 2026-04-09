@@ -355,9 +355,10 @@
         padding: 10px 14px;
         border-radius: 16px 16px 4px 16px;
         word-wrap: break-word;
-        max-width: 240px;
-        margin-left: auto;
+        max-width: min(240px, 85%);
+        margin-left: 0;
         margin-right: 0;
+        flex-shrink: 0;
         background: #0A0F1E;
         color: white;
         box-shadow: none;
@@ -372,10 +373,11 @@
         padding: 10px 14px;
         border-radius: 16px 16px 16px 4px;
         word-wrap: break-word;
-        max-width: 240px;
+        max-width: min(240px, 85%);
         background: white;
         color: #1a1a2e;
         margin-right: 0;
+        flex-shrink: 0;
         box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
         font-size: 13px;
     }
@@ -485,18 +487,52 @@
         gap: 2px;
     }
 
+    .chat-message-wrapper--user {
+        align-items: flex-end;
+    }
+
+    .chat-message-wrapper--assistant {
+        align-items: flex-start;
+    }
+
+    /*
+     * Trip / booking messaging uses the same .chat-message-wrapper class with
+     * flex-direction: row !important — that forces timestamp beside the bubble.
+     * Scope AI chat layout to #chat-root so it wins on pages that load both.
+     */
+    #chat-root .chat-message-wrapper {
+        flex-direction: column !important;
+        justify-content: flex-start !important;
+        align-items: stretch !important;
+        width: 100% !important;
+        margin-bottom: 0 !important;
+    }
+
+    #chat-root .chat-message-wrapper--user {
+        align-items: flex-end !important;
+    }
+
+    #chat-root .chat-message-wrapper--assistant {
+        align-items: flex-start !important;
+    }
+
     .chat-message-time {
         font-size: 10px;
         color: #9ca3af;
+        margin-top: 4px;
         margin-bottom: 0;
-        padding: 0 2px;
+        padding: 0 4px;
+        line-height: 1.2;
+        white-space: nowrap;
     }
 
-    .chat-message-user .chat-message-time {
+    .chat-message-wrapper--user .chat-message-time {
+        align-self: flex-end;
         text-align: right;
     }
 
-    .chat-message-assistant .chat-message-time {
+    .chat-message-wrapper--assistant .chat-message-time {
+        align-self: flex-start;
         text-align: left;
     }
 
@@ -505,10 +541,12 @@
         display: flex;
         gap: 4px;
         align-items: flex-end;
+        width: 100%;
     }
 
-    .chat-message-user .chat-message-content {
+    .chat-message-wrapper--user .chat-message-content {
         flex-direction: row-reverse;
+        justify-content: flex-start;
     }
 
     .chat-message-actions {
@@ -677,6 +715,7 @@
     const MAX_RETRIES = 3;
     const REQUEST_TIMEOUT = 30000; // 30 seconds
     let SUGGESTED_QUESTIONS = []; // Loaded from admin settings via API
+    let suggestedQuestionsLoadPromise = null;
 
     const toggle = document.getElementById('chat-toggle');
     const closeBtn = document.getElementById('chat-close');
@@ -705,8 +744,6 @@
     function init() {
         setOnlineStatus(true);
         setupEventListeners();
-        loadSuggestedQuestions();
-        // Questions will be shown after history is loaded
     }
 
     function setupEventListeners() {
@@ -724,27 +761,32 @@
         window.addEventListener('offline', () => setOnlineStatus(false));
     }
 
-    async function loadSuggestedQuestions() {
-        try {
-            const res = await fetch('/api/chat/suggested-questions', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                signal: AbortSignal.timeout(REQUEST_TIMEOUT),
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (data.questions && Array.isArray(data.questions)) {
-                    SUGGESTED_QUESTIONS = data.questions;
-                    console.log('Loaded suggested questions:', SUGGESTED_QUESTIONS);
-                }
-            }
-        } catch (err) {
-            console.warn('Could not load suggested questions, using defaults:', err);
-            // Use default questions if fetch fails
+    function loadSuggestedQuestions() {
+        if (suggestedQuestionsLoadPromise) {
+            return suggestedQuestionsLoadPromise;
         }
+        suggestedQuestionsLoadPromise = (async () => {
+            try {
+                const res = await fetch('/api/chat/suggested-questions', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    signal: AbortSignal.timeout(REQUEST_TIMEOUT),
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.questions && Array.isArray(data.questions)) {
+                        SUGGESTED_QUESTIONS = data.questions;
+                        console.log('Loaded suggested questions:', SUGGESTED_QUESTIONS);
+                    }
+                }
+            } catch (err) {
+                console.warn('Could not load suggested questions, using defaults:', err);
+            }
+        })();
+        return suggestedQuestionsLoadPromise;
     }
 
     function handleToggle() {
@@ -784,7 +826,8 @@
         }
     }
 
-    function showSuggestedQuestions() {
+    async function showSuggestedQuestions() {
+        await loadSuggestedQuestions();
         suggestedEl.innerHTML = `
             <div class="chat-suggested-title">Suggested Questions</div>
             ${SUGGESTED_QUESTIONS.map(q => `
@@ -820,7 +863,7 @@
         localStorage.removeItem(STORAGE_TITLE_KEY);
         localStorage.removeItem(STORAGE_START_KEY);
         infoEl.textContent = '';
-        showSuggestedQuestions();
+        void showSuggestedQuestions().catch((err) => console.warn('Suggested questions:', err));
         showToast('Chat cleared', 'success');
     }
 
@@ -894,7 +937,7 @@
         if (!conversationId) {
             hideLoader();
             historyLoaded = true;
-            showSuggestedQuestions();
+            await showSuggestedQuestions();
             return;
         }
 
@@ -934,20 +977,20 @@
                 }, 50);
             } else {
                 // No history - show suggested questions
-                showSuggestedQuestions();
+                await showSuggestedQuestions();
             }
             historyLoaded = true;
         } catch (err) {
             hideLoader();
             console.error('Error loading history:', err);
             historyLoaded = true;
-            showSuggestedQuestions();
+            await showSuggestedQuestions();
         }
     }
 
     function showLoader() {
         const wrapperEl = document.createElement('div');
-        wrapperEl.className = 'chat-message-wrapper';
+        wrapperEl.className = 'chat-message-wrapper chat-message-wrapper--assistant';
         wrapperEl.id = 'chat-loader';
         
         const loaderEl = document.createElement('div');
@@ -1016,7 +1059,7 @@
         const timeStr = time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
         const wrapperEl = document.createElement('div');
-        wrapperEl.className = 'chat-message-wrapper';
+        wrapperEl.className = 'chat-message-wrapper ' + (role === 'user' ? 'chat-message-wrapper--user' : 'chat-message-wrapper--assistant');
         wrapperEl.id = `msg-${messageId}`;
 
         const timeEl = document.createElement('div');
@@ -1118,8 +1161,8 @@
             contentEl.appendChild(actionsEl);
         }
 
-        wrapperEl.appendChild(timeEl);
         wrapperEl.appendChild(contentEl);
+        wrapperEl.appendChild(timeEl);
         messagesDiv.appendChild(wrapperEl);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
@@ -1196,6 +1239,7 @@
         hideSuggested();
 
         let conversationId = localStorage.getItem(STORAGE_KEY);
+        let staleConversationRecovered = false;
         showLoader();
 
         const makeRequest = async (attempt = 1) => {
@@ -1218,6 +1262,8 @@
                     credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                         'X-CSRF-Token': csrfToken,
                     },
                     body: JSON.stringify({
@@ -1229,8 +1275,34 @@
                 });
 
                 clearTimeout(timeoutId);
-                const data = await res.json();
+                const rawText = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(rawText);
+                } catch (parseErr) {
+                    hideLoader();
+                    console.warn('Chat send: expected JSON, got status', res.status, rawText.slice(0, 300));
+                    showToast(
+                        /^\s*<(!doctype|html)/i.test(rawText)
+                            ? 'Server returned an error page. Try refreshing or clearing chat history.'
+                            : 'Invalid response from server.',
+                        'error'
+                    );
+                    return;
+                }
                 hideLoader();
+
+                const invalidConv = res.status === 422 && data.errors && Array.isArray(data.errors.conversation_id) && data.errors.conversation_id.length;
+                if (invalidConv && !staleConversationRecovered) {
+                    staleConversationRecovered = true;
+                    localStorage.removeItem(STORAGE_KEY);
+                    localStorage.removeItem(STORAGE_START_KEY);
+                    conversationId = null;
+                    updateConversationInfo();
+                    showToast('Saved chat was no longer valid. Starting a fresh conversation.', 'info');
+                    showLoader();
+                    return await makeRequest(1);
+                }
                 
                 // Log response for debugging
                 console.log('Chat Response Debug:', {
@@ -1252,7 +1324,7 @@
                         await new Promise(r => setTimeout(r, 1000 * attempt));
                         return makeRequest(attempt + 1);
                     }
-                    throw new Error(data.error || 'Failed to send message');
+                    throw new Error(data.error || (typeof data.message === 'string' ? data.message : '') || 'Failed to send message');
                 }
 
                 if (data.conversation_id) {

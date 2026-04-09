@@ -5,6 +5,7 @@
 @endphp
 
 @if ($booking)
+    <div class="customer-booking-info">
     <div class="row">
         <div class="col-lg-4">
             <strong>{{ __('Booking Information') }}:</strong> {{ $booking->booking_number }}
@@ -246,7 +247,7 @@
                 @endphp
                 <div class="col-lg-4">
                     <strong>{{ __('Deposit hold status') }}:</strong>
-                    <span class="label label-{{ $badgeColor }}">{{ $label }}</span>
+                    <span class="badge customer-booking-info__status-badge bg-{{ $badgeColor }}">{{ $label }}</span>
                 </div>
             @endif
 
@@ -301,8 +302,9 @@
                 <strong>{{ __('Payment method') }}:</strong>  {{ $booking->payment->payment_channel->label() }}
             </div>
 
-            <div class="col-lg-4">
-                <strong>{{ __('Payment status') }}:</strong>  {!! $booking->payment->status->toHtml() !!}
+            <div class="col-lg-4 customer-booking-info__status-field">
+                <strong>{{ __('Payment status') }}:</strong>
+                <span class="customer-booking-info__status-wrap">{!! $booking->payment->status->toHtml() !!}</span>
             </div>
 
             @if ($booking->payment->payment_channel == \Botble\Payment\Enums\PaymentMethodEnum::BANK_TRANSFER
@@ -316,9 +318,9 @@
         @endif
 
         @if ($displayBookingStatus)
-            <div class="col-lg-4">
+            <div class="col-lg-4 customer-booking-info__status-field">
                 <strong>{{ __('Booking status') }}:</strong>
-                {!! BaseHelper::clean($booking->status->toHtml()) !!}
+                <span class="customer-booking-info__status-wrap">{!! BaseHelper::clean($booking->status->toHtml()) !!}</span>
             </div>
         @endif
     </div>
@@ -459,7 +461,7 @@
             'escalateUrl' => route('customer.bookings.messages.escalate', $booking->id)
         ])
     </div>
-@endif
+
     @if($booking->status->getValue() === 'completed')
 
     <div class="mt-4 mb-2">
@@ -543,6 +545,8 @@
     </div>
 
     @endif
+
+    </div>
 
 @endif
 
