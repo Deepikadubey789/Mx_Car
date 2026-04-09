@@ -144,4 +144,29 @@ class BookingController extends BaseController
 
         return $this->httpResponse()->setMessage(__('Review deleted successfully!'));
     }
+
+    public function sendKeyInstructions(Request $request, Booking $booking): \Illuminate\Http\RedirectResponse
+    {
+        abort_if($booking->vendor_id != auth('customer')->id(), 403);
+
+        $request->validate([
+            'key_instructions' => 'required|string|min:10',
+        ]);
+
+        $booking->update([
+            'key_instructions' => $request->key_instructions,
+            'key_instructions_sent_at' => now(),
+        ]);
+
+        \Illuminate\Support\Facades\Mail::send(
+            'plugins/car-rentals::emails.key-instructions',
+            ['booking' => $booking, 'instructions' => $request->key_instructions],
+            function ($mail) use ($booking) {
+                $mail->to($booking->customer_email, $booking->customer_name)
+                    ->subject('Your Car Pickup Instructions - Booking #' . $booking->booking_number);
+            }
+        );
+
+        return redirect()->back()->with('success_msg', 'Key instructions sent to ' . $booking->customer_email . ' successfully!');
+    }
 }

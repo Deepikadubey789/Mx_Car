@@ -71,5 +71,8 @@ Theme::registerRoutes(function (): void {
 
         Route::get('upgrade-to-vendor', 'PublicController@getUpgradeToVendor')->name('upgrade-to-vendor');
         Route::post('upgrade-to-vendor', 'PublicController@postUpgradeToVendor')->name('upgrade-to-vendor.post');
+
+        Route::post('bookings/{booking}/upload-after-photos', 'PublicController@uploadAfterPhotos')->name('bookings.upload-after-photos');
+
     });
 });

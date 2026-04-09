@@ -146,6 +146,70 @@ class BookingController extends BaseController
             );
     }
 
+    public function uploadPickupPhotos(Request $request, Booking $booking)
+    {
+        if (!$request->hasFile('pickup_photos')) {
+            return response()->json(['error' => 'No photos uploaded.'], 422);
+        }
+
+        $uploadedPaths = [];
+        foreach ($request->file('pickup_photos') as $photo) {
+            $result = RvMedia::handleUpload($photo, 0, 'bookings/pickup-photos');
+            if (!$result['error']) {
+                $uploadedPaths[] = $result['data']->url;
+            }
+        }
+
+        $existing = $booking->pickup_photos ?? [];
+        $booking->update([
+            'pickup_photos' => array_merge($existing, $uploadedPaths),
+            'pickup_photos_uploaded_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'photos' => $booking->fresh()->pickup_photos,
+            'uploaded_at' => $booking->pickup_photos_uploaded_at->format('M d, Y h:i A'),
+        ]);
+    }
+    public function deletePickupPhoto(Request $request, Booking $booking)
+    {
+        $index = $request->input('index');
+        $photos = $booking->pickup_photos ?? [];
+    
+        if (!isset($photos[$index])) {
+            return response()->json(['error' => 'Photo not found.'], 404);
+        }
+    
+        array_splice($photos, $index, 1);
+        $booking->update(['pickup_photos' => array_values($photos)]);
+    
+        return response()->json(['success' => true]);
+    }
+    public function sendKeyInstructions(Request $request, Booking $booking)
+    {
+        $request->validate([
+            'key_instructions' => 'required|string|min:10',
+        ]);
+
+        $booking->update([
+            'key_instructions' => $request->key_instructions,
+            'key_instructions_sent_at' => now(),
+        ]);
+
+        // Send email to customer
+        \Illuminate\Support\Facades\Mail::send(
+            'plugins/car-rentals::emails.key-instructions',
+            ['booking' => $booking, 'instructions' => $request->key_instructions],
+            function ($mail) use ($booking) {
+                $mail->to($booking->customer_email, $booking->customer_name)
+                    ->subject('Your Car Pickup Instructions - Booking #' . $booking->booking_number);
+            }
+        );
+
+        return redirect()->back()->with('success', 'Key instructions sent to ' . $booking->customer_email . ' successfully!');
+    }
+
     public function create()
     {
         $this->pageTitle(trans('plugins/car-rentals::booking.create'));

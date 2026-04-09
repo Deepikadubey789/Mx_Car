@@ -425,6 +425,15 @@ class CarForm extends FormAbstract
                     ->colspan(2)
                     ->placeholder(trans('plugins/car-rentals::car-rentals.car.placeholders.insurance_info'))
             )
+            ->add(
+                'default_pickup_instructions',
+                TextareaField::class,
+                TextareaFieldOption::make()
+                    ->label('Default Pickup Instructions')
+                    ->colspan(2)
+                    ->placeholder('Enter default pickup location, key/lock box code, and any special instructions for customers...')
+                    ->rows(4)
+            )
             ->add('images[]', MediaImagesField::class, [
                 'label' => trans('plugins/car-rentals::car-rentals.car.forms.images'),
                 'values' => $this->getModel()->getKey() ? $this->getModel()->images : [],

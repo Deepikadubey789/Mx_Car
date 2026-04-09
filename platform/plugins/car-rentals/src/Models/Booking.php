@@ -59,12 +59,23 @@ class Booking extends BaseModel
         'completion_notes',
         'completed_at',
         'is_escalated',
+        'key_instructions',
+        'key_instructions_sent_at',
+        'pickup_photos',
+        'pickup_photos_uploaded_at',
+        'after_photos',
+        'after_photos_uploaded_at',
     ];
 
     protected $casts = [
         'status' => BookingStatusEnum::class,
         'completion_damage_images' => 'array',
         'completed_at' => 'datetime',
+        'key_instructions_sent_at' => 'datetime',
+        'pickup_photos' => 'array',
+        'pickup_photos_uploaded_at' => 'datetime',
+        'after_photos' => 'array',
+        'after_photos_uploaded_at' => 'datetime',
         'price_lock_expires_at' => 'datetime',
         'price_snapshot' => 'array',
         'is_escalated' => 'boolean',

@@ -147,6 +147,20 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 Route::post('{booking}/messages/deescalate', [
                     'as' => 'messages.deescalate',
                     'uses' => 'TripMessageController@deescalate',
+                ]);   
+                Route::post('{booking}/send-key-instructions', [
+                    'as' => 'send-key-instructions',
+                    'uses' => 'BookingController@sendKeyInstructions',
+                    'permission' => 'car-rentals.bookings.edit',
+                ]);
+                Route::post('{booking}/upload-pickup-photos', [
+                    'as' => 'upload-pickup-photos',
+                    'uses' => 'BookingController@uploadPickupPhotos',
+                    'permission' => 'car-rentals.bookings.edit',
+                ]);
+                Route::delete('{booking}/delete-pickup-photo', [
+                    'as' => 'delete-pickup-photo',
+                    'uses' => 'BookingController@deletePickupPhoto',
                     'permission' => 'car-rentals.bookings.edit',
                 ]);
             });

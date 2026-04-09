@@ -308,6 +308,34 @@ class PublicController extends BaseController
             ->setMessage(__('Your review has been deleted successfully.'));
     }
 
+    public function uploadAfterPhotos(Request $request, Booking $booking)
+    {
+        // abort_unless($this->canViewBooking($booking), 404);
+    
+        if (!$request->hasFile('after_photos')) {
+            return response()->json(['error' => 'No photos uploaded.'], 422);
+        }
+    
+        $uploadedPaths = [];
+        foreach ($request->file('after_photos') as $photo) {
+            $result = RvMedia::handleUpload($photo, 0, 'bookings/after-photos');
+            if (!$result['error']) {
+                $uploadedPaths[] = $result['data']->url;
+            }
+        }
+    
+        $existing = $booking->after_photos ?? [];
+        $booking->update([
+            'after_photos' => array_merge($existing, $uploadedPaths),
+            'after_photos_uploaded_at' => now(),
+        ]);
+    
+        return response()->json([
+            'success' => true,
+            'photos' => $booking->fresh()->after_photos,
+        ]);
+    }
+
     public function getUpgradeToVendor()
     {
         $customer = auth('customer')->user();

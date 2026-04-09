@@ -73,6 +73,7 @@ class Car extends BaseModel
         'vendor_id',
         'external_booking_url',
         'currency_id',
+        'default_pickup_instructions',
     ];
 
     protected $casts = [

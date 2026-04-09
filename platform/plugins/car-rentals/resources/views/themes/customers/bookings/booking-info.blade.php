@@ -460,3 +460,137 @@
         ])
     </div>
 @endif
+    @if($booking->status->getValue() === 'completed')
+
+    <div class="mt-4 mb-2">
+        <h6>{{ __('After Photos (Return)') }}</h6>
+    </div>
+
+    <div class="btn-list d-flex gap-2 mt-2 mb-3">
+        <x-core::button
+            type="button"
+            icon="ti ti-camera"
+            :class="$buttonClass ?? ''"
+            onclick="document.getElementById('afterPhotosModal').style.setProperty('display','flex','important');window.scrollTo(0,0);"
+        >
+            {{ __('Upload Return Photos') }}
+        </x-core::button>
+    </div>
+
+    @if($booking->after_photos && count($booking->after_photos) > 0)
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
+            @foreach($booking->after_photos as $photo)
+                <div style="width:100px; height:100px;">
+                    <img
+                        src="{{ RvMedia::getImageUrl($photo, 'thumb') }}"
+                        style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;"
+                    >
+                </div>
+            @endforeach
+        </div>
+        @if($booking->after_photos_uploaded_at)
+            <small class="text-muted mt-1 d-block">
+                {{ __('Uploaded') }}: {{ $booking->after_photos_uploaded_at->format('M d, Y h:i A') }}
+            </small>
+        @endif
+    @else
+        <p class="text-muted">{{ __('No return photos uploaded yet.') }}</p>
+    @endif
+
+    <div id="afterPhotosModal"
+         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+                background: rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:8px; width:420px; max-width:95%;
+                    box-shadow:0 8px 30px rgba(0,0,0,0.18); overflow:hidden;">
+
+            <div style="padding:16px 20px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:15px; font-weight:600; color:#111827;">{{ __('Upload Return Photos') }}</span>
+                <button type="button"
+                    onclick="document.getElementById('afterPhotosModal').style.setProperty('display','none','important')"
+                    style="background:none; border:none; cursor:pointer; color:#6b7280; font-size:18px; line-height:1; padding:0;">
+                    &times;
+                </button>
+            </div>
+
+            <form id="afterPhotosForm" enctype="multipart/form-data">
+                @csrf
+                <div style="padding:20px;">
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                        <input type="file" name="after_photos[]" multiple accept="image/*"
+                               id="afterPhotoInput"
+                               style="border:1px solid #d1d5db; border-radius:4px; padding:5px 8px; font-size:13px; color:#374151; flex:1;"
+                               onchange="document.getElementById('afterPhotoCount').textContent = this.files.length + ' photo(s) selected'">
+                    </div>
+                    <p style="font-size:12px; color:#9ca3af; margin:0;">{{ __('Select multiple photos') }}</p>
+                    <p id="afterPhotoCount" style="font-size:12px; color:#6b7280; margin-top:4px; margin-bottom:0;"></p>
+                </div>
+
+                <div style="padding:12px 20px; border-top:1px solid #f3f4f6; display:flex; justify-content:flex-end; gap:8px;">
+                    <button type="button"
+                        onclick="document.getElementById('afterPhotosModal').style.setProperty('display','none','important')"
+                        style="padding:8px 18px; border:1px solid #d1d5db; border-radius:6px; background:#fff;
+                               font-size:13px; font-weight:500; cursor:pointer; color:#374151;">
+                        {{ __('Cancel') }}
+                    </button>
+                    <button type="submit" id="afterUploadBtn"
+                        style="padding:8px 18px; border:none; border-radius:6px; background:#c0392b;
+                               color:#fff; font-size:13px; font-weight:600; cursor:pointer;">
+                        {{ __('Upload Photos') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @endif
+
+@endif
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('afterPhotosForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const fileInput = document.getElementById('afterPhotoInput');
+        if (!fileInput || fileInput.files.length === 0) {
+            alert('Please select photos first.');
+            return;
+        }
+
+        const formData = new FormData();
+        Array.from(fileInput.files).forEach(file => {
+            formData.append('after_photos[]', file);
+        });
+        formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content);
+
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ti ti-loader me-1"></i>Uploading...';
+
+        fetch('/bookings/{{ $booking->id }}/upload-after-photos', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('afterPhotosModal').style.setProperty('display', 'none', 'important');
+                location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Upload failed'));
+                btn.disabled = false;
+                btn.innerHTML = 'Upload Photos';
+            }
+        })
+        .catch(() => {
+            alert('Upload failed. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = 'Upload Photos';
+        });
+    });
+});
+</script>

@@ -77,6 +77,11 @@ Route::group([
             'CarMaintenanceHistoryController@destroy'
         )->name('car-maintenance-histories.destroy');
 
+        Route::post('bookings/{booking}/send-key-instructions', [
+            'as' => 'bookings.send-key-instructions',
+            'uses' => 'BookingController@sendKeyInstructions',
+        ])->wherePrimaryKey('booking');
+        
         Route::resource('bookings', 'BookingController')
             ->parameters(['' => 'booking'])
             ->only(['index']);
