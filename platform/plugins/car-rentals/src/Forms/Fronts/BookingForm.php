@@ -20,9 +20,11 @@ use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\Service;
 use Botble\CarRentals\Models\Insurance; // NEW IMPORT
+use Botble\CarRentals\Services\PricingQuoteService;
 use Botble\Theme\Facades\Theme;
 use Botble\Theme\FormFront;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class BookingForm extends FormFront
 {
@@ -65,11 +67,15 @@ class BookingForm extends FormFront
         $startTime = BaseHelper::stringify(request()->query('rental_start_time', '09:00'));
         $endTime = BaseHelper::stringify(request()->query('rental_end_time', '09:00'));
 
-        $rentalPrice = $car->getCarRentalPrice($startDate, $endDate);
-
-        $taxAmount = $car->calculateTaxAmount($rentalPrice);
-        $taxInfo = $car->getTaxInfo($taxAmount);
-        $totalAmount = $rentalPrice + $taxAmount;
+        $quoteData = app(PricingQuoteService::class)->buildQuote(
+            $car,
+            Carbon::createFromFormat($dateFormat, $startDate),
+            Carbon::createFromFormat($dateFormat, $endDate),
+            [],
+            [],
+            null,
+            Auth::guard('customer')->user()
+        );
 
         // FETCH SERVICES
         $services = Service::query()->select(['id', 'name', 'price', 'currency_id'])->wherePublished()->get();
@@ -175,10 +181,30 @@ class BookingForm extends FormFront
                 HtmlField::class,
                 HtmlFieldOption::make()
                     ->view('plugins/car-rentals::cars.partials.booking-form-estimate', [
-                        'total' => $totalAmount,
-                        'subtotal' => $rentalPrice,
-                        'tax' => $taxAmount,
-                        'taxInfo' => $taxInfo,
+                        'total' => (float) $quoteData['final_payable_amount'],
+                        'subtotal' => (float) $quoteData['subtotal'],
+                        'tax' => (float) $quoteData['tax_amount'],
+                        'taxInfo' => (string) $quoteData['tax_title'],
+                        'discount' => (float) $quoteData['coupon_amount'],
+                        'depositAmount' => (float) $quoteData['deposit_amount'],
+                        'feeAmount' => (float) $quoteData['fee_amount'],
+                        'rentalDays' => (int) $quoteData['rental_days'],
+                        'baseRentalAmount' => (float) $quoteData['base_rental_amount'],
+                        'rentalAmount' => (float) $quoteData['rental_amount'],
+                        'policyDiscountAmount' => (float) $quoteData['policy_discount_amount'],
+                        'policyDiscountSource' => (string) ($quoteData['policy_discount_source'] ?? ''),
+                        'serviceAmount' => (float) $quoteData['service_amount'],
+                        'insuranceAmount' => (float) $quoteData['insurance_amount'],
+                        'feeName' => (string) ($quoteData['fee_name'] ?? ''),
+                        'depositType' => (string) ($quoteData['deposit_type'] ?? 'percentage'),
+                        'depositRate' => (float) ($quoteData['deposit_rate'] ?? 0),
+                        'depositBaseAmount' => (float) ($quoteData['deposit_base_amount'] ?? 0),
+                        'includedDistanceLimit' => $quoteData['included_distance_limit'] !== null
+                            ? (int) $quoteData['included_distance_limit']
+                            : null,
+                        'distanceUnit' => (string) ($quoteData['distance_unit'] ?? 'km'),
+                        'extraDistanceUnitPrice' => (float) ($quoteData['extra_distance_unit_price'] ?? 0),
+                        'distanceOverageBillingMode' => (string) ($quoteData['distance_overage_billing_mode'] ?? 'end_of_trip'),
                         'currencyId' => $car->currency_id,
                     ])
                     ->colspan(2)

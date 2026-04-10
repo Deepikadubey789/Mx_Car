@@ -103,6 +103,13 @@ return [
     'enter_kilometers' => 'Enter final kilometers',
     'completion_miles_help' => 'Enter the final mileage reading when the car was returned.',
     'completion_kilometers_help' => 'Enter the final kilometer reading when the car was returned.',
+    'start_mileage' => 'Start Mileage',
+    'included_distance_limit' => 'Included Distance Limit',
+    'distance_travelled' => 'Distance Travelled',
+    'distance_overage_units' => 'Extra Distance',
+    'distance_overage_amount' => 'Extra Distance Charge',
+    'distance_overage_line_item' => 'Distance overage charge',
+    'distance_overage_summary_help' => 'Overage is calculated only when completion mileage is provided and booking policy includes distance rules.',
 
     'completion_gas_level' => 'Gas Level',
     'select_gas_level' => 'Select gas level',
@@ -139,9 +146,12 @@ return [
     'deposit_settlement_release' => 'Release full hold',
     'deposit_settlement_capture_partial' => 'Capture partial amount for damages',
     'deposit_settlement_capture_full' => 'Capture full hold amount',
+    'deposit_settlement_capture_overage' => 'Capture calculated overage amount',
     'deposit_capture_amount' => 'Capture amount',
     'deposit_capture_amount_placeholder' => 'Enter amount to capture from the hold',
     'deposit_capture_amount_help' => 'Required when partial capture is selected. Must be less than or equal to authorized amount.',
+    'deposit_capture_overage_no_amount' => 'No overage amount is available to capture for this booking.',
+    'deposit_capture_overage_insufficient_hold' => 'Only :captured could be captured from deposit hold. Remaining overage to collect: :remaining.',
 
     // Coupon fields
     'coupon_code' => 'Coupon Code',
@@ -154,6 +164,7 @@ return [
     'validation' => [
         'completion_miles_integer' => 'The mileage must be a valid number.',
         'completion_miles_min' => 'The mileage must be at least 0.',
+        'completion_miles_less_than_start' => 'The final mileage cannot be less than the trip start mileage.',
         'completion_gas_level_invalid' => 'Please select a valid gas level.',
         'damage_image_invalid' => 'The uploaded file must be a valid image.',
         'damage_image_max_size' => 'The image size must not exceed 5MB.',

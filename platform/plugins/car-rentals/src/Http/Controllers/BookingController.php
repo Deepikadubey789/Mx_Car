@@ -20,9 +20,8 @@ use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\BookingCar;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\Customer;
-use Botble\CarRentals\Models\Service;
-use Botble\CarRentals\Services\CouponService;
 use Botble\CarRentals\Services\DepositHoldSettlementService;
+use Botble\CarRentals\Services\PricingQuoteService;
 use Botble\CarRentals\Tables\BookingTable;
 use Botble\Media\Facades\RvMedia;
 use Botble\Payment\Enums\PaymentMethodEnum;
@@ -87,6 +86,9 @@ class BookingController extends BaseController
     {
         $data = $request->validated();
         $settlementMessage = null;
+        $settlementAction = Arr::get($data, 'deposit_settlement_action');
+        $settlementCaptureAmount = Arr::get($data, 'deposit_capture_amount');
+        $overageAmountForSettlement = (float) ($booking->distance_overage_amount ?? 0);
 
         if ($booking->deposit_hold_status === 'authorized' && empty($data['deposit_settlement_action'])) {
             return $this
@@ -118,13 +120,83 @@ class BookingController extends BaseController
             $data['completed_at'] = Carbon::now();
         }
 
+        $startMileageBaseline = $booking->start_mileage_snapshot ?? $booking->start_mileage;
+
+        if (Arr::has($data, 'completion_miles') && $data['completion_miles'] !== null && $startMileageBaseline !== null) {
+            $completionMiles = (int) $data['completion_miles'];
+            $startMileage = (int) $startMileageBaseline;
+
+            if ($completionMiles < $startMileage) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setMessage(trans('plugins/car-rentals::booking.validation.completion_miles_less_than_start'));
+            }
+        }
+
+        if (Arr::has($data, 'completion_miles') && $data['completion_miles'] !== null && $startMileageBaseline !== null) {
+            $completionMiles = (int) $data['completion_miles'];
+            $startMileage = (int) $startMileageBaseline;
+            $travelled = max(0, $completionMiles - $startMileage);
+            $includedLimit = max(0, (int) ($booking->included_distance_limit ?? 0));
+            $overageUnits = max(0, $travelled - $includedLimit);
+            $billingMode = (string) ($booking->distance_overage_billing_mode ?: 'end_of_trip');
+            $unitPrice = (float) ($booking->extra_distance_unit_price ?? 0);
+            $overageAmount = in_array($billingMode, ['end_of_trip', 'both'], true)
+                ? round($overageUnits * $unitPrice, 2)
+                : 0.0;
+
+            $data['distance_travelled'] = $travelled;
+            $data['distance_overage_units'] = $overageUnits;
+            $data['distance_overage_amount'] = $overageAmount;
+            $overageAmountForSettlement = $overageAmount;
+
+            if ($booking->car && $booking->car->car_id) {
+                Car::query()->whereKey($booking->car->car_id)->update([
+                    'mileage' => $completionMiles,
+                ]);
+            }
+        }
+
+        if ($booking->deposit_hold_status === 'authorized' && $settlementAction === 'capture_overage') {
+            if ($overageAmountForSettlement <= 0) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setMessage(trans('plugins/car-rentals::booking.deposit_capture_overage_no_amount'));
+            }
+
+            $authorizedAmount = (float) ($booking->deposit_hold_amount ?: $booking->deposit_amount);
+            $settlementAction = 'capture_partial';
+            $settlementCaptureAmount = min($overageAmountForSettlement, $authorizedAmount);
+
+            if ($settlementCaptureAmount <= 0) {
+                return $this
+                    ->httpResponse()
+                    ->setError()
+                    ->setMessage(trans('plugins/car-rentals::booking.deposit_capture_overage_no_amount'));
+            }
+        }
+
+        if (Arr::has($data, 'distance_overage_amount')) {
+            $baseTripAmount = max(0, round(
+                (float) ($booking->sub_total ?? 0)
+                + (float) ($booking->tax_amount ?? 0)
+                - (float) ($booking->coupon_amount ?? 0)
+                + (float) ($booking->fee_amount ?? 0)
+                + (float) ($booking->deposit_amount ?? 0),
+                2
+            ));
+            $data['amount'] = round($baseTripAmount + (float) $data['distance_overage_amount'], 2);
+        }
+
         $booking->update($data);
 
-        if ($booking->deposit_hold_status === 'authorized' && ! empty($data['deposit_settlement_action'])) {
+        if ($booking->deposit_hold_status === 'authorized' && ! empty($settlementAction)) {
             $settlement = app(DepositHoldSettlementService::class)->settle(
                 $booking,
-                $data['deposit_settlement_action'],
-                Arr::get($data, 'deposit_capture_amount')
+                $settlementAction,
+                $settlementCaptureAmount
             );
 
             if (! $settlement['ok']) {
@@ -135,7 +207,20 @@ class BookingController extends BaseController
             }
 
             $settlementMessage = $settlement['message'] ?? null;
+
+            if (
+                Arr::get($data, 'deposit_settlement_action') === 'capture_overage'
+                && $overageAmountForSettlement > (float) $settlementCaptureAmount
+            ) {
+                $remainingOverage = round($overageAmountForSettlement - (float) $settlementCaptureAmount, 2);
+                $settlementMessage .= ' ' . trans('plugins/car-rentals::booking.deposit_capture_overage_insufficient_hold', [
+                    'captured' => format_price((float) $settlementCaptureAmount, $booking->currency_id),
+                    'remaining' => format_price($remainingOverage, $booking->currency_id),
+                ]);
+            }
         }
+
+        $this->syncDistanceOverageInvoiceItem($booking);
 
         return $this
             ->httpResponse()
@@ -144,6 +229,52 @@ class BookingController extends BaseController
                     ? trans('plugins/car-rentals::booking.completion_details_updated_successfully') . ' ' . $settlementMessage
                     : trans('plugins/car-rentals::booking.completion_details_updated_successfully')
             );
+    }
+
+    protected function syncDistanceOverageInvoiceItem(Booking $booking): void
+    {
+        if (! $booking->invoice()->exists()) {
+            return;
+        }
+
+        $invoice = $booking->invoice;
+        $invoice->loadMissing('items');
+
+        $overageAmount = round((float) ($booking->distance_overage_amount ?? 0), 2);
+        $lineItemMarker = '[distance_overage]';
+
+        $existingItem = $invoice->items
+            ->first(fn ($item) => $item->description === $lineItemMarker);
+
+        $existingAmount = $existingItem ? (float) $existingItem->amount : 0.0;
+
+        if ($overageAmount > 0) {
+            $lineData = [
+                'name' => trans('plugins/car-rentals::booking.distance_overage_line_item'),
+                'description' => $lineItemMarker,
+                'qty' => 1,
+                'sub_total' => $overageAmount,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'amount' => $overageAmount,
+            ];
+
+            if ($existingItem) {
+                $existingItem->update($lineData);
+            } else {
+                $invoice->items()->create($lineData);
+            }
+        } elseif ($existingItem) {
+            $existingItem->delete();
+        }
+
+        $delta = $overageAmount - $existingAmount;
+
+        if (abs($delta) > 0) {
+            $invoice->sub_total = round((float) $invoice->sub_total + $delta, 2);
+            $invoice->amount = round((float) $invoice->amount + $delta, 2);
+            $invoice->save();
+        }
     }
 
     public function uploadPickupPhotos(Request $request, Booking $booking)
@@ -381,13 +512,21 @@ class BookingController extends BaseController
         $startDate = Carbon::parse($request->input('rental_start_date'));
         $endDate = Carbon::parse($request->input('rental_end_date'));
 
-        $rentalDays = $startDate->diffInDays($endDate) ?: 1;
-        $carPrice = $car->getCarRentalPrice($startDate->format('Y-m-d'), $endDate->format('Y-m-d'));
-
         $serviceIds = $request->input('services', []);
         if (is_string($serviceIds)) {
             $serviceIds = json_decode($serviceIds, true) ?: [];
         }
+
+        $couponCode = $request->input('coupon_code');
+        $quoteData = app(PricingQuoteService::class)->buildQuote(
+            $car,
+            $startDate,
+            $endDate,
+            $serviceIds,
+            [],
+            $couponCode,
+            null
+        );
 
         $booking = new Booking();
         $booking->fill([
@@ -403,67 +542,53 @@ class BookingController extends BaseController
 
         $booking->transaction_id = Str::upper(Str::random(32));
 
-        // Calculate amount
-        $amount = $carPrice;
-        $serviceAmount = 0;
-
-        if ($serviceIds) {
-            $services = Service::query()
-                ->wherePublished()
-                ->whereIn('id', $serviceIds)
-                ->get();
-
-            foreach ($services as $service) {
-                if ($service->price_type && $service->price_type->getValue() === 'per_day') {
-                    $serviceAmount += $service->price * $rentalDays;
-                } else {
-                    $serviceAmount += $service->price;
-                }
-            }
-            $amount += $serviceAmount;
+        $couponAmount = (float) ($quoteData['coupon_amount'] ?? 0);
+        $manualCouponAmount = $request->input('coupon_amount');
+        if ($manualCouponAmount !== null && $manualCouponAmount !== '' && is_numeric($manualCouponAmount) && $manualCouponAmount >= 0) {
+            $couponCap = (float) $quoteData['subtotal'] + (float) $quoteData['tax_amount'];
+            $couponAmount = min((float) $manualCouponAmount, $couponCap);
         }
 
-        // Calculate tax
-        $taxAmount = 0;
-        if ($car->tax && $car->tax->percentage) {
-            $taxAmount = $amount * $car->tax->percentage / 100;
+        $totalAmount = ((float) $quoteData['subtotal'] + (float) $quoteData['tax_amount'] - $couponAmount + (float) $quoteData['fee_amount']);
+        $finalPayableAmount = $totalAmount + (float) $quoteData['deposit_amount'];
+
+        if ($couponCode && $couponAmount > 0) {
+            $booking->coupon_code = $couponCode;
         }
 
-        // Process coupon if provided
-        $couponAmount = 0;
-        $couponCode = $request->input('coupon_code');
-        if ($couponCode) {
-            $couponService = app(CouponService::class);
-            $coupon = $couponService->getCouponByCode($couponCode);
-
-            if ($coupon) {
-                $couponAmount = $couponService->getDiscountAmount(
-                    $coupon->type->getValue(),
-                    $coupon->value,
-                    $amount + $taxAmount
-                );
-
-                // Use manual coupon amount if provided and valid
-                $manualCouponAmount = $request->input('coupon_amount');
-                if ($manualCouponAmount && is_numeric($manualCouponAmount) && $manualCouponAmount >= 0) {
-                    $couponAmount = min($manualCouponAmount, $amount + $taxAmount);
-                }
-
-                $booking->coupon_code = $couponCode;
-                $booking->coupon_amount = $couponAmount;
-            }
-        } elseif ($request->input('coupon_amount')) {
-            // Allow manual coupon amount without code for admin flexibility
-            $manualCouponAmount = $request->input('coupon_amount');
-            if (is_numeric($manualCouponAmount) && $manualCouponAmount >= 0) {
-                $couponAmount = min($manualCouponAmount, $amount + $taxAmount);
-                $booking->coupon_amount = $couponAmount;
-            }
-        }
-
-        $booking->amount = $amount + $taxAmount - $couponAmount;
-        $booking->sub_total = $amount;
-        $booking->tax_amount = $taxAmount;
+        $booking->coupon_amount = $couponAmount;
+        $booking->amount = $finalPayableAmount;
+        $booking->sub_total = (float) $quoteData['subtotal'];
+        $booking->tax_amount = (float) $quoteData['tax_amount'];
+        $booking->fee_name = (string) $quoteData['fee_name'];
+        $booking->fee_value = (float) $quoteData['fee_value'];
+        $booking->fee_amount = (float) $quoteData['fee_amount'];
+        $booking->deposit_base_amount = (float) $quoteData['deposit_base_amount'];
+        $booking->deposit_amount = (float) $quoteData['deposit_amount'];
+        $booking->deposit_type = (string) $quoteData['deposit_type'];
+        $booking->deposit_rate = (float) $quoteData['deposit_rate'];
+        $booking->deposit_risk_multiplier = (float) Arr::get($quoteData, 'deposit_risk.multiplier', 1);
+        $booking->deposit_risk_level = (string) Arr::get($quoteData, 'deposit_risk.risk_level', 'low');
+        $booking->deposit_risk_reasons = Arr::get($quoteData, 'deposit_risk.reasons', []);
+        $booking->price_snapshot = [
+            'rental_days' => (int) ($quoteData['rental_days'] ?? 1),
+            'base_rental_amount' => (float) ($quoteData['base_rental_amount'] ?? 0),
+            'policy_discount_amount' => (float) ($quoteData['policy_discount_amount'] ?? 0),
+            'policy_discount_pre_cap_amount' => (float) ($quoteData['policy_discount_pre_cap_amount'] ?? 0),
+            'policy_discount_capped' => (bool) ($quoteData['policy_discount_capped'] ?? false),
+            'policy_discount_cap_percent' => $quoteData['policy_discount_cap_percent'] !== null
+                ? (float) $quoteData['policy_discount_cap_percent']
+                : null,
+            'policy_discount_source' => (string) ($quoteData['policy_discount_source'] ?? ''),
+        ];
+        $booking->distance_unit = (string) ($quoteData['distance_unit'] ?? 'km');
+        $booking->start_mileage = $car->mileage !== null ? (int) $car->mileage : null;
+        $booking->start_mileage_snapshot = $car->mileage !== null ? (int) $car->mileage : null;
+        $booking->included_distance_limit = $quoteData['included_distance_limit'] !== null
+            ? (int) $quoteData['included_distance_limit']
+            : null;
+        $booking->distance_overage_billing_mode = (string) ($quoteData['distance_overage_billing_mode'] ?? 'end_of_trip');
+        $booking->extra_distance_unit_price = (float) ($quoteData['extra_distance_unit_price'] ?? 0);
         $booking->currency_id = $car->currency_id;
         $booking->save();
 
@@ -476,7 +601,7 @@ class BookingController extends BaseController
             'car_name' => $car->name,
             'car_image' => Arr::first($car->images),
             'booking_id' => $booking->getKey(),
-            'price' => $carPrice,
+            'price' => (float) $quoteData['rental_amount'],
             'currency_id' => get_application_currency()->id,
             'rental_start_date' => $startDate->format('Y-m-d'),
             'rental_end_date' => $endDate->format('Y-m-d'),

@@ -468,6 +468,13 @@ class CarForm extends FormAbstract
                         ]);
 
                     $form->addMetaBoxes([
+                        'pricing-policy' => [
+                            'title' => trans('plugins/car-rentals::car-rentals.pricing_policy.name'),
+                            'content' => view('plugins/car-rentals::cars.pricing-policy', [
+                                'car' => $this->getModel(),
+                            ])->render(),
+                            'priority' => 2,
+                        ],
                         'pricing-calendar' => [
                             'title' => trans('plugins/car-rentals::car-rentals.pricing_calendar.name'),
                             'content' => view('plugins/car-rentals::forms.car-pricing-calendar', [

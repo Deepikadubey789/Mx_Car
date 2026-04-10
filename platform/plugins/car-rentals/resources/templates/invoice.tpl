@@ -266,6 +266,126 @@
 </table>
 {% endif %}
 
+{% if booking %}
+<table class="invoice-info-container" style="margin: 20px 0;">
+    <tr>
+        <td colspan="2" style="padding-bottom: 8px;">
+            <strong>{{ 'plugins/car-rentals::invoice.pricing_details'|trans }}</strong>
+        </td>
+    </tr>
+    <tr>
+        <td style="width: 50%; padding-right: 12px; vertical-align: top;">
+            <table>
+                <tr>
+                    <td colspan="2" style="padding: 6px 0;"><strong>{{ 'plugins/car-rentals::invoice.discount_breakdown'|trans }}</strong></td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.discount_source'|trans }}</td>
+                    <td>{{ policy_discount_source_label }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.discount_cap'|trans }}</td>
+                    <td>
+                        {% if price_snapshot.policy_discount_cap_percent is defined and price_snapshot.policy_discount_cap_percent is not null %}
+                            {{ price_snapshot.policy_discount_cap_percent }}%
+                        {% else %}
+                            {{ 'plugins/car-rentals::invoice.na'|trans }}
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.policy_discount_amount'|trans }}</td>
+                    <td>{{ (price_snapshot.policy_discount_amount|default(0))|price_format }}</td>
+                </tr>
+            </table>
+        </td>
+        <td style="width: 50%; padding-left: 12px; vertical-align: top;">
+            <table>
+                <tr>
+                    <td colspan="2" style="padding: 6px 0;"><strong>{{ 'plugins/car-rentals::invoice.mileage_policy'|trans }}</strong></td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::booking.included_distance_limit'|trans }}</td>
+                    <td>
+                        {% if booking.included_distance_limit is not null %}
+                            {{ booking.included_distance_limit }} {{ booking.distance_unit|default('km') }}
+                        {% else %}
+                            {{ 'plugins/car-rentals::invoice.na'|trans }}
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.extra_distance_rate'|trans }}</td>
+                    <td>{{ booking.extra_distance_unit_price|default(0)|price_format }}/{{ booking.distance_unit|default('km') }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.billing_mode'|trans }}</td>
+                    <td>{{ distance_billing_mode_label }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td style="padding-right: 12px; vertical-align: top; padding-top: 10px;">
+            <table>
+                <tr>
+                    <td colspan="2" style="padding: 6px 0;"><strong>{{ 'plugins/car-rentals::invoice.trip_mileage_summary'|trans }}</strong></td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::booking.start_mileage'|trans }}</td>
+                    <td>{{ booking.start_mileage_snapshot|default(booking.start_mileage|default('plugins/car-rentals::invoice.na'|trans)) }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::booking.distance_travelled'|trans }}</td>
+                    <td>{{ booking.distance_travelled|default(0) }} {{ booking.distance_unit|default('km') }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::booking.distance_overage_units'|trans }}</td>
+                    <td>{{ booking.distance_overage_units|default(0) }} {{ booking.distance_unit|default('km') }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::booking.distance_overage_amount'|trans }}</td>
+                    <td>{{ booking.distance_overage_amount|default(0)|price_format }}</td>
+                </tr>
+            </table>
+        </td>
+        <td style="padding-left: 12px; vertical-align: top; padding-top: 10px;">
+            <table>
+                <tr>
+                    <td colspan="2" style="padding: 6px 0;"><strong>{{ 'plugins/car-rentals::invoice.deposit_breakdown'|trans }}</strong></td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.deposit_type'|trans }}</td>
+                    <td>
+                        {% if booking.deposit_type == 'fixed' %}
+                            {{ 'Fixed'|trans }}
+                        {% else %}
+                            {{ (booking.deposit_rate|default(0)) }}%
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.deposit_base_amount'|trans }}</td>
+                    <td>{{ booking.deposit_base_amount|default(0)|price_format }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.deposit_authorized_amount'|trans }}</td>
+                    <td>{{ booking.deposit_hold_amount|default(0)|price_format }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.deposit_captured_amount'|trans }}</td>
+                    <td>{{ booking.deposit_captured_amount|default(0)|price_format }}</td>
+                </tr>
+                <tr>
+                    <td>{{ 'plugins/car-rentals::invoice.deposit_released_amount'|trans }}</td>
+                    <td>{{ booking.deposit_released_amount|default(0)|price_format }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+{% endif %}
+
 <table class="line-items-container">
     <thead>
     <tr>

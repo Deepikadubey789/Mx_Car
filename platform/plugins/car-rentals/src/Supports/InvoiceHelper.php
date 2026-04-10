@@ -105,7 +105,50 @@ class InvoiceHelper
             }
         }
 
+        $this->syncDistanceOverageInvoiceItem($invoice, $booking);
+
         return $invoice;
+    }
+
+    protected function syncDistanceOverageInvoiceItem(Invoice $invoice, Booking $booking): void
+    {
+        $invoice->loadMissing('items');
+
+        $lineItemMarker = '[distance_overage]';
+        $overageAmount = round((float) ($booking->distance_overage_amount ?? 0), 2);
+
+        $existingItem = $invoice->items
+            ->first(fn (InvoiceItem $item) => $item->description === $lineItemMarker);
+
+        $existingAmount = $existingItem ? (float) $existingItem->amount : 0.0;
+
+        if ($overageAmount > 0) {
+            $lineData = [
+                'name' => trans('plugins/car-rentals::booking.distance_overage_line_item'),
+                'description' => $lineItemMarker,
+                'qty' => 1,
+                'sub_total' => $overageAmount,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'amount' => $overageAmount,
+            ];
+
+            if ($existingItem) {
+                $existingItem->update($lineData);
+            } else {
+                $invoice->items()->create($lineData);
+            }
+        } elseif ($existingItem) {
+            $existingItem->delete();
+        }
+
+        $delta = $overageAmount - $existingAmount;
+
+        if (abs($delta) > 0.0) {
+            $invoice->sub_total = round((float) $invoice->sub_total + $delta, 2);
+            $invoice->amount = round((float) $invoice->amount + $delta, 2);
+            $invoice->save();
+        }
     }
 
     public function makeInvoicePDF(Invoice $invoice): Pdf
@@ -154,9 +197,29 @@ class InvoiceHelper
     protected function getDataForInvoiceTemplate(Invoice $invoice): array
     {
         $booking = $invoice->reference;
+        $priceSnapshot = [];
+        $policyDiscountSourceLabel = trans('plugins/car-rentals::invoice.na');
+        $distanceBillingModeLabel = trans('plugins/car-rentals::invoice.billing_modes.end_of_trip');
 
         if ($booking) {
             $booking->load(['car', 'services']);
+
+            if (is_array($booking->price_snapshot)) {
+                $priceSnapshot = $booking->price_snapshot;
+            }
+
+            $policyDiscountSource = (string) ($priceSnapshot['policy_discount_source'] ?? '');
+
+            $policyDiscountSourceLabel = match (true) {
+                $policyDiscountSource === 'weekly' => trans('plugins/car-rentals::invoice.discount_sources.weekly'),
+                $policyDiscountSource === 'monthly' => trans('plugins/car-rentals::invoice.discount_sources.monthly'),
+                str_starts_with($policyDiscountSource, 'trip-rule:') => trans('plugins/car-rentals::invoice.discount_sources.trip_rule'),
+                $policyDiscountSource === 'combined' => trans('plugins/car-rentals::invoice.discount_sources.combined'),
+                default => trans('plugins/car-rentals::invoice.discount_sources.none'),
+            };
+
+            $distanceMode = (string) ($booking->distance_overage_billing_mode ?: 'end_of_trip');
+            $distanceBillingModeLabel = trans('plugins/car-rentals::invoice.billing_modes.' . $distanceMode);
         }
 
         $invoiceData = [
@@ -182,6 +245,9 @@ class InvoiceHelper
                 'company_phone_for_invoicing' => get_car_rentals_setting('company_phone_for_invoicing'),
                 'car_rentals_invoice_footer' => apply_filters('car_rentals_invoice_footer', null, $invoice),
             ],
+            'price_snapshot' => $priceSnapshot,
+            'policy_discount_source_label' => $policyDiscountSourceLabel,
+            'distance_billing_mode_label' => $distanceBillingModeLabel,
         ];
 
         if (is_plugin_active('payment')) {

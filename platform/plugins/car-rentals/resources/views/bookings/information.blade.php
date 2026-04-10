@@ -150,6 +150,32 @@
         @endif
     @endif
 
+    @php
+        $distanceUnit = (string) ($booking->distance_unit ?: 'km');
+        $startMileageValue = $booking->start_mileage_snapshot ?? $booking->start_mileage;
+        $completionMileageValue = $booking->completion_miles;
+        $includedDistanceLimit = (int) ($booking->included_distance_limit ?? 0);
+        $distanceTravelled = (int) ($booking->distance_travelled ?? 0);
+        $distanceOverageUnits = (int) ($booking->distance_overage_units ?? 0);
+        $extraDistanceUnitPrice = (float) ($booking->extra_distance_unit_price ?? 0);
+        $distanceOverageAmount = round((float) ($booking->distance_overage_amount ?? 0), 2);
+        $baseTripAmount = max(0, round(
+            (float) ($booking->sub_total ?? 0)
+            + (float) ($booking->tax_amount ?? 0)
+            - (float) ($booking->coupon_amount ?? 0)
+            + (float) ($booking->fee_amount ?? 0)
+            + (float) ($booking->deposit_amount ?? 0),
+            2
+        ));
+        $hasMileageBreakdown = $completionMileageValue !== null
+            || $startMileageValue !== null
+            || $includedDistanceLimit > 0
+            || $distanceTravelled > 0
+            || $distanceOverageUnits > 0
+            || $distanceOverageAmount > 0
+            || $extraDistanceUnitPrice > 0;
+    @endphp
+
     <x-core::datagrid>
         <x-core::datagrid.item :title="__('Sub Total')">
             {{ format_price($booking->sub_total, $booking->currency_id) }}
@@ -179,6 +205,44 @@
         @if ($booking->deposit_amount > 0)
             <x-core::datagrid.item :title="__('Refundable Deposit') . ' ' . ($booking->deposit_type === 'fixed' ? '(' . __('Fixed') . ')' : '(' . (float) ($booking->deposit_rate ?? 0) . '%)')">
                 {{ format_price($booking->deposit_amount, $booking->currency_id) }}
+            </x-core::datagrid.item>
+        @endif
+
+        @if ($hasMileageBreakdown)
+            <x-core::datagrid.item :title="__('Trip Total Before Mileage Extra')">
+                {{ format_price($baseTripAmount, $booking->currency_id) }}
+            </x-core::datagrid.item>
+
+            @if ($startMileageValue !== null)
+                <x-core::datagrid.item :title="__('Trip Start Mileage')">
+                    {{ (int) $startMileageValue }} {{ $distanceUnit }}
+                </x-core::datagrid.item>
+            @endif
+
+            @if ($completionMileageValue !== null)
+                <x-core::datagrid.item :title="__('Trip End Mileage')">
+                    {{ (int) $completionMileageValue }} {{ $distanceUnit }}
+                </x-core::datagrid.item>
+            @endif
+
+            <x-core::datagrid.item :title="__('Included Distance Limit')">
+                {{ $includedDistanceLimit }} {{ $distanceUnit }}
+            </x-core::datagrid.item>
+
+            <x-core::datagrid.item :title="__('Distance Travelled')">
+                {{ $distanceTravelled }} {{ $distanceUnit }}
+            </x-core::datagrid.item>
+
+            <x-core::datagrid.item :title="__('Extra Distance Units')">
+                {{ $distanceOverageUnits }} {{ $distanceUnit }}
+            </x-core::datagrid.item>
+
+            <x-core::datagrid.item :title="__('Extra Distance Rate')">
+                {{ format_price($extraDistanceUnitPrice, $booking->currency_id) }}/{{ $distanceUnit }}
+            </x-core::datagrid.item>
+
+            <x-core::datagrid.item :title="__('Mileage Extra Amount')">
+                {{ format_price($distanceOverageAmount, $booking->currency_id) }}
             </x-core::datagrid.item>
         @endif
 

@@ -98,6 +98,79 @@
                         'printBookingRoute' => 'car-rentals.vendor.bookings.print',
                         'buttonClass' => 'btn-primary'
                     ])
+
+                    @php
+                        $distanceUnit = (string) ($booking->distance_unit ?: 'km');
+                        $startMileageValue = $booking->start_mileage_snapshot ?? $booking->start_mileage;
+                        $completionMileageValue = $booking->completion_miles;
+                        $includedDistanceLimit = (int) ($booking->included_distance_limit ?? 0);
+                        $distanceTravelled = (int) ($booking->distance_travelled ?? 0);
+                        $distanceOverageUnits = (int) ($booking->distance_overage_units ?? 0);
+                        $extraDistanceUnitPrice = (float) ($booking->extra_distance_unit_price ?? 0);
+                        $distanceOverageAmount = round((float) ($booking->distance_overage_amount ?? 0), 2);
+                        $baseTripAmount = max(0, round(
+                            (float) ($booking->sub_total ?? 0)
+                            + (float) ($booking->tax_amount ?? 0)
+                            - (float) ($booking->coupon_amount ?? 0)
+                            + (float) ($booking->fee_amount ?? 0)
+                            + (float) ($booking->deposit_amount ?? 0),
+                            2
+                        ));
+                        $hasMileageBreakdown = $completionMileageValue !== null
+                            || $startMileageValue !== null
+                            || $includedDistanceLimit > 0
+                            || $distanceTravelled > 0
+                            || $distanceOverageUnits > 0
+                            || $distanceOverageAmount > 0
+                            || $extraDistanceUnitPrice > 0;
+                    @endphp
+
+                    @if ($hasMileageBreakdown)
+                        <x-core::alert type="info" class="mt-3 mb-0">
+                            <h5 class="mb-2">{{ __('Mileage & Extra Distance Breakdown') }}</h5>
+                            <x-core::datagrid>
+                                <x-core::datagrid.item :title="__('Trip Total Before Mileage Extra')">
+                                    {{ format_price($baseTripAmount, $booking->currency_id) }}
+                                </x-core::datagrid.item>
+
+                                @if ($startMileageValue !== null)
+                                    <x-core::datagrid.item :title="__('Trip Start Mileage')">
+                                        {{ (int) $startMileageValue }} {{ $distanceUnit }}
+                                    </x-core::datagrid.item>
+                                @endif
+
+                                @if ($completionMileageValue !== null)
+                                    <x-core::datagrid.item :title="__('Trip End Mileage')">
+                                        {{ (int) $completionMileageValue }} {{ $distanceUnit }}
+                                    </x-core::datagrid.item>
+                                @endif
+
+                                <x-core::datagrid.item :title="__('Included Distance Limit')">
+                                    {{ $includedDistanceLimit }} {{ $distanceUnit }}
+                                </x-core::datagrid.item>
+
+                                <x-core::datagrid.item :title="__('Distance Travelled')">
+                                    {{ $distanceTravelled }} {{ $distanceUnit }}
+                                </x-core::datagrid.item>
+
+                                <x-core::datagrid.item :title="__('Extra Distance Units')">
+                                    {{ $distanceOverageUnits }} {{ $distanceUnit }}
+                                </x-core::datagrid.item>
+
+                                <x-core::datagrid.item :title="__('Extra Distance Rate')">
+                                    {{ format_price($extraDistanceUnitPrice, $booking->currency_id) }}/{{ $distanceUnit }}
+                                </x-core::datagrid.item>
+
+                                <x-core::datagrid.item :title="__('Mileage Extra Amount')">
+                                    {{ format_price($distanceOverageAmount, $booking->currency_id) }}
+                                </x-core::datagrid.item>
+
+                                <x-core::datagrid.item :title="__('Final Total')">
+                                    {{ format_price($booking->amount, $booking->currency_id) }}
+                                </x-core::datagrid.item>
+                            </x-core::datagrid>
+                        </x-core::alert>
+                    @endif
                 </x-core::card.body>
             </x-core::card>
         </div>

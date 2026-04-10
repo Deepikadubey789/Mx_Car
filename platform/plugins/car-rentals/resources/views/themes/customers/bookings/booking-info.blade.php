@@ -6,6 +6,32 @@
 
 @if ($booking)
     <div class="customer-booking-info">
+    @php
+        $distanceUnit = (string) ($booking->distance_unit ?: 'km');
+        $startMileageValue = $booking->start_mileage_snapshot ?? $booking->start_mileage;
+        $completionMileageValue = $booking->completion_miles;
+        $includedDistanceLimit = (int) ($booking->included_distance_limit ?? 0);
+        $distanceTravelled = (int) ($booking->distance_travelled ?? 0);
+        $distanceOverageUnits = (int) ($booking->distance_overage_units ?? 0);
+        $extraDistanceUnitPrice = (float) ($booking->extra_distance_unit_price ?? 0);
+        $distanceOverageAmount = round((float) ($booking->distance_overage_amount ?? 0), 2);
+        $baseTripAmount = max(0, round(
+            (float) ($booking->sub_total ?? 0)
+            + (float) ($booking->tax_amount ?? 0)
+            - (float) ($booking->coupon_amount ?? 0)
+            + (float) ($booking->fee_amount ?? 0)
+            + (float) ($booking->deposit_amount ?? 0),
+            2
+        ));
+        $hasMileageBreakdown = $completionMileageValue !== null
+            || $startMileageValue !== null
+            || $includedDistanceLimit > 0
+            || $distanceTravelled > 0
+            || $distanceOverageUnits > 0
+            || $distanceOverageAmount > 0
+            || $extraDistanceUnitPrice > 0;
+    @endphp
+
     <div class="row">
         <div class="col-lg-4">
             <strong>{{ __('Booking Information') }}:</strong> {{ $booking->booking_number }}
@@ -279,6 +305,52 @@
 
             <div class="col-lg-12">
                 <small class="text-muted">{{ __('Security deposit is processed as an authorization hold and settled after inspection.') }}</small>
+            </div>
+        @endif
+
+        @if ($hasMileageBreakdown)
+            <div class="col-lg-4">
+                <strong>{{ __('Trip Total Before Mileage Extra') }}:</strong>
+                {{ format_price($baseTripAmount, $booking->currency_id) }}
+            </div>
+
+            @if ($startMileageValue !== null)
+                <div class="col-lg-4">
+                    <strong>{{ __('Trip Start Mileage') }}:</strong>
+                    {{ (int) $startMileageValue }} {{ $distanceUnit }}
+                </div>
+            @endif
+
+            @if ($completionMileageValue !== null)
+                <div class="col-lg-4">
+                    <strong>{{ __('Trip End Mileage') }}:</strong>
+                    {{ (int) $completionMileageValue }} {{ $distanceUnit }}
+                </div>
+            @endif
+
+            <div class="col-lg-4">
+                <strong>{{ __('Included Distance Limit') }}:</strong>
+                {{ $includedDistanceLimit }} {{ $distanceUnit }}
+            </div>
+
+            <div class="col-lg-4">
+                <strong>{{ __('Distance Travelled') }}:</strong>
+                {{ $distanceTravelled }} {{ $distanceUnit }}
+            </div>
+
+            <div class="col-lg-4">
+                <strong>{{ __('Extra Distance Units') }}:</strong>
+                {{ $distanceOverageUnits }} {{ $distanceUnit }}
+            </div>
+
+            <div class="col-lg-4">
+                <strong>{{ __('Extra Distance Rate') }}:</strong>
+                {{ format_price($extraDistanceUnitPrice, $booking->currency_id) }}/{{ $distanceUnit }}
+            </div>
+
+            <div class="col-lg-4">
+                <strong>{{ __('Mileage Extra Amount') }}:</strong>
+                {{ format_price($distanceOverageAmount, $booking->currency_id) }}
             </div>
         @endif
 

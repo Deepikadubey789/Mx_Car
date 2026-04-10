@@ -16,7 +16,7 @@ class UpdateBookingCompletionRequest extends Request
             'existing_damage_images' => ['nullable', 'array'],
             'existing_damage_images.*' => ['string'],
             'completion_notes' => ['nullable', 'string', 'max:10000'],
-            'deposit_settlement_action' => ['nullable', 'string', 'in:release,capture_partial,capture_full'],
+            'deposit_settlement_action' => ['nullable', 'string', 'in:release,capture_partial,capture_full,capture_overage'],
             'deposit_capture_amount' => ['nullable', 'required_if:deposit_settlement_action,capture_partial', 'numeric', 'gt:0', 'min:0'],
         ];
     }

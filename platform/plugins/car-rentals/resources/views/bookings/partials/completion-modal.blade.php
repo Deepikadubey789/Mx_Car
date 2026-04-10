@@ -123,6 +123,40 @@
                     </div>
 
                     <div class="mb-3">
+                        @if (($booking->start_mileage_snapshot ?? $booking->start_mileage) !== null)
+                            @php
+                                $distanceCurrencyCode = strtoupper((string) ($booking->currency?->title ?: 'USD'));
+                                if (strlen($distanceCurrencyCode) !== 3) {
+                                    $distanceCurrencyCode = 'USD';
+                                }
+                            @endphp
+                            <div class="alert alert-info py-2 mb-3">
+                                <div
+                                    class="d-flex flex-wrap gap-3"
+                                    id="distance-overage-summary"
+                                    data-start-mileage="{{ (int) ($booking->start_mileage_snapshot ?? $booking->start_mileage) }}"
+                                    data-included-limit="{{ (int) ($booking->included_distance_limit ?? 0) }}"
+                                    data-billing-mode="{{ $booking->distance_overage_billing_mode ?: 'end_of_trip' }}"
+                                    data-unit-price="{{ (float) ($booking->extra_distance_unit_price ?? 0) }}"
+                                    data-currency-code="{{ $distanceCurrencyCode }}"
+                                    data-currency-id="{{ $booking->currency_id }}"
+                                >
+                                    <span><strong>{{ trans('plugins/car-rentals::booking.start_mileage') }}:</strong> {{ (int) ($booking->start_mileage_snapshot ?? $booking->start_mileage) }}</span>
+                                    <span><strong>{{ trans('plugins/car-rentals::booking.included_distance_limit') }}:</strong> {{ (int) ($booking->included_distance_limit ?? 0) }}</span>
+                                    <span><strong>{{ trans('plugins/car-rentals::booking.distance_travelled') }}:</strong> <span id="distance-travelled-value">{{ (int) ($booking->distance_travelled ?? 0) }}</span></span>
+                                    <span><strong>{{ trans('plugins/car-rentals::booking.distance_overage_units') }}:</strong> <span id="distance-overage-units-value">{{ (int) ($booking->distance_overage_units ?? 0) }}</span></span>
+                                    <span>
+                                        <strong>{{ trans('plugins/car-rentals::booking.distance_overage_amount') }}:</strong>
+                                        <span
+                                            id="distance-overage-amount-value"
+                                            data-fallback-formatted="{{ format_price((float) ($booking->distance_overage_amount ?? 0), $booking->currency_id) }}"
+                                        >{{ format_price((float) ($booking->distance_overage_amount ?? 0), $booking->currency_id) }}</span>
+                                    </span>
+                                </div>
+                                <small class="text-muted d-block mt-1">{{ trans('plugins/car-rentals::booking.distance_overage_summary_help') }}</small>
+                            </div>
+                        @endif
+
                         <x-core::form.label for="completion_notes" :value="trans('plugins/car-rentals::booking.completion_notes')" />
                         <x-core::form.textarea
                             name="completion_notes"
@@ -150,6 +184,7 @@
                                         <option value="release">{{ trans('plugins/car-rentals::booking.deposit_settlement_release') }}</option>
                                         <option value="capture_partial">{{ trans('plugins/car-rentals::booking.deposit_settlement_capture_partial') }}</option>
                                         <option value="capture_full">{{ trans('plugins/car-rentals::booking.deposit_settlement_capture_full') }}</option>
+                                        <option value="capture_overage">{{ trans('plugins/car-rentals::booking.deposit_settlement_capture_overage') }}</option>
                                     </x-core::form.select>
                                     <x-core::form.helper-text>
                                         {{ trans('plugins/car-rentals::booking.deposit_settlement_action_help') }}
@@ -240,6 +275,66 @@ document.addEventListener('DOMContentLoaded', function () {
 
             captureAmountWrapper.classList.add('d-none');
         });
+    }
+
+    const completionMilesInput = document.getElementById('completion_miles');
+    const distanceSummary = document.getElementById('distance-overage-summary');
+    const travelledValueEl = document.getElementById('distance-travelled-value');
+    const overageUnitsValueEl = document.getElementById('distance-overage-units-value');
+    const overageAmountValueEl = document.getElementById('distance-overage-amount-value');
+
+    if (completionMilesInput && distanceSummary && travelledValueEl && overageUnitsValueEl && overageAmountValueEl) {
+        const startMileage = Number(distanceSummary.dataset.startMileage || 0);
+        const includedLimit = Number(distanceSummary.dataset.includedLimit || 0);
+        const unitPrice = Number(distanceSummary.dataset.unitPrice || 0);
+        const billingMode = String(distanceSummary.dataset.billingMode || 'end_of_trip');
+        const currencyCode = String(distanceSummary.dataset.currencyCode || 'USD');
+        const currencyId = Number(distanceSummary.dataset.currencyId || 0);
+        const fallbackFormatted = overageAmountValueEl.dataset.fallbackFormatted || '0.00';
+
+        const amountFormatter = (() => {
+            try {
+                return new Intl.NumberFormat(undefined, {
+                    style: 'currency',
+                    currency: currencyCode,
+                });
+            } catch (error) {
+                return null;
+            }
+        })();
+
+        const formatAmount = (amount) => {
+            if (currencyId > 0 && typeof Botble !== 'undefined' && typeof Botble.formatMoney === 'function') {
+                return Botble.formatMoney(amount, currencyId);
+            }
+
+            if (amountFormatter) {
+                return amountFormatter.format(amount);
+            }
+
+            return amount.toFixed(2) || fallbackFormatted;
+        };
+
+        const recalculateDistanceSummary = () => {
+            const parsedCompletion = Number(completionMilesInput.value);
+
+            if (Number.isNaN(parsedCompletion)) {
+                return;
+            }
+
+            const travelled = Math.max(0, Math.floor(parsedCompletion) - Math.floor(startMileage));
+            const overageUnits = Math.max(0, travelled - Math.max(0, Math.floor(includedLimit)));
+            const shouldBillOverage = billingMode === 'end_of_trip' || billingMode === 'both';
+            const overageAmount = shouldBillOverage ? Math.round(overageUnits * unitPrice * 100) / 100 : 0;
+
+            travelledValueEl.textContent = String(travelled);
+            overageUnitsValueEl.textContent = String(overageUnits);
+            overageAmountValueEl.textContent = formatAmount(overageAmount);
+        };
+
+        completionMilesInput.addEventListener('input', recalculateDistanceSummary);
+        completionMilesInput.addEventListener('change', recalculateDistanceSummary);
+        recalculateDistanceSummary();
     }
 });
 

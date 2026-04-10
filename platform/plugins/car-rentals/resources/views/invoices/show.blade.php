@@ -24,6 +24,17 @@
         $bookingReference = $invoice->reference instanceof \Botble\CarRentals\Models\Booking
             ? $invoice->reference
             : null;
+        $priceSnapshot = is_array($bookingReference?->price_snapshot) ? $bookingReference->price_snapshot : [];
+        $policyDiscountSource = (string) ($priceSnapshot['policy_discount_source'] ?? '');
+        $policyDiscountSourceLabel = match (true) {
+            $policyDiscountSource === 'weekly' => trans('plugins/car-rentals::invoice.discount_sources.weekly'),
+            $policyDiscountSource === 'monthly' => trans('plugins/car-rentals::invoice.discount_sources.monthly'),
+            str_starts_with($policyDiscountSource, 'trip-rule:') => trans('plugins/car-rentals::invoice.discount_sources.trip_rule'),
+            $policyDiscountSource === 'combined' => trans('plugins/car-rentals::invoice.discount_sources.combined'),
+            default => trans('plugins/car-rentals::invoice.discount_sources.none'),
+        };
+        $distanceBillingMode = (string) ($bookingReference?->distance_overage_billing_mode ?: 'end_of_trip');
+        $distanceBillingModeLabel = trans('plugins/car-rentals::invoice.billing_modes.' . $distanceBillingMode);
     @endphp
 
     <x-core::card size="lg">
@@ -150,4 +161,143 @@
             </x-core::table>
         </x-core::card.body>
     </x-core::card>
+
+    @if ($bookingReference)
+        <x-core::card size="lg" class="mt-3">
+            <x-core::card.header>
+                <x-core::card.title>
+                    {{ trans('plugins/car-rentals::invoice.pricing_details') }}
+                </x-core::card.title>
+            </x-core::card.header>
+            <x-core::card.body>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <h5 class="mb-2">{{ trans('plugins/car-rentals::invoice.discount_breakdown') }}</h5>
+                        <x-core::table :striped="false" :hover="false">
+                            <x-core::table.body>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.discount_source') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">{{ $policyDiscountSourceLabel }}</x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.discount_cap') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ array_key_exists('policy_discount_cap_percent', $priceSnapshot) && $priceSnapshot['policy_discount_cap_percent'] !== null
+                                            ? (float) $priceSnapshot['policy_discount_cap_percent'] . '%'
+                                            : trans('plugins/car-rentals::invoice.na') }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.policy_discount_amount') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ format_price((float) ($priceSnapshot['policy_discount_amount'] ?? 0), $invoice->currency_id) }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                            </x-core::table.body>
+                        </x-core::table>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="mb-2">{{ trans('plugins/car-rentals::invoice.mileage_policy') }}</h5>
+                        <x-core::table :striped="false" :hover="false">
+                            <x-core::table.body>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::booking.included_distance_limit') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ $bookingReference->included_distance_limit !== null
+                                            ? ((int) $bookingReference->included_distance_limit . ' ' . ($bookingReference->distance_unit ?: 'km'))
+                                            : trans('plugins/car-rentals::invoice.na') }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.extra_distance_rate') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ format_price((float) ($bookingReference->extra_distance_unit_price ?? 0), $invoice->currency_id) }}/{{ $bookingReference->distance_unit ?: 'km' }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.billing_mode') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">{{ $distanceBillingModeLabel }}</x-core::table.body.cell>
+                                </x-core::table.body.row>
+                            </x-core::table.body>
+                        </x-core::table>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="mb-2">{{ trans('plugins/car-rentals::invoice.trip_mileage_summary') }}</h5>
+                        <x-core::table :striped="false" :hover="false">
+                            <x-core::table.body>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::booking.start_mileage') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ $bookingReference->start_mileage_snapshot ?? $bookingReference->start_mileage ?? trans('plugins/car-rentals::invoice.na') }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::booking.distance_travelled') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ (int) ($bookingReference->distance_travelled ?? 0) }} {{ $bookingReference->distance_unit ?: 'km' }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::booking.distance_overage_units') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ (int) ($bookingReference->distance_overage_units ?? 0) }} {{ $bookingReference->distance_unit ?: 'km' }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::booking.distance_overage_amount') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ format_price((float) ($bookingReference->distance_overage_amount ?? 0), $invoice->currency_id) }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                            </x-core::table.body>
+                        </x-core::table>
+                    </div>
+
+                    <div class="col-md-6">
+                        <h5 class="mb-2">{{ trans('plugins/car-rentals::invoice.deposit_breakdown') }}</h5>
+                        <x-core::table :striped="false" :hover="false">
+                            <x-core::table.body>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.deposit_type') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ $bookingReference->deposit_type === 'fixed' ? __('Fixed') : ((float) ($bookingReference->deposit_rate ?? 0) . '%') }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.deposit_base_amount') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ format_price((float) ($bookingReference->deposit_base_amount ?? 0), $invoice->currency_id) }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::booking.deposit_hold_status') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">{{ $bookingReference->deposit_hold_status ?: trans('plugins/car-rentals::invoice.na') }}</x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.deposit_authorized_amount') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ format_price((float) ($bookingReference->deposit_hold_amount ?? 0), $invoice->currency_id) }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.deposit_captured_amount') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ format_price((float) ($bookingReference->deposit_captured_amount ?? 0), $invoice->currency_id) }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                                <x-core::table.body.row>
+                                    <x-core::table.body.cell>{{ trans('plugins/car-rentals::invoice.deposit_released_amount') }}</x-core::table.body.cell>
+                                    <x-core::table.body.cell class="text-end">
+                                        {{ format_price((float) ($bookingReference->deposit_released_amount ?? 0), $invoice->currency_id) }}
+                                    </x-core::table.body.cell>
+                                </x-core::table.body.row>
+                            </x-core::table.body>
+                        </x-core::table>
+                    </div>
+                </div>
+            </x-core::card.body>
+        </x-core::card>
+    @endif
 @stop

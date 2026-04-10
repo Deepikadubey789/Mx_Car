@@ -54,6 +54,15 @@ class Booking extends BaseModel
         'note',
         'status',
         'completion_miles',
+        'distance_unit',
+        'start_mileage',
+        'start_mileage_snapshot',
+        'included_distance_limit',
+        'distance_overage_billing_mode',
+        'extra_distance_unit_price',
+        'distance_travelled',
+        'distance_overage_units',
+        'distance_overage_amount',
         'completion_gas_level',
         'completion_damage_images',
         'completion_notes',
@@ -82,6 +91,9 @@ class Booking extends BaseModel
         'deposit_risk_reasons' => 'array',
         'deposit_authorized_at' => 'datetime',
         'deposit_settled_at' => 'datetime',
+        'start_mileage_snapshot' => 'integer',
+        'extra_distance_unit_price' => 'float',
+        'distance_overage_amount' => 'float',
     ];
 
     public function car(): HasOne

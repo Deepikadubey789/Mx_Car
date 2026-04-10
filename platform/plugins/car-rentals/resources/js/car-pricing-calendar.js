@@ -3,6 +3,7 @@ class CarPricingCalendar {
         this.container = element
         this.url = element.dataset.url
         this.calendar = null
+        this.modal = null
         this.form = {
             id: '',
             value: '',
@@ -70,7 +71,9 @@ class CarPricingCalendar {
     }
 
     initForm() {
-        const modal = this.container.querySelector('#modal-pricing-calendar')
+        const modal = this.resolveModal()
+        if (!modal) return
+
         const form = modal.querySelector('form')
         const activeCheckbox = modal.querySelector('#pricing-active')
         const conditionalFields = modal.querySelector('#conditional-fields')
@@ -98,8 +101,51 @@ class CarPricingCalendar {
         })
     }
 
-    updateInfoAlerts(valueType) {
+    resolveModal() {
+        if (this.modal) {
+            return this.modal
+        }
+
         const modal = this.container.querySelector('#modal-pricing-calendar')
+        if (!modal) {
+            return null
+        }
+
+        // Keep modal at document root so bootstrap backdrop stacking is correct.
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal)
+        }
+
+        this.modal = modal
+
+        modal.addEventListener('hidden.bs.modal', () => {
+            this.normalizeBackdrops()
+        })
+
+        return this.modal
+    }
+
+    normalizeBackdrops() {
+        const backdrops = document.querySelectorAll('.modal-backdrop')
+
+        if (backdrops.length > 1) {
+            backdrops.forEach((backdrop, index) => {
+                if (index < backdrops.length - 1) {
+                    backdrop.remove()
+                }
+            })
+        }
+
+        if (!document.querySelector('.modal.show')) {
+            document.body.classList.remove('modal-open')
+            document.body.style.removeProperty('padding-right')
+        }
+    }
+
+    updateInfoAlerts(valueType) {
+        const modal = this.resolveModal()
+        if (!modal) return
+
         const percentageInfo = modal.querySelector('#pricing-percentage-info')
         const amountInfo = modal.querySelector('#pricing-amount-info')
 
@@ -113,7 +159,8 @@ class CarPricingCalendar {
 
     showModal(data) {
         this.form = { ...data }
-        const modal = this.container.querySelector('#modal-pricing-calendar')
+        const modal = this.resolveModal()
+        if (!modal) return
 
         // Update modal title
         const title = data.start_date === data.end_date
@@ -139,12 +186,16 @@ class CarPricingCalendar {
     }
 
     hideModal() {
-        const modal = this.container.querySelector('#modal-pricing-calendar')
+        const modal = this.resolveModal()
+        if (!modal) return
+
         $(modal).modal('hide')
     }
 
     saveForm() {
-        const modal = this.container.querySelector('#modal-pricing-calendar')
+        const modal = this.resolveModal()
+        if (!modal) return
+
         const saveBtn = modal.querySelector('.btn-save')
 
         // Get form data

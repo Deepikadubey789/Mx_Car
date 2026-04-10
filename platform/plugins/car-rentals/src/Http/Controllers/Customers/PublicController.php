@@ -15,6 +15,7 @@ use Botble\CarRentals\Http\Requests\AvatarRequest;
 use Botble\CarRentals\Http\Requests\Fronts\Customers\EditCustomerRequest;
 use Botble\CarRentals\Http\Requests\UpdateBookingCompletionRequest;
 use Botble\CarRentals\Models\Booking;
+use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\CarReview;
 use Botble\CarRentals\Models\Invoice;
 use Botble\Media\Facades\RvMedia;
@@ -23,6 +24,7 @@ use Botble\SeoHelper\Facades\SeoHelper;
 use Botble\Theme\Facades\Theme;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Hash;
@@ -256,11 +258,110 @@ class PublicController extends BaseController
             $data['completed_at'] = now();
         }
 
+        $startMileageBaseline = $booking->start_mileage_snapshot ?? $booking->start_mileage;
+
+        if (Arr::has($data, 'completion_miles') && $data['completion_miles'] !== null && $startMileageBaseline !== null) {
+            $completionMiles = (int) $data['completion_miles'];
+            $startMileage = (int) $startMileageBaseline;
+
+            if ($completionMiles < $startMileage) {
+                return redirect()
+                    ->back()
+                    ->withErrors([
+                        'completion_miles' => trans('plugins/car-rentals::booking.validation.completion_miles_less_than_start'),
+                    ])
+                    ->withInput();
+            }
+        }
+
+        if (Arr::has($data, 'completion_miles') && $data['completion_miles'] !== null && $startMileageBaseline !== null) {
+            $completionMiles = (int) $data['completion_miles'];
+            $startMileage = (int) $startMileageBaseline;
+            $travelled = max(0, $completionMiles - $startMileage);
+            $includedLimit = max(0, (int) ($booking->included_distance_limit ?? 0));
+            $overageUnits = max(0, $travelled - $includedLimit);
+            $billingMode = (string) ($booking->distance_overage_billing_mode ?: 'end_of_trip');
+            $unitPrice = (float) ($booking->extra_distance_unit_price ?? 0);
+            $overageAmount = in_array($billingMode, ['end_of_trip', 'both'], true)
+                ? round($overageUnits * $unitPrice, 2)
+                : 0.0;
+
+            $data['distance_travelled'] = $travelled;
+            $data['distance_overage_units'] = $overageUnits;
+            $data['distance_overage_amount'] = $overageAmount;
+
+            if ($booking->car && $booking->car->car_id) {
+                Car::query()->whereKey($booking->car->car_id)->update([
+                    'mileage' => $completionMiles,
+                ]);
+            }
+        }
+
+        if (Arr::has($data, 'distance_overage_amount')) {
+            $baseTripAmount = max(0, round(
+                (float) ($booking->sub_total ?? 0)
+                + (float) ($booking->tax_amount ?? 0)
+                - (float) ($booking->coupon_amount ?? 0)
+                + (float) ($booking->fee_amount ?? 0)
+                + (float) ($booking->deposit_amount ?? 0),
+                2
+            ));
+            $data['amount'] = round($baseTripAmount + (float) $data['distance_overage_amount'], 2);
+        }
+
         $booking->update($data);
+
+        $this->syncDistanceOverageInvoiceItem($booking);
 
         return redirect()
             ->back()
             ->with('success_msg', trans('plugins/car-rentals::booking.completion_details_updated_successfully'));
+    }
+
+    protected function syncDistanceOverageInvoiceItem(Booking $booking): void
+    {
+        if (! $booking->invoice()->exists()) {
+            return;
+        }
+
+        $invoice = $booking->invoice;
+        $invoice->loadMissing('items');
+
+        $overageAmount = round((float) ($booking->distance_overage_amount ?? 0), 2);
+        $lineItemMarker = '[distance_overage]';
+
+        $existingItem = $invoice->items
+            ->first(fn ($item) => $item->description === $lineItemMarker);
+
+        $existingAmount = $existingItem ? (float) $existingItem->amount : 0.0;
+
+        if ($overageAmount > 0) {
+            $lineData = [
+                'name' => trans('plugins/car-rentals::booking.distance_overage_line_item'),
+                'description' => $lineItemMarker,
+                'qty' => 1,
+                'sub_total' => $overageAmount,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'amount' => $overageAmount,
+            ];
+
+            if ($existingItem) {
+                $existingItem->update($lineData);
+            } else {
+                $invoice->items()->create($lineData);
+            }
+        } elseif ($existingItem) {
+            $existingItem->delete();
+        }
+
+        $delta = $overageAmount - $existingAmount;
+
+        if (abs($delta) > 0) {
+            $invoice->sub_total = round((float) $invoice->sub_total + $delta, 2);
+            $invoice->amount = round((float) $invoice->amount + $delta, 2);
+            $invoice->save();
+        }
     }
 
     protected function canViewInvoice(Invoice $invoice): bool

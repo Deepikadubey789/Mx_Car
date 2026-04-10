@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Arr;
 
@@ -127,6 +128,16 @@ class Car extends BaseModel
     public function reviews(): HasMany
     {
         return $this->hasMany(CarReview::class, 'car_id');
+    }
+
+    public function pricingPolicy(): HasOne
+    {
+        return $this->hasOne(CarPricingPolicy::class, 'car_id')->withDefault();
+    }
+
+    public function tripDiscountRules(): HasMany
+    {
+        return $this->hasMany(CarTripDiscount::class, 'car_id');
     }
 
     public function categories(): BelongsToMany

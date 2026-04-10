@@ -8,7 +8,6 @@ use Botble\Base\Http\Controllers\BaseController;
 use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\CarRentals\Enums\CarStatusEnum;
 use Botble\CarRentals\Enums\ModerationStatusEnum;
-use Botble\CarRentals\Enums\ServicePriceTypeEnum;
 use Botble\CarRentals\Events\BookingCreated;
 use Botble\CarRentals\Facades\BookingHelper;
 use Botble\CarRentals\Facades\CarListHelper;
@@ -27,11 +26,10 @@ use Botble\CarRentals\Models\CarTag;
 use Botble\CarRentals\Models\Currency;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Models\Service;
-use Botble\CarRentals\Models\Insurance; // NEW IMPORT
+use Botble\CarRentals\Models\Insurance;
 use Botble\CarRentals\Services\BookingService;
-use Botble\CarRentals\Services\CouponService;
 use Botble\CarRentals\Services\PriceLockService;
-use Botble\CarRentals\Services\RiskBasedDepositService;
+use Botble\CarRentals\Services\PricingQuoteService;
 use Botble\Location\Models\City;
 use Botble\Location\Repositories\Interfaces\CityInterface;
 use Botble\Location\Repositories\Interfaces\CountryInterface;
@@ -506,31 +504,9 @@ class PublicController extends BaseController
         $startTime = Arr::get($sessionData, 'rental_start_time', '09:00');
         $endTime = Arr::get($sessionData, 'rental_end_time', '09:00');
 
-        $days = max(1, $startDate->diffInDays($endDate));
-
-        $serviceAmount = 0;
-        $services = collect();
-
-        if ($serviceIds = Arr::get($sessionData, 'service_ids')) {
-            $services = Service::query()->whereIn('id', $serviceIds)->get();
-
-            foreach ($services as $service) {
-                if ($service->price_type == ServicePriceTypeEnum::PER_DAY) {
-                    $serviceAmount += $service->price * $days;
-                } else {
-                    $serviceAmount += $service->price;
-                }
-            }
-        }
-
-        $insuranceAmount = 0;
-        $insurances = collect();
-        if ($insuranceIds = Arr::get($sessionData, 'insurance_ids')) {
-            $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
-            foreach ($insurances as $insurance) {
-                $insuranceAmount += $insurance->price;
-            }
-        }
+        $serviceIds = Arr::get($sessionData, 'service_ids', []);
+        $insuranceIds = Arr::get($sessionData, 'insurance_ids', []);
+        $couponCode = Arr::get($sessionData, 'coupon_code');
 
         if (! $car->isAvailableAt(['start_date' => $startDate, 'end_date' => $endDate])) {
             return $this
@@ -558,49 +534,35 @@ class PublicController extends BaseController
             Auth::guard('customer')->loginUsingId($customer->getKey());
         }
 
-        $discountAmount = 0;
-
-        $rentalCarAmount = $car->getCarRentalPrice($startDate->toDateString(), $endDate->toDateString());
-
-        $amount = $rentalCarAmount + $serviceAmount + $insuranceAmount;
-
-        $taxAmount = $car->calculateTaxAmount($amount);
-
-        if ($couponCode = Arr::get($sessionData, 'coupon_code')) {
-            $couponService = new CouponService();
-
-            $coupon = $couponService->getCouponByCode($couponCode);
-
-            if ($coupon !== null) {
-                $discountAmount = $couponService->getDiscountAmount(
-                    $coupon->type->getValue(),
-                    $coupon->value,
-                    $amount
-                );
-
-                BookingHelper::saveCheckoutData([
-                    'coupon_amount' => $discountAmount,
-                ]);
-            }
-        }
-
-        $priceLockService = app(PriceLockService::class);
-        $depositType = $priceLockService->getDepositType();
-        $depositRate = $priceLockService->getDepositRate();
-        $depositFixedAmount = $priceLockService->getDepositFixedAmount();
-        $feeName = $priceLockService->getFeeName();
-        $feeValue = $priceLockService->getFeeValue();
-        $feeAmount = $priceLockService->calculateFeeAmount($amount);
-        $baseDepositAmount = $priceLockService->calculateDepositAmount($amount);
-        $depositRisk = app(RiskBasedDepositService::class)->assess(
-            $baseDepositAmount,
+        $quoteData = app(PricingQuoteService::class)->buildQuote(
             $car,
+            $startDate,
+            $endDate,
+            $serviceIds,
+            $insuranceIds,
+            $couponCode,
             Auth::guard('customer')->user()
         );
-        $depositAmount = (float) $depositRisk['final_amount'];
 
-        $totalAmount = ($amount + $taxAmount) - $discountAmount + $feeAmount;
-        $finalPayableAmount = $totalAmount + $depositAmount;
+        $services = $quoteData['services'];
+        $insurances = $quoteData['insurances'];
+        $rentalCarAmount = (float) $quoteData['rental_amount'];
+        $amount = (float) $quoteData['subtotal'];
+        $taxAmount = (float) $quoteData['tax_amount'];
+        $discountAmount = (float) $quoteData['coupon_amount'];
+        $feeName = (string) $quoteData['fee_name'];
+        $feeValue = (float) $quoteData['fee_value'];
+        $feeAmount = (float) $quoteData['fee_amount'];
+        $depositType = (string) $quoteData['deposit_type'];
+        $depositRate = (float) $quoteData['deposit_rate'];
+        $baseDepositAmount = (float) $quoteData['deposit_base_amount'];
+        $depositRisk = $quoteData['deposit_risk'];
+        $depositAmount = (float) $quoteData['deposit_amount'];
+        $finalPayableAmount = (float) $quoteData['final_payable_amount'];
+
+        BookingHelper::saveCheckoutData([
+            'coupon_amount' => $discountAmount,
+        ]);
 
         $booking = new Booking($request->validated());
 
@@ -621,6 +583,25 @@ class PublicController extends BaseController
         $booking->deposit_risk_reasons = $depositRisk['reasons'];
         $booking->deposit_hold_status = $depositAmount > 0 ? 'pending_authorization' : null;
         $booking->deposit_hold_amount = $depositAmount;
+        $booking->price_snapshot = [
+            'rental_days' => (int) ($quoteData['rental_days'] ?? 1),
+            'base_rental_amount' => (float) ($quoteData['base_rental_amount'] ?? 0),
+            'policy_discount_amount' => (float) ($quoteData['policy_discount_amount'] ?? 0),
+            'policy_discount_pre_cap_amount' => (float) ($quoteData['policy_discount_pre_cap_amount'] ?? 0),
+            'policy_discount_capped' => (bool) ($quoteData['policy_discount_capped'] ?? false),
+            'policy_discount_cap_percent' => $quoteData['policy_discount_cap_percent'] !== null
+                ? (float) $quoteData['policy_discount_cap_percent']
+                : null,
+            'policy_discount_source' => (string) ($quoteData['policy_discount_source'] ?? ''),
+        ];
+        $booking->distance_unit = (string) ($quoteData['distance_unit'] ?? 'km');
+        $booking->start_mileage = $car->mileage !== null ? (int) $car->mileage : null;
+        $booking->included_distance_limit = $quoteData['included_distance_limit'] !== null
+            ? (int) $quoteData['included_distance_limit']
+            : null;
+        $booking->start_mileage_snapshot = $car->mileage !== null ? (int) $car->mileage : null;
+        $booking->distance_overage_billing_mode = (string) ($quoteData['distance_overage_billing_mode'] ?? 'end_of_trip');
+        $booking->extra_distance_unit_price = (float) ($quoteData['extra_distance_unit_price'] ?? 0);
         $booking->currency_id = $request->input('currency_id', strtoupper(get_application_currency()->id));
         $booking->booking_number = Booking::generateUniqueBookingNumber();
         $booking->transaction_id = Str::upper(Str::random(32));
@@ -650,11 +631,11 @@ class PublicController extends BaseController
             'currency_id' => $request->input('currency_id', strtoupper(get_application_currency()->id)),
         ]);
 
-        if (isset($services) && $services->isNotEmpty()) {
+        if ($services->isNotEmpty()) {
             $booking->services()->attach($services->pluck('id')->all());
         }
 
-        if (isset($insurances) && $insurances->isNotEmpty()) {
+        if ($insurances->isNotEmpty()) {
             $booking->insurances()->attach($insurances->pluck('id')->all());
         }
 
@@ -770,82 +751,42 @@ class PublicController extends BaseController
         $startDate = $request->input('rental_start_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_start_date')) : null;
         $endDate = $request->input('rental_end_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_end_date')) : null;
 
-        $rentalCarAmount = $car->getCarRentalPrice($startDate->toDateString(), $endDate->toDateString());
-
-        $amount = $rentalCarAmount;
-
-        $days = max(1, $startDate->diffInDays($endDate));
-
-        $serviceAmount = 0;
-
-        if ($serviceIds = $request->input('service_ids', [])) {
-            $services = Service::query()->whereIn('id', $serviceIds)->get();
-
-            foreach ($services as $service) {
-                $servicePrice = $service->price;
-
-                if ($service->currency_id && $service->currency_id != $car->currency_id) {
-                    $servicePriceInDefault = $service->price;
-                    if ($service->currency_id) {
-                        $serviceCurrency = Currency::find($service->currency_id);
-                        if ($serviceCurrency && ! $serviceCurrency->is_default && $serviceCurrency->exchange_rate > 0) {
-                            $servicePriceInDefault = $service->price / $serviceCurrency->exchange_rate;
-                        }
-                    }
-
-                    $servicePrice = $servicePriceInDefault;
-                    if ($car->currency_id) {
-                        $carCurrency = Currency::find($car->currency_id);
-                        if ($carCurrency && ! $carCurrency->is_default && $carCurrency->exchange_rate > 0) {
-                            $servicePrice = $servicePriceInDefault * $carCurrency->exchange_rate;
-                        }
-                    }
-                }
-
-                if ($service->price_type == ServicePriceTypeEnum::PER_DAY) {
-                    $serviceAmount += $servicePrice * $days;
-                } else {
-                    $serviceAmount += $servicePrice;
-                }
-            }
-        }
-
-        $insuranceAmount = 0;
-        if ($insuranceIds = $request->input('insurance_ids', [])) {
-            $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
-            foreach ($insurances as $insurance) {
-                $insuranceAmount += $insurance->price;
-            }
-        }
-
-        $totalBeforeTax = $amount + $serviceAmount + $insuranceAmount;
-
-        $taxAmount = $car->calculateTaxAmount($totalBeforeTax);
-
-        $taxInfo = $car->getTaxInfo($taxAmount);
-
-        $priceLockService = app(PriceLockService::class);
-        $feeAmount = $priceLockService->calculateFeeAmount($totalBeforeTax);
-        $baseDepositAmount = $priceLockService->calculateDepositAmount($totalBeforeTax);
-        $depositRisk = app(RiskBasedDepositService::class)->assess(
-            $baseDepositAmount,
+        $quoteData = app(PricingQuoteService::class)->buildQuote(
             $car,
+            $startDate,
+            $endDate,
+            $request->input('service_ids', []),
+            $request->input('insurance_ids', []),
+            null,
             Auth::guard('customer')->user()
         );
-        $depositAmount = (float) $depositRisk['final_amount'];
-
-        $totalAmount = $totalBeforeTax + $taxAmount + $feeAmount;
-        $finalPayableAmount = $totalAmount + $depositAmount;
 
         $data = [
-            'subtotal' => $amount + $serviceAmount + $insuranceAmount,
-            'total' => $finalPayableAmount,
-            'tax' => $taxAmount,
-            'taxInfo' => $taxInfo,
-            'discount' => 0,
+            'subtotal' => (float) $quoteData['subtotal'],
+            'total' => (float) $quoteData['final_payable_amount'],
+            'tax' => (float) $quoteData['tax_amount'],
+            'taxInfo' => (string) $quoteData['tax_title'],
+            'discount' => (float) $quoteData['coupon_amount'],
             'currencyId' => $car->currency_id,
-            'depositAmount' => $depositAmount,
-            'feeAmount' => $feeAmount,
+            'depositAmount' => (float) $quoteData['deposit_amount'],
+            'feeAmount' => (float) $quoteData['fee_amount'],
+            'rentalDays' => (int) $quoteData['rental_days'],
+            'baseRentalAmount' => (float) $quoteData['base_rental_amount'],
+            'rentalAmount' => (float) $quoteData['rental_amount'],
+            'policyDiscountAmount' => (float) $quoteData['policy_discount_amount'],
+            'policyDiscountSource' => (string) ($quoteData['policy_discount_source'] ?? ''),
+            'serviceAmount' => (float) $quoteData['service_amount'],
+            'insuranceAmount' => (float) $quoteData['insurance_amount'],
+            'feeName' => (string) ($quoteData['fee_name'] ?? ''),
+            'depositType' => (string) ($quoteData['deposit_type'] ?? 'percentage'),
+            'depositRate' => (float) ($quoteData['deposit_rate'] ?? 0),
+            'depositBaseAmount' => (float) ($quoteData['deposit_base_amount'] ?? 0),
+            'includedDistanceLimit' => $quoteData['included_distance_limit'] !== null
+                ? (int) $quoteData['included_distance_limit']
+                : null,
+            'distanceUnit' => (string) ($quoteData['distance_unit'] ?? 'km'),
+            'extraDistanceUnitPrice' => (float) ($quoteData['extra_distance_unit_price'] ?? 0),
+            'distanceOverageBillingMode' => (string) ($quoteData['distance_overage_billing_mode'] ?? 'end_of_trip'),
         ];
 
         return $this
@@ -1259,72 +1200,44 @@ class PublicController extends BaseController
      */
     protected function prepareCheckoutBookingPricing(array $sessionData, Car $car, Carbon $startDate, Carbon $endDate): array
     {
-        $rentalCarAmount = $car->getCarRentalPrice($startDate->toDateString(), $endDate->toDateString());
-        $days = max(1, $startDate->diffInDays($endDate));
         $serviceIds = Arr::get($sessionData, 'service_ids', []);
-
-        $serviceAmount = 0;
-        $services = collect();
-        if ($serviceIds) {
-            $services = Service::query()->whereIn('id', $serviceIds)->get();
-            foreach ($services as $service) {
-                if ($service->price_type == ServicePriceTypeEnum::PER_DAY) {
-                    $serviceAmount += $service->price * $days;
-                } else {
-                    $serviceAmount += $service->price;
-                }
-            }
-        }
-
-        $insuranceAmount = 0;
-        $insurances = collect();
-        if ($insuranceIds = Arr::get($sessionData, 'insurance_ids', [])) {
-            $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
-            foreach ($insurances as $insurance) {
-                $insuranceAmount += $insurance->price;
-            }
-        }
-
-        $amount = $rentalCarAmount + $serviceAmount + $insuranceAmount;
-
-        $discountAmount = 0.0;
         $couponCode = Arr::get($sessionData, 'coupon_code');
 
-        if ($couponCode) {
-            $couponService = new CouponService();
-            $coupon = $couponService->getCouponByCode($couponCode);
-            if ($coupon !== null) {
-                $discountAmount = $couponService->getDiscountAmount(
-                    $coupon->type->getValue(),
-                    $coupon->value,
-                    $amount
-                );
-                BookingHelper::saveCheckoutData([
-                    'coupon_amount' => $discountAmount,
-                ]);
-            }
-        }
-
-        $taxAmount = $car->calculateTaxAmount($amount);
-        $taxTitle = $car->getTaxInfo($taxAmount);
-
-        $priceLockService = app(PriceLockService::class);
-        $depositType = $priceLockService->getDepositType();
-        $depositRate = $priceLockService->getDepositRate();
-        $depositFixedAmount = $priceLockService->getDepositFixedAmount();
-        $feeName = $priceLockService->getFeeName();
-        $feeValue = $priceLockService->getFeeValue();
-        $feeAmount = $priceLockService->calculateFeeAmount($amount);
-        $baseDepositAmount = $priceLockService->calculateDepositAmount($amount);
-        $depositRisk = app(RiskBasedDepositService::class)->assess(
-            $baseDepositAmount,
+        $quoteData = app(PricingQuoteService::class)->buildQuote(
             $car,
+            $startDate,
+            $endDate,
+            $serviceIds,
+            Arr::get($sessionData, 'insurance_ids', []),
+            $couponCode,
             Auth::guard('customer')->user()
         );
-        $depositAmount = (float) $depositRisk['final_amount'];
 
-        $totalAmount = ($amount + $taxAmount) - $discountAmount + $feeAmount;
-        $finalPayableAmount = $totalAmount + $depositAmount;
+        $services = $quoteData['services'];
+        $insurances = $quoteData['insurances'];
+        $rentalCarAmount = (float) $quoteData['rental_amount'];
+        $serviceAmount = (float) $quoteData['service_amount'];
+        $amount = (float) $quoteData['subtotal'];
+        $taxAmount = (float) $quoteData['tax_amount'];
+        $taxTitle = (string) $quoteData['tax_title'];
+        $discountAmount = (float) $quoteData['coupon_amount'];
+        $feeName = (string) $quoteData['fee_name'];
+        $feeValue = (float) $quoteData['fee_value'];
+        $feeAmount = (float) $quoteData['fee_amount'];
+        $depositType = (string) $quoteData['deposit_type'];
+        $depositRate = (float) $quoteData['deposit_rate'];
+        $depositFixedAmount = (float) $quoteData['deposit_fixed_amount'];
+        $baseDepositAmount = (float) $quoteData['deposit_base_amount'];
+        $depositRisk = $quoteData['deposit_risk'];
+        $depositAmount = (float) $quoteData['deposit_amount'];
+        $totalAmount = (float) $quoteData['total_amount'];
+        $finalPayableAmount = (float) $quoteData['final_payable_amount'];
+
+        BookingHelper::saveCheckoutData([
+            'coupon_amount' => $discountAmount,
+        ]);
+
+        $priceLockService = app(PriceLockService::class);
         $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
 
         $quote = [

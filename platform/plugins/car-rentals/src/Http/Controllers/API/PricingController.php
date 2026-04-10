@@ -3,11 +3,9 @@
 namespace Botble\CarRentals\Http\Controllers\API;
 
 use Botble\Api\Http\Controllers\BaseApiController;
-use Botble\CarRentals\Facades\CarRentalsHelper;
 use Botble\CarRentals\Models\Car;
-use Botble\CarRentals\Models\Service;
-use Botble\CarRentals\Models\Tax;
 use Botble\CarRentals\Services\BookingService;
+use Botble\CarRentals\Services\PricingQuoteService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -60,63 +58,40 @@ class PricingController extends BaseApiController
         $pickupDate = Carbon::parse($validated['pickup_date']);
         $returnDate = Carbon::parse($validated['return_date']);
 
-        $days = abs($returnDate->diffInDays($pickupDate) ?: 1);
+        $days = max(1, $pickupDate->diffInDays($returnDate));
 
-        $basePrice = $car->getCarRentalPrice($pickupDate->format('Y-m-d'), $returnDate->format('Y-m-d'));
+        $quoteData = app(PricingQuoteService::class)->buildQuote(
+            $car,
+            $pickupDate,
+            $returnDate,
+            $validated['services'] ?? [],
+            [],
+            $validated['coupon_code'] ?? null,
+            null
+        );
 
-        $servicesTotal = 0;
-        $selectedServices = [];
+        $selectedServices = collect($quoteData['services'])->map(function ($service) use ($days) {
+            $serviceTotal = $service->price_type == 'per_day'
+                ? ((float) $service->price * $days)
+                : (float) $service->price;
 
-        if (! empty($validated['services'])) {
-            $services = Service::query()->whereIn('id', $validated['services'])->get();
+            return [
+                'id' => $service->id,
+                'name' => $service->name,
+                'price' => (float) $service->price,
+                'price_type' => $service->price_type?->getValue(),
+                'total' => round($serviceTotal, 2),
+            ];
+        })->values()->all();
 
-            foreach ($services as $service) {
-                $serviceCost = $service->price;
-
-                if ($service->price_type == 'per_day') {
-                    $serviceCost *= $days;
-                }
-
-                $servicesTotal += $serviceCost;
-                $selectedServices[] = [
-                    'id' => $service->id,
-                    'name' => $service->name,
-                    'price' => $service->price,
-                    'price_type' => $service->price_type,
-                    'total' => $serviceCost,
-                ];
-            }
-        }
-
-        $subtotal = $basePrice + $servicesTotal;
-
-        $taxTotal = 0;
-        $appliedTaxes = [];
-
-        if (CarRentalsHelper::isTaxEnabled()) {
-            $taxes = CarRentalsHelper::getAppliedTaxes();
-            foreach ($taxes as $tax) {
-                $taxAmount = ($subtotal * $tax->percentage) / 100;
-                $taxTotal += $taxAmount;
-
-                $appliedTaxes[] = [
-                    'id' => $tax->id,
-                    'title' => $tax->title,
-                    'percentage' => $tax->percentage,
-                    'amount' => round($taxAmount, 2),
-                ];
-            }
-        }
-
-        $couponDiscount = 0;
-        $couponDetails = null;
-
-        if (! empty($validated['coupon_code'])) {
-            // TODO: Implement coupon validation and discount calculation
-            // This would require a CouponService to validate and calculate discount
-        }
-
-        $total = $subtotal + $taxTotal - $couponDiscount;
+        $policyDiscount = (float) ($quoteData['policy_discount_amount'] ?? 0);
+        $couponDiscount = (float) ($quoteData['coupon_amount'] ?? 0);
+        $couponDetails = ! empty($validated['coupon_code'])
+            ? [
+                'code' => $validated['coupon_code'],
+                'amount' => round($couponDiscount, 2),
+            ]
+            : null;
 
         $isAvailable = $car->isAvailableAt([
             'start_date' => Carbon::parse($validated['pickup_date']),
@@ -135,15 +110,18 @@ class PricingController extends BaseApiController
                 'days' => $days,
             ],
             'pricing' => [
-                'base_price' => round($basePrice, 2),
-                'services_total' => round($servicesTotal, 2),
-                'subtotal' => round($subtotal, 2),
-                'tax_total' => round($taxTotal, 2),
+                'base_price' => round((float) $quoteData['rental_amount'], 2),
+                'services_total' => round((float) $quoteData['service_amount'], 2),
+                'subtotal' => round((float) $quoteData['subtotal'], 2),
+                'policy_discount' => round($policyDiscount, 2),
+                'tax_total' => round((float) $quoteData['tax_amount'], 2),
                 'coupon_discount' => round($couponDiscount, 2),
-                'total' => round($total, 2),
+                'fee_amount' => round((float) $quoteData['fee_amount'], 2),
+                'deposit_amount' => round((float) $quoteData['deposit_amount'], 2),
+                'total' => round((float) $quoteData['final_payable_amount'], 2),
             ],
             'services' => $selectedServices,
-            'taxes' => $appliedTaxes,
+            'taxes' => [],
             'coupon' => $couponDetails,
             'availability' => [
                 'is_available' => $isAvailable,

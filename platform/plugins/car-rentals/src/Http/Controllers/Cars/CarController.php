@@ -11,11 +11,14 @@ use Botble\CarRentals\Forms\CarForm;
 use Botble\CarRentals\Http\Requests\CarRequest;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\CarDate;
+use Botble\CarRentals\Models\CarPricingPolicy;
+use Botble\CarRentals\Models\CarTripDiscount;
 use Botble\CarRentals\Models\CarTag;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Tables\CarTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 class CarController extends BaseController
@@ -64,6 +67,8 @@ class CarController extends BaseController
             $model->moderation_status = ModerationStatusEnum::APPROVED;
 
             $model->save();
+
+            $this->syncPricingPolicy($model, $request);
 
             $tags = $request->input('tags');
 
@@ -121,6 +126,8 @@ class CarController extends BaseController
 
             $model->save();
 
+            $this->syncPricingPolicy($model, $request);
+
             $tags = $request->input('tags');
 
             $tags = $tags ? explode(',', $tags) : [];
@@ -149,6 +156,83 @@ class CarController extends BaseController
     public function destroy(Car $car): DeleteResourceAction
     {
         return DeleteResourceAction::make($car);
+    }
+
+    protected function syncPricingPolicy(Car $car, Request $request): void
+    {
+        $policyKeys = [
+            'weekly_discount_type',
+            'weekly_discount_value',
+            'monthly_discount_type',
+            'monthly_discount_value',
+            'included_distance_per_day',
+            'included_distance_per_trip',
+            'extra_distance_unit_price',
+            'distance_unit',
+            'distance_overage_billing_mode',
+            'allow_best_discount_only',
+            'max_discount_cap_percent',
+        ];
+
+        $hasPolicyInput = false;
+
+        foreach ($policyKeys as $key) {
+            if ($request->has($key)) {
+                $hasPolicyInput = true;
+                break;
+            }
+        }
+
+        $tripDiscounts = $request->input('trip_discounts');
+        if (! $hasPolicyInput && ! is_array($tripDiscounts)) {
+            return;
+        }
+
+        $policy = $car->pricingPolicy()->firstOrNew([]);
+        $policy->fill([
+            'weekly_discount_type' => $request->input('weekly_discount_type', $policy->weekly_discount_type ?? 'none'),
+            'weekly_discount_value' => $request->input('weekly_discount_value', $policy->weekly_discount_value ?? 0),
+            'monthly_discount_type' => $request->input('monthly_discount_type', $policy->monthly_discount_type ?? 'none'),
+            'monthly_discount_value' => $request->input('monthly_discount_value', $policy->monthly_discount_value ?? 0),
+            'included_distance_per_day' => $request->input('included_distance_per_day', $policy->included_distance_per_day),
+            'included_distance_per_trip' => $request->input('included_distance_per_trip', $policy->included_distance_per_trip),
+            'extra_distance_unit_price' => $request->input('extra_distance_unit_price', $policy->extra_distance_unit_price ?? 0),
+            'distance_unit' => $request->input('distance_unit', $policy->distance_unit ?? 'km'),
+            'distance_overage_billing_mode' => $request->input('distance_overage_billing_mode', $policy->distance_overage_billing_mode ?? 'end_of_trip'),
+            'allow_best_discount_only' => $request->boolean('allow_best_discount_only', $policy->allow_best_discount_only ?? true),
+            'max_discount_cap_percent' => $request->input('max_discount_cap_percent', $policy->max_discount_cap_percent),
+            'active' => true,
+        ]);
+        $policy->car_id = $car->getKey();
+        $policy->save();
+
+        if (is_array($tripDiscounts)) {
+            $policy->tripDiscounts()->delete();
+
+            foreach ($tripDiscounts as $tripDiscount) {
+                if (! is_array($tripDiscount)) {
+                    continue;
+                }
+
+                $minDays = (int) Arr::get($tripDiscount, 'min_days', 0);
+                $discountValue = Arr::get($tripDiscount, 'discount_value');
+
+                if ($minDays < 1 || $discountValue === null || $discountValue === '') {
+                    continue;
+                }
+
+                $policy->tripDiscounts()->create([
+                    'car_id' => $car->getKey(),
+                    'min_days' => $minDays,
+                    'max_days' => Arr::get($tripDiscount, 'max_days'),
+                    'discount_type' => Arr::get($tripDiscount, 'discount_type', 'percentage'),
+                    'discount_value' => $discountValue,
+                    'priority' => Arr::get($tripDiscount, 'priority', 0),
+                    'active' => (bool) Arr::get($tripDiscount, 'active', true),
+                    'description' => Arr::get($tripDiscount, 'description'),
+                ]);
+            }
+        }
     }
 
     public function approve(Car $car)
