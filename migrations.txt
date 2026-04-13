@@ -10,9 +10,10 @@
   php artisan migrate --path=database/migrations/2026_04_06_052648_create_cr_customer_reviews_table.php
   php artisan migrate --path=database/migrations/2026_04_07_053910_create_cr_insurances_table.php
   php artisan migrate --path=database/migrations/2026_04_07_062534_create_cr_booking_insurances_table.php
-
+  php artisan migrate --path=/database/migrations/2026_04_13_104215_upgrade_insurance_to_protection_engine.php
 
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134719_create_cr_trip_messages_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134722_add_is_escalated_to_cr_bookings_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_08_100000_add_pickup_photos_to_bookings.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_200000_add_contactless_fields.php
+

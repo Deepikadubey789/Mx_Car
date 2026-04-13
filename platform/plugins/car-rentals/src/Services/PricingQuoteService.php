@@ -4,7 +4,7 @@ namespace Botble\CarRentals\Services;
 
 use Botble\CarRentals\Enums\ServicePriceTypeEnum;
 use Botble\CarRentals\Models\Car;
-use Botble\CarRentals\Models\Insurance;
+use Botble\CarRentals\Models\GuestProtectionPlan; // NEW IMPORT
 use Botble\CarRentals\Models\Service;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -16,7 +16,7 @@ class PricingQuoteService
         Carbon $startDate,
         Carbon $endDate,
         array $serviceIds = [],
-        array $insuranceIds = [],
+        ?int $guestProtectionPlanId = null, // CHANGED FROM array $insuranceIds
         ?string $couponCode = null,
         mixed $customer = null
     ): array {
@@ -35,10 +35,22 @@ class PricingQuoteService
         $services = Service::query()->whereIn('id', $serviceIds)->get();
         $serviceAmount = $this->calculateServiceAmount($services, $rentalDays);
 
-        $insurances = Insurance::query()->whereIn('id', $insuranceIds)->get();
-        $insuranceAmount = round((float) $insurances->sum('price'), 2);
+        // --- NEW: GUEST PROTECTION PLAN CALCULATION ---
+        $guestProtectionPlan = null;
+        $guestProtectionFee = 0.0;
+        $guestDeductibleAmount = 0.0;
 
-        $subtotal = round($rentalAmount + $serviceAmount + $insuranceAmount, 2);
+        if ($guestProtectionPlanId) {
+            $guestProtectionPlan = GuestProtectionPlan::query()->find($guestProtectionPlanId);
+            if ($guestProtectionPlan) {
+                // Calculate the protection fee based on the daily rate * rental days
+                $guestProtectionFee = round((float) $guestProtectionPlan->daily_fee * $rentalDays, 2);
+                $guestDeductibleAmount = (float) $guestProtectionPlan->deductible_amount;
+            }
+        }
+
+        // Subtotal now includes the protection fee instead of the old insurance array
+        $subtotal = round($rentalAmount + $serviceAmount + $guestProtectionFee, 2);
 
         $couponAmount = 0.0;
         if ($couponCode) {
@@ -94,7 +106,12 @@ class PricingQuoteService
             'extra_distance_unit_price' => $extraDistanceUnitPrice,
             'rental_amount' => $rentalAmount,
             'service_amount' => $serviceAmount,
-            'insurance_amount' => $insuranceAmount,
+            
+            // --- NEW VARIABLES RETURNED ---
+            'guest_protection_plan' => $guestProtectionPlan,
+            'guest_protection_fee' => $guestProtectionFee,
+            'guest_deductible_amount' => $guestDeductibleAmount,
+            
             'subtotal' => $subtotal,
             'coupon_code' => $couponCode,
             'coupon_amount' => $couponAmount,
@@ -112,7 +129,6 @@ class PricingQuoteService
             'total_amount' => $totalAmount,
             'final_payable_amount' => $finalPayableAmount,
             'services' => $services,
-            'insurances' => $insurances,
         ];
     }
 
@@ -121,22 +137,18 @@ class PricingQuoteService
         if (! $policy || ! $policy->active) {
             return null;
         }
-
         if ($policy->included_distance_per_trip !== null) {
             return max(0, (int) $policy->included_distance_per_trip);
         }
-
         if ($policy->included_distance_per_day !== null) {
             return max(0, (int) $policy->included_distance_per_day) * max(1, $rentalDays);
         }
-
         return null;
     }
 
     protected function calculateServiceAmount(Collection $services, int $rentalDays): float
     {
         $serviceAmount = 0.0;
-
         foreach ($services as $service) {
             $price = (float) $service->price;
             if ($service->price_type == ServicePriceTypeEnum::PER_DAY) {
@@ -145,7 +157,6 @@ class PricingQuoteService
                 $serviceAmount += $price;
             }
         }
-
         return round($serviceAmount, 2);
     }
 
@@ -155,73 +166,39 @@ class PricingQuoteService
 
         if (! $policy || ! $policy->active) {
             return [
-                'amount' => 0.0,
-                'pre_cap_amount' => 0.0,
-                'capped' => false,
-                'cap_percent' => null,
-                'type' => null,
-                'source' => null,
+                'amount' => 0.0, 'pre_cap_amount' => 0.0, 'capped' => false,
+                'cap_percent' => null, 'type' => null, 'source' => null,
             ];
         }
 
         $candidates = [];
 
         $weeklyCandidate = $this->discountCandidate(
-            $rentalDays >= 7,
-            (string) $policy->weekly_discount_type,
-            (float) $policy->weekly_discount_value,
-            $baseRentalAmount,
-            'weekly'
+            $rentalDays >= 7, (string) $policy->weekly_discount_type, (float) $policy->weekly_discount_value, $baseRentalAmount, 'weekly'
         );
-
-        if ($weeklyCandidate) {
-            $candidates[] = $weeklyCandidate;
-        }
+        if ($weeklyCandidate) $candidates[] = $weeklyCandidate;
 
         $monthlyCandidate = $this->discountCandidate(
-            $rentalDays >= 30,
-            (string) $policy->monthly_discount_type,
-            (float) $policy->monthly_discount_value,
-            $baseRentalAmount,
-            'monthly'
+            $rentalDays >= 30, (string) $policy->monthly_discount_type, (float) $policy->monthly_discount_value, $baseRentalAmount, 'monthly'
         );
+        if ($monthlyCandidate) $candidates[] = $monthlyCandidate;
 
-        if ($monthlyCandidate) {
-            $candidates[] = $monthlyCandidate;
-        }
-
-        $tripDiscounts = $policy->tripDiscounts()
-            ->where('active', true)
-            ->where('min_days', '<=', $rentalDays)
+        $tripDiscounts = $policy->tripDiscounts()->where('active', true)->where('min_days', '<=', $rentalDays)
             ->where(function ($query) use ($rentalDays): void {
-                $query->whereNull('max_days')
-                    ->orWhere('max_days', '>=', $rentalDays);
-            })
-            ->orderByDesc('priority')
-            ->get();
+                $query->whereNull('max_days')->orWhere('max_days', '>=', $rentalDays);
+            })->orderByDesc('priority')->get();
 
         foreach ($tripDiscounts as $tripDiscount) {
             $candidate = $this->discountCandidate(
-                true,
-                (string) $tripDiscount->discount_type,
-                (float) $tripDiscount->discount_value,
-                $baseRentalAmount,
-                'trip-rule:' . $tripDiscount->id
+                true, (string) $tripDiscount->discount_type, (float) $tripDiscount->discount_value, $baseRentalAmount, 'trip-rule:' . $tripDiscount->id
             );
-
-            if ($candidate) {
-                $candidates[] = $candidate;
-            }
+            if ($candidate) $candidates[] = $candidate;
         }
 
         if (empty($candidates)) {
             return [
-                'amount' => 0.0,
-                'pre_cap_amount' => 0.0,
-                'capped' => false,
-                'cap_percent' => null,
-                'type' => null,
-                'source' => null,
+                'amount' => 0.0, 'pre_cap_amount' => 0.0, 'capped' => false,
+                'cap_percent' => null, 'type' => null, 'source' => null,
             ];
         }
 
@@ -239,10 +216,7 @@ class PricingQuoteService
         } else {
             $rawAmount = (float) collect($candidates)->sum('amount');
             $discountType = 'combined';
-            $discountSource = collect($candidates)
-                ->pluck('source')
-                ->unique()
-                ->implode(',');
+            $discountSource = collect($candidates)->pluck('source')->unique()->implode(',');
         }
 
         $preCapAmount = round(min($rawAmount, $baseRentalAmount), 2);
@@ -268,13 +242,8 @@ class PricingQuoteService
         ];
     }
 
-    protected function discountCandidate(
-        bool $eligible,
-        string $discountType,
-        float $discountValue,
-        float $baseRentalAmount,
-        string $source
-    ): ?array {
+    protected function discountCandidate(bool $eligible, string $discountType, float $discountValue, float $baseRentalAmount, string $source): ?array 
+    {
         if (! $eligible || $discountValue <= 0 || $discountType === 'none') {
             return null;
         }
@@ -285,9 +254,7 @@ class PricingQuoteService
             default => 0,
         };
 
-        if ($amount <= 0) {
-            return null;
-        }
+        if ($amount <= 0) return null;
 
         return [
             'amount' => round(min($amount, $baseRentalAmount), 2),

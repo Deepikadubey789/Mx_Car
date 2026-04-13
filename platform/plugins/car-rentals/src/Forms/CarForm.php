@@ -65,6 +65,7 @@ class CarForm extends FormAbstract
             $selectedTags = $model->tags->pluck('id')->all();
         }
 
+
         /**
          * @var GetCategoriesWithChildrenService $getCategoriesWithChildrenService
          */
@@ -73,6 +74,20 @@ class CarForm extends FormAbstract
 
         $carColors = CarColor::query()->select(['id', 'name'])->wherePublished()->orderBy('order')->pluck('name', 'id')->all();
         $selectedColors = [];
+        
+        // Fetch Admin-created Host Protection Plans and build descriptive labels
+        $plans = \Botble\CarRentals\Models\HostProtectionPlan::query()
+            ->wherePublished()
+            ->get();
+            
+        $hostProtectionPlans = [];
+        foreach ($plans as $plan) {
+            $revenueShare = (float) $plan->revenue_share_percentage;
+            $deductible = format_price($plan->deductible_amount);
+            
+            // Example output: "Standard 75 (You keep 75% | Deductible: $250.00)"
+            $hostProtectionPlans[$plan->id] = "{$plan->name} (You keep {$revenueShare}% | Deductible: {$deductible})";
+        }
 
         if ($carColors && $model) {
             $selectedColors = $model->colors->pluck('id')->all();
@@ -418,12 +433,13 @@ class CarForm extends FormAbstract
                     ->placeholder(trans('plugins/car-rentals::car-rentals.car.placeholders.number_of_doors'))
             )
             ->add(
-                'insurance_info',
-                TextField::class,
-                TextFieldOption::make()
-                    ->label(trans('plugins/car-rentals::car-rentals.car.forms.insurance_info'))
-                    ->colspan(2)
-                    ->placeholder(trans('plugins/car-rentals::car-rentals.car.placeholders.insurance_info'))
+                'host_protection_plan_id',
+                SelectField::class,
+                SelectFieldOption::make()
+                    ->label(__('Host Protection Plan'))
+                    ->choices($hostProtectionPlans)
+                    ->emptyValue(__('Select a Protection Plan for this vehicle'))
+                    ->helperText(__('This dictates your revenue share and out-of-pocket deductible for damage claims.'))
             )
             ->add(
                 'default_pickup_instructions',

@@ -172,29 +172,30 @@
         <br>
     @endif
 
-    {{-- NEW: Insurances Table --}}
-    @if ($booking->insurances->isNotEmpty())
-        <h6>{{ __('Insurances') }}</h6>
+    {{-- FIX: Updated Guest Protection Plan Table --}}
+    @if ($booking->guest_protection_fee > 0)
+        <h6>{{ __('Guest Protection Plan') }}</h6>
         <x-core::table>
             <x-core::table.header>
                 <x-core::table.header.cell>
-                    {{ __('Coverage Plan') }}
+                    {{ __('Coverage Details') }}
                 </x-core::table.header.cell>
                 <x-core::table.header.cell class="text-center">
                     {{ __('Price') }}
                 </x-core::table.header.cell>
             </x-core::table.header>
             <x-core::table.body>
-                @foreach ($booking->insurances->unique() as $insurance)
-                    <x-core::table.body.row>
-                        <x-core::table.body.cell style="vertical-align: middle !important;">
-                            <i class="ti ti-shield-check text-success me-2"></i> {{ $insurance->name }}
-                        </x-core::table.body.cell>
-                        <x-core::table.body.cell class="text-center">
-                            {{ format_price($insurance->price, $booking->currency_id) }}
-                        </x-core::table.body.cell>
-                    </x-core::table.body.row>
-                @endforeach
+                <x-core::table.body.row>
+                    <x-core::table.body.cell style="vertical-align: middle !important;">
+                        <i class="ti ti-shield-check text-success me-2"></i> {{ __('Vehicle Protection Coverage') }}
+                        @if ($booking->guest_deductible_amount > 0)
+                            <br><small class="text-muted ms-4">{{ __('Out-of-pocket Deductible') }}: {{ format_price($booking->guest_deductible_amount, $booking->currency_id) }}</small>
+                        @endif
+                    </x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center">
+                        {{ format_price($booking->guest_protection_fee, $booking->currency_id) }}
+                    </x-core::table.body.cell>
+                </x-core::table.body.row>
             </x-core::table.body>
         </x-core::table>
         <br>

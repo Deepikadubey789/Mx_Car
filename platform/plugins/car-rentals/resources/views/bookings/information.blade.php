@@ -123,31 +123,53 @@
         @endif
     @endif
 
-    {{-- NEW: Insurances Table --}}
-    @if($insurances = $booking->insurances)
-        @if($insurances->isNotEmpty())
-            <div class="mb-4">
-                <h4>{{ __('Insurances') }}</h4>
-                <x-core::table>
-                    <x-core::table.header>
-                        <x-core::table.header.cell>{{ __('Coverage Plan') }}</x-core::table.header.cell>
-                        <x-core::table.header.cell class="text-center" style="width: 200px;">{{ __('Price') }}</x-core::table.header.cell>
-                    </x-core::table.header>
-                    <x-core::table.body>
-                        @foreach($insurances as $insurance)
-                            <x-core::table.body.row>
-                                <x-core::table.body.cell style="vertical-align: middle !important;">
-                                    <i class="ti ti-shield-check text-success me-2"></i> {{ $insurance->name }}
-                                </x-core::table.body.cell>
-                                <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
-                                    <strong>{{ format_price($insurance->price, $booking->currency_id) }}</strong>
-                                </x-core::table.body.cell>
-                            </x-core::table.body.row>
-                        @endforeach
-                    </x-core::table.body>
-                </x-core::table>
-            </div>
-        @endif
+    {{-- FIX: Updated Guest Protection Plan Table --}}
+    @if ($booking->guest_protection_fee > 0)
+        <div class="mb-4">
+            <h4>{{ __('Guest Protection Plan') }}</h4>
+            <x-core::table>
+                <x-core::table.header>
+                    <x-core::table.header.cell>{{ __('Coverage Details') }}</x-core::table.header.cell>
+                    <x-core::table.header.cell class="text-center" style="width: 200px;">{{ __('Price Paid by Guest') }}</x-core::table.header.cell>
+                </x-core::table.header>
+                <x-core::table.body>
+                    <x-core::table.body.row>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">
+                            <i class="ti ti-shield-check text-success me-2"></i> {{ __('Vehicle Protection Coverage') }}
+                            @if ($booking->guest_deductible_amount > 0)
+                                <br><small class="text-muted ms-4">{{ __('Guest Out-of-pocket Deductible') }}: {{ format_price($booking->guest_deductible_amount, $booking->currency_id) }}</small>
+                            @endif
+                        </x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
+                            <strong>{{ format_price($booking->guest_protection_fee, $booking->currency_id) }}</strong>
+                        </x-core::table.body.cell>
+                    </x-core::table.body.row>
+                </x-core::table.body>
+            </x-core::table>
+        </div>
+    @endif
+
+    {{-- FIX: Added Host Protection Plan Table (Crucial for Vendors) --}}
+    @if ($booking->host_protection_plan_id)
+        <div class="mb-4">
+            <h4>{{ __('Your Protection Plan (Host)') }}</h4>
+            <x-core::table>
+                <x-core::table.header>
+                    <x-core::table.header.cell>{{ __('Revenue Share') }}</x-core::table.header.cell>
+                    <x-core::table.header.cell class="text-center" style="width: 200px;">{{ __('Your Deductible') }}</x-core::table.header.cell>
+                </x-core::table.header>
+                <x-core::table.body>
+                    <x-core::table.body.row>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">
+                            <i class="ti ti-shield-chevron text-info me-2"></i> {{ (float) $booking->host_revenue_share_percentage }}% {{ __('Payout') }}
+                        </x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
+                            <strong>{{ format_price($booking->host_deductible_amount, $booking->currency_id) }}</strong>
+                        </x-core::table.body.cell>
+                    </x-core::table.body.row>
+                </x-core::table.body>
+            </x-core::table>
+        </div>
     @endif
 
     @php
