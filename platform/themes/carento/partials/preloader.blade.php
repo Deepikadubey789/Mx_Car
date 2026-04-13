@@ -121,150 +121,151 @@
 </style>  -->
 
 
-
-<div id="preloader-active">
-    <div class="preloader d-flex align-items-center justify-content-center">
-        <div class="preloader-inner">
-            <div class="car-loader-wrap">
-                <div class="car-track">
-                    <div id="carEl" class="car-el">
-                        <svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
-                            <ellipse cx="100" cy="76" rx="75" ry="6" fill="rgba(0,0,0,0.12)"/>
-                            <rect x="10" y="45" width="180" height="22" rx="6" fill="#c62828"/>
-                            <path d="M40 45 Q50 18 80 15 L140 15 Q165 15 175 45 Z" fill="#b71c1c"/>
-                            <path d="M130 15 Q155 16 168 42 L140 42 Z" fill="#81d4fa" opacity="0.85"/>
-                            <path d="M80 15 L55 42 L90 42 Z" fill="#81d4fa" opacity="0.85"/>
-                            <rect x="92" y="16" width="35" height="26" rx="2" fill="#81d4fa" opacity="0.85"/>
-                            <rect x="80" y="14" width="60" height="4" rx="2" fill="#8b0000"/>
-                            <rect x="175" y="52" width="18" height="8" rx="3" fill="#e53935"/>
-                            <rect x="7" y="52" width="18" height="8" rx="3" fill="#e53935"/>
-                            <ellipse cx="185" cy="50" rx="7" ry="4" fill="#fff9c4" opacity="0.95"/>
-                            <ellipse cx="15" cy="50" rx="6" ry="3.5" fill="#ff1744" opacity="0.9"/>
-                            <line x1="105" y1="18" x2="105" y2="64" stroke="#8b0000" stroke-width="1.5"/>
-                            <circle cx="45" cy="67" r="16" fill="#1a1a1a"/>
-                            <circle cx="45" cy="67" r="10" fill="#333"/>
-                            <circle cx="45" cy="67" r="5" fill="#777"/>
-                            <line x1="45" y1="57" x2="45" y2="77" stroke="#555" stroke-width="2"/>
-                            <line x1="35" y1="67" x2="55" y2="67" stroke="#555" stroke-width="2"/>
-                            <circle cx="155" cy="67" r="16" fill="#1a1a1a"/>
-                            <circle cx="155" cy="67" r="10" fill="#333"/>
-                            <circle cx="155" cy="67" r="5" fill="#777"/>
-                            <line x1="155" y1="57" x2="155" y2="77" stroke="#555" stroke-width="2"/>
-                            <line x1="145" y1="67" x2="165" y2="67" stroke="#555" stroke-width="2"/>
-                            <rect x="8" y="60" width="12" height="5" rx="2" fill="#555"/>
-                        </svg>
-                    </div>
-                    <div class="car-road">
-                        <div class="road-lines"></div>
-                        <div id="carProgress" class="car-progress"></div>
-                    </div>
-                </div>
-                <p id="carLoadingText" class="car-loading-text">LOADING...</p>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-#preloader-active {
+  /* === OVERLAY - dark transparent === */
+  .hacker-loader-overlay {
     position: fixed;
-    inset: 0;
-    background: #ffffff;
-    z-index: 99999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.preloader {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.car-loader-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 20px;
-}
-.car-track {
-    position: relative;
-    width: 420px;
-    height: 130px;
-}
-.car-el {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    width: 160px;
-    transition: left 0.05s linear;
-}
-.car-road {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 18px;
-    background: #e0e0e0;
-    border-radius: 9px;
-    overflow: hidden;
-}
-.road-lines {
-    position: absolute;
-    top: 7px;
-    left: 0;
-    width: 200%;
-    height: 4px;
-    background: repeating-linear-gradient(
-        90deg,
-        #bbb 0px, #bbb 30px,
-        transparent 30px, transparent 50px
-    );
-    animation: roadMove 0.4s linear infinite;
-}
-.car-progress {
-    position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
     height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #c62828, #ff5252);
-    border-radius: 9px;
-    opacity: 0.4;
-}
-.car-loading-text {
-    font-size: 16px;
-    font-weight: 700;
-    color: #c62828;
-    letter-spacing: 2px;
-    margin: 0;
-    animation: blink 1s ease-in-out infinite;
-}
-@keyframes roadMove {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-80px); }
-}
-@keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.3; }
-}
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9999999;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+  }
+
+  /* === LOADER - bda, centered === */
+  .hacker-loader {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 180px;      /* 100px tha, ab 180px */
+    height: 180px;
+    z-index: 99999999;
+  }
+
+  .loader-hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .loader-gone {
+    display: none !important;
+  }
+
+  .binary-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px dashed #00ff00;
+    animation: spin 2s linear infinite;
+  }
+
+  .core {
+    position: absolute;
+    width: 60%;
+    height: 60%;
+    top: 20%;
+    left: 20%;
+    background: rgba(0, 255, 0, 0.1);
+    border-radius: 50%;
+    animation: glitch-core 0.5s infinite;
+    box-shadow: 0 0 25px #00ff00;
+  }
+
+  .binary-digits {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    color: #00ff00;
+    font-size: 18px;     /* bde digits */
+    text-align: center;
+    animation: spin 1.5s linear infinite reverse;
+  }
+
+  .binary-digits span {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform-origin: 0 90px;   /* 180px/2 = 90px */
+  }
+
+  .binary-digits span:nth-child(1) { transform: rotate(0deg)   translateY(-10px); }
+  .binary-digits span:nth-child(2) { transform: rotate(45deg)  translateY(-10px); }
+  .binary-digits span:nth-child(3) { transform: rotate(90deg)  translateY(-10px); }
+  .binary-digits span:nth-child(4) { transform: rotate(135deg) translateY(-10px); }
+  .binary-digits span:nth-child(5) { transform: rotate(180deg) translateY(-10px); }
+  .binary-digits span:nth-child(6) { transform: rotate(225deg) translateY(-10px); }
+  .binary-digits span:nth-child(7) { transform: rotate(270deg) translateY(-10px); }
+  .binary-digits span:nth-child(8) { transform: rotate(315deg) translateY(-10px); }
+
+  .loading-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #00ff00;
+    font-size: 20px;     /* bda text */
+    text-transform: uppercase;
+    animation: flicker 1.5s infinite;
+    white-space: nowrap;
+  }
+
+  @keyframes spin {
+    0%   { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes glitch-core {
+    0%   { transform: scale(1); }
+    20%  { transform: scale(1.05) translate(2px, -2px); }
+    40%  { transform: scale(0.95) translate(-2px, 2px); }
+    60%  { transform: scale(1.02) translate(1px, 1px); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes flicker {
+    0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% { opacity: 1; }
+    20%, 24%, 55% { opacity: 0.3; }
+  }
 </style>
 
+<!-- DARK TRANSPARENT BACKDROP -->
+<div class="hacker-loader-overlay" id="hackerOverlay"></div>
+
+<!-- LOADER -->
+<div class="hacker-loader" id="hackerLoader">
+  <div class="binary-ring"></div>
+  <div class="core"></div>
+  <div class="binary-digits">
+    <span>0</span>
+    <span>1</span>
+    <span>0</span>
+    <span>1</span>
+    <span>1</span>
+    <span>0</span>
+    <span>1</span>
+    <span>0</span>
+  </div>
+  <div class="loading-text">Loading</div>
+</div>
+
 <script>
-(function() {
-    var p = 0;
-    function animateCar() {
-        p += 0.5;
-        if (p > 100) p = 0;
-        var maxLeft = 420 - 160;
-        var carEl = document.getElementById('carEl');
-        var prog = document.getElementById('carProgress');
-        var txt = document.getElementById('carLoadingText');
-        if (carEl) carEl.style.left = (p / 100 * maxLeft * 0.6) + 'px';
-        if (prog) prog.style.width = p + '%';
-        if (txt) txt.textContent = 'LOADING' + '.'.repeat(Math.floor(Date.now()/500) % 4);
-        requestAnimationFrame(animateCar);
-    }
-    animateCar();
-})();
-</script>  
+  window.addEventListener('load', function () {
+    var overlay = document.getElementById('hackerOverlay');
+    var loader  = document.getElementById('hackerLoader');
+
+    overlay.classList.add('loader-hidden');
+    loader.classList.add('loader-hidden');
+
+    setTimeout(function () {
+      overlay.classList.add('loader-gone');
+      loader.classList.add('loader-gone');
+    }, 500);
+  });
+</script>

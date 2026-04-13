@@ -5,33 +5,6 @@
 @endphp
 
 @if ($booking)
-    <div class="customer-booking-info">
-    @php
-        $distanceUnit = (string) ($booking->distance_unit ?: 'km');
-        $startMileageValue = $booking->start_mileage_snapshot ?? $booking->start_mileage;
-        $completionMileageValue = $booking->completion_miles;
-        $includedDistanceLimit = (int) ($booking->included_distance_limit ?? 0);
-        $distanceTravelled = (int) ($booking->distance_travelled ?? 0);
-        $distanceOverageUnits = (int) ($booking->distance_overage_units ?? 0);
-        $extraDistanceUnitPrice = (float) ($booking->extra_distance_unit_price ?? 0);
-        $distanceOverageAmount = round((float) ($booking->distance_overage_amount ?? 0), 2);
-        $baseTripAmount = max(0, round(
-            (float) ($booking->sub_total ?? 0)
-            + (float) ($booking->tax_amount ?? 0)
-            - (float) ($booking->coupon_amount ?? 0)
-            + (float) ($booking->fee_amount ?? 0)
-            + (float) ($booking->deposit_amount ?? 0),
-            2
-        ));
-        $hasMileageBreakdown = $completionMileageValue !== null
-            || $startMileageValue !== null
-            || $includedDistanceLimit > 0
-            || $distanceTravelled > 0
-            || $distanceOverageUnits > 0
-            || $distanceOverageAmount > 0
-            || $extraDistanceUnitPrice > 0;
-    @endphp
-
     <div class="row">
         <div class="col-lg-4">
             <strong>{{ __('Booking Information') }}:</strong> {{ $booking->booking_number }}
@@ -97,43 +70,19 @@
         <h6>{{ __('Car') }}</h6>
         <x-core::table>
             <x-core::table.header>
-                <x-core::table.header.cell>
-                    {{ __('Name') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Rental Start Date') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Rental End Date') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Price') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Tax') }}
-                </x-core::table.header.cell>
+                <x-core::table.header.cell>{{ __('Name') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Rental Start Date') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Rental End Date') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Price') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Tax') }}</x-core::table.header.cell>
             </x-core::table.header>
             <x-core::table.body>
                 <x-core::table.body.row>
-                    <x-core::table.body.cell
-                        class="text-start"
-                    >{{ $booking->car->car_name }}</x-core::table.body.cell>
-                    <x-core::table.body.cell
-                        class="text-center"
-                        style="vertical-align: middle !important;"
-                    >{{ $booking->car->rental_start_date_formatted }}</x-core::table.body.cell>
-                    <x-core::table.body.cell
-                        class="text-center"
-                        style="vertical-align: middle !important;"
-                    >{{ $booking->car->rental_end_date_formatted }}</x-core::table.body.cell>
-                    <x-core::table.body.cell
-                        class="text-center"
-                        style="vertical-align: middle !important;"
-                    ><strong>{{ format_price($booking->car->price) }}</strong></x-core::table.body.cell>
-                    <x-core::table.body.cell
-                        class="text-center"
-                        style="vertical-align: middle !important;"
-                    ><strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong></x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-start">{{ $booking->car->car_name }}</x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">{{ $booking->car->rental_start_date_formatted }}</x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">{{ $booking->car->rental_end_date_formatted }}</x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;"><strong>{{ format_price($booking->car->price) }}</strong></x-core::table.body.cell>
+                    <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;"><strong>{{ format_price($booking->tax_amount, $booking->currency_id) }}</strong></x-core::table.body.cell>
                 </x-core::table.body.row>
             </x-core::table.body>
         </x-core::table>
@@ -143,28 +92,16 @@
         <h6>{{ __('Services') }}</h6>
         <x-core::table>
             <x-core::table.header>
-                <x-core::table.header.cell>
-                    {{ __('Name') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Price') }}
-                </x-core::table.header.cell>
-                <x-core::table.header.cell class="text-center">
-                    {{ __('Total') }}
-                </x-core::table.header.cell>
+                <x-core::table.header.cell>{{ __('Name') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Price') }}</x-core::table.header.cell>
+                <x-core::table.header.cell class="text-center">{{ __('Total') }}</x-core::table.header.cell>
             </x-core::table.header>
             <x-core::table.body>
                 @foreach ($booking->services->unique() as $service)
                     <x-core::table.body.row>
-                        <x-core::table.body.cell style="vertical-align: middle !important;">
-                            {{ $service->name }}
-                        </x-core::table.body.cell>
-                        <x-core::table.body.cell class="text-center">
-                            {{ format_price($service->price, $booking->currency_id) }}
-                        </x-core::table.body.cell>
-                        <x-core::table.body.cell class="text-center">
-                            {{ format_price($service->price, $booking->currency_id) }}
-                        </x-core::table.body.cell>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">{{ $service->name }}</x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center">{{ format_price($service->price, $booking->currency_id) }}</x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center">{{ format_price($service->price, $booking->currency_id) }}</x-core::table.body.cell>
                     </x-core::table.body.row>
                 @endforeach
             </x-core::table.body>
@@ -172,7 +109,7 @@
         <br>
     @endif
 
-    {{-- FIX: Updated Guest Protection Plan Table --}}
+    {{-- Guest Protection Plan Table (Resolved Git Conflict) --}}
     @if ($booking->guest_protection_fee > 0)
         <h6>{{ __('Guest Protection Plan') }}</h6>
         <x-core::table>
@@ -253,28 +190,14 @@
 
             @if ($booking->deposit_hold_status)
                 @php
-                    $statusMap = [
-                        'pending_authorization' => 'warning',
-                        'authorized' => 'warning',
-                        'release_pending_provider_expiry' => 'info',
-                        'released' => 'success',
-                        'captured' => 'success',
-                        'captured_directly' => 'success',
-                    ];
-                    $statusLabel = [
-                        'pending_authorization' => 'Pending Authorization',
-                        'authorized' => 'Authorized Hold',
-                        'release_pending_provider_expiry' => 'Release Pending',
-                        'released' => 'Released',
-                        'captured' => 'Captured',
-                        'captured_directly' => 'Captured (No Hold)',
-                    ];
+                    $statusMap = ['pending_authorization' => 'warning', 'authorized' => 'warning', 'release_pending_provider_expiry' => 'info', 'released' => 'success', 'captured' => 'success', 'captured_directly' => 'success'];
+                    $statusLabel = ['pending_authorization' => 'Pending Authorization', 'authorized' => 'Authorized Hold', 'release_pending_provider_expiry' => 'Release Pending', 'released' => 'Released', 'captured' => 'Captured', 'captured_directly' => 'Captured (No Hold)'];
                     $badgeColor = $statusMap[$booking->deposit_hold_status] ?? 'secondary';
                     $label = $statusLabel[$booking->deposit_hold_status] ?? ucwords(str_replace('_', ' ', $booking->deposit_hold_status));
                 @endphp
                 <div class="col-lg-4">
                     <strong>{{ __('Deposit hold status') }}:</strong>
-                    <span class="badge customer-booking-info__status-badge bg-{{ $badgeColor }}">{{ $label }}</span>
+                    <span class="badge bg-{{ $badgeColor }} ms-1">{{ $label }}</span>
                 </div>
             @endif
 
@@ -309,52 +232,6 @@
             </div>
         @endif
 
-        @if ($hasMileageBreakdown)
-            <div class="col-lg-4">
-                <strong>{{ __('Trip Total Before Mileage Extra') }}:</strong>
-                {{ format_price($baseTripAmount, $booking->currency_id) }}
-            </div>
-
-            @if ($startMileageValue !== null)
-                <div class="col-lg-4">
-                    <strong>{{ __('Trip Start Mileage') }}:</strong>
-                    {{ (int) $startMileageValue }} {{ $distanceUnit }}
-                </div>
-            @endif
-
-            @if ($completionMileageValue !== null)
-                <div class="col-lg-4">
-                    <strong>{{ __('Trip End Mileage') }}:</strong>
-                    {{ (int) $completionMileageValue }} {{ $distanceUnit }}
-                </div>
-            @endif
-
-            <div class="col-lg-4">
-                <strong>{{ __('Included Distance Limit') }}:</strong>
-                {{ $includedDistanceLimit }} {{ $distanceUnit }}
-            </div>
-
-            <div class="col-lg-4">
-                <strong>{{ __('Distance Travelled') }}:</strong>
-                {{ $distanceTravelled }} {{ $distanceUnit }}
-            </div>
-
-            <div class="col-lg-4">
-                <strong>{{ __('Extra Distance Units') }}:</strong>
-                {{ $distanceOverageUnits }} {{ $distanceUnit }}
-            </div>
-
-            <div class="col-lg-4">
-                <strong>{{ __('Extra Distance Rate') }}:</strong>
-                {{ format_price($extraDistanceUnitPrice, $booking->currency_id) }}/{{ $distanceUnit }}
-            </div>
-
-            <div class="col-lg-4">
-                <strong>{{ __('Mileage Extra Amount') }}:</strong>
-                {{ format_price($distanceOverageAmount, $booking->currency_id) }}
-            </div>
-        @endif
-
         <div class="col-lg-4">
             <strong>{{ __('Total') }}:</strong>
             {{ format_price($booking->amount, $booking->currency_id) }}
@@ -372,17 +249,14 @@
             @endauth
 
             <div class="col-lg-4">
-                <strong>{{ __('Payment method') }}:</strong>  {{ $booking->payment->payment_channel->label() }}
+                <strong>{{ __('Payment method') }}:</strong> {{ $booking->payment->payment_channel->label() }}
             </div>
 
-            <div class="col-lg-4 customer-booking-info__status-field">
-                <strong>{{ __('Payment status') }}:</strong>
-                <span class="customer-booking-info__status-wrap">{!! $booking->payment->status->toHtml() !!}</span>
+            <div class="col-lg-4">
+                <strong>{{ __('Payment status') }}:</strong> {!! $booking->payment->status->toHtml() !!}
             </div>
 
-            @if ($booking->payment->payment_channel == \Botble\Payment\Enums\PaymentMethodEnum::BANK_TRANSFER
-                && $booking->payment->status == \Botble\Payment\Enums\PaymentStatusEnum::PENDING
-            )
+            @if ($booking->payment->payment_channel == \Botble\Payment\Enums\PaymentMethodEnum::BANK_TRANSFER && $booking->payment->status == \Botble\Payment\Enums\PaymentStatusEnum::PENDING)
                 <div class="col-lg-4">
                     <strong>{{ __('Payment info') }}:</strong>
                     {!! BaseHelper::clean(get_payment_setting('description', $booking->payment->payment_channel)) !!}
@@ -391,36 +265,42 @@
         @endif
 
         @if ($displayBookingStatus)
-            <div class="col-lg-4 customer-booking-info__status-field">
+            <div class="col-lg-4">
                 <strong>{{ __('Booking status') }}:</strong>
-                <span class="customer-booking-info__status-wrap">{!! BaseHelper::clean($booking->status->toHtml()) !!}</span>
+                {!! BaseHelper::clean($booking->status->toHtml()) !!}
             </div>
         @endif
     </div>
 
+    @if ($booking->damage_amount > 0)
+        <div class="col-lg-4">
+            <strong>{{ __('Damage Claim') }}:</strong>
+            {{ format_price($booking->damage_amount, $booking->currency_id) }}
+            @php
+                $damageColors = [
+                    'pending' => 'warning',
+                    'accepted' => 'success',
+                    'disputed' => 'danger',
+                    'resolved' => 'info',
+                ];
+                $damageColor = $damageColors[$booking->damage_status] ?? 'secondary';
+            @endphp
+            <span class="badge bg-{{ $damageColor }} ms-1">
+                {{ ucfirst($booking->damage_status ?? 'pending') }}
+            </span>
+        </div>
+    @endif
+
     <div class="d-flex flex-wrap gap-2 mt-4">
         @if ((auth()->check() || $booking->customer_id) && ($invoiceId = $booking->invoice->id) && $route)
-            <x-core::button
-                tag="a"
-                :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])"
-                target="_blank"
-                icon="ti ti-printer"
-                :class="$buttonClass ?? ''"
-            >
+            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])" target="_blank" icon="ti ti-printer" :class="$buttonClass ?? ''">
                 {{ __('View Invoice') }}
             </x-core::button>
-            <x-core::button
-                tag="a"
-                :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])"
-                target="_blank"
-                icon="ti ti-download"
-                :class="$buttonClass ?? ''"
-            >
+            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])" target="_blank" icon="ti ti-download" :class="$buttonClass ?? ''">
                 {{ __('Download Invoice') }}
             </x-core::button>
         @endif
 
-        {{-- NEW: Rate Car Button (Customer Only) --}}
         @if ($booking->status == \Botble\CarRentals\Enums\BookingStatusEnum::COMPLETED && ! \Botble\CarRentals\Models\CarReview::where('booking_id', $booking->id)->exists())
             <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#rateCarModal" icon="ti ti-star" color="warning" :class="$buttonClass ?? ''">
                 {{ __('Rate Car') }}
@@ -428,10 +308,9 @@
         @endif
     </div>
 
-   {{-- NEW: Rate Car Modal (Customer Only) --}}
+    {{-- Rate Car Modal --}}
     @if ($booking->status == \Botble\CarRentals\Enums\BookingStatusEnum::COMPLETED && ! \Botble\CarRentals\Models\CarReview::where('booking_id', $booking->id)->exists())
         <div class="modal fade" id="rateCarModal" tabindex="-1" aria-labelledby="rateCarModalLabel" aria-hidden="true">
-            {{-- Added modal-dialog-centered and fallback styles for perfect centering --}}
             <div class="modal-dialog modal-dialog-centered" style="max-width: 500px; margin: 3rem auto;">
                 <div class="modal-content border-0 shadow-lg rounded-4" style="background: #fff;">
                     <div class="modal-header border-bottom-0 pb-0">
@@ -445,7 +324,6 @@
                         <input type="hidden" name="car_id" value="{{ $booking->car->car_id }}">
                         <input type="hidden" name="booking_id" value="{{ $booking->id }}">
                         <input type="hidden" name="customer_id" value="{{ auth('customer')->id() }}">
-                        
                         <div class="modal-body">
                             <div class="mb-3">
                                 <label class="form-label fw-bold">{{ __('Rating') }}</label>
@@ -470,62 +348,199 @@
                 </div>
             </div>
         </div>
-
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                // FIX: Move the modal to the absolute body level to escape CSS stacking traps!
                 const modalEl = document.getElementById('rateCarModal');
-                if (modalEl) {
-                    document.body.appendChild(modalEl);
-                }
-
+                if (modalEl) document.body.appendChild(modalEl);
                 const form = document.querySelector('.customer-review-form');
                 if (!form) return;
-
                 form.addEventListener('submit', function (e) {
                     e.preventDefault();
-                    
-                    if (form.getAttribute('action') === '#') {
-                        alert('Review route is missing!');
-                        return;
-                    }
-
+                    if (form.getAttribute('action') === '#') { alert('Review route is missing!'); return; }
                     const btn = form.querySelector('button[type="submit"]');
                     const originalText = btn.innerHTML;
                     btn.disabled = true;
                     btn.innerHTML = '{{ __('Submitting...') }}';
-                    
-                    const formData = new FormData(form);
-
                     fetch(form.getAttribute('action'), {
                         method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Accept': 'application/json'
-                        }
+                        body: new FormData(form),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
                     })
-                    .then(response => response.json())
+                    .then(r => r.json())
                     .then(res => {
-                        if (res.error) {
-                            alert(res.message);
-                            btn.disabled = false;
-                            btn.innerHTML = originalText;
-                        } else {
-                            alert(res.message);
-                            location.reload();
-                        }
+                        if (res.error) { alert(res.message); btn.disabled = false; btn.innerHTML = originalText; }
+                        else { alert(res.message); location.reload(); }
                     })
-                    .catch(error => {
-                        alert('{{ __('An error occurred. Please try again.') }}');
-                        btn.disabled = false;
-                        btn.innerHTML = originalText;
-                    });
+                    .catch(() => { alert('{{ __('An error occurred. Please try again.') }}'); btn.disabled = false; btn.innerHTML = originalText; });
                 });
             });
         </script>
     @endif
 
+    {{-- Teammate's New Photos Section --}}
+    @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
+    @php
+        $booking->refresh();
+        $pickupPhotos = $booking->pickup_photos;
+        if (is_string($pickupPhotos)) $pickupPhotos = json_decode($pickupPhotos, true);
+        $pickupPhotos = (array) ($pickupPhotos ?? []);
+
+        $afterPhotos = $booking->after_photos;
+        if (is_string($afterPhotos)) $afterPhotos = json_decode($afterPhotos, true);
+        $afterPhotos = (array) ($afterPhotos ?? []);
+    @endphp
+
+    <div class="row mt-4 mb-4">
+        {{-- Pickup Photos --}}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 shadow-sm border-0" style="background: #f8f9fa; border-radius: 12px;">
+                <div class="card-body p-3">
+                    <h6 class="fw-bold mb-3" style="font-size: 14px;">
+                        <i class="ti ti-camera-check text-primary me-2"></i>{{ __('Car Condition at Pickup (Host)') }}
+                    </h6>
+                    @if(!empty($pickupPhotos) && count(array_filter($pickupPhotos)) > 0)
+                        <div class="row g-2">
+                            @foreach($pickupPhotos as $photo)
+                                @if($photo)
+                                    <div class="col-4">
+                                        <a href="{{ RvMedia::getImageUrl($photo) }}" target="_blank">
+                                            <img src="{{ RvMedia::getImageUrl($photo, 'thumb') }}"
+                                                 class="img-fluid rounded border shadow-sm"
+                                                 style="height: 80px; width: 100%; object-fit: cover;"
+                                                 onerror="this.src='{{ RvMedia::getDefaultImage() }}'">
+                                        </a>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-4 bg-white rounded">
+                            <i class="ti ti-photo-off fs-2 text-muted mb-2"></i>
+                            <p class="small text-muted mb-0">{{ __('No pickup photos available.') }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- Return Photos --}}
+        <div class="col-md-6 mb-3">
+            <div class="card h-100 shadow-sm border-0" style="background: #f8f9fa; border-radius: 12px;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold mb-0" style="font-size: 14px;">
+                            <i class="ti ti-camera-plus text-success me-2"></i>{{ __('Your Photos (Return)') }}
+                        </h6>
+                        @if($booking->status->getValue() === 'completed')
+                            <x-core::button
+                                type="button"
+                                icon="ti ti-camera"
+                                :class="$buttonClass ?? ''"
+                                onclick="document.getElementById('afterPhotosModal').style.setProperty('display','flex','important');window.scrollTo(0,0);">
+                                {{ __('Upload Return Photos') }}
+                            </x-core::button>
+                        @endif
+                    </div>
+                    @if(!empty($afterPhotos) && count(array_filter($afterPhotos)) > 0)
+                        <div class="row g-2">
+                            @foreach($afterPhotos as $photo)
+                                @if($photo)
+                                    <div class="col-4">
+                                        <a href="{{ RvMedia::getImageUrl($photo) }}" target="_blank">
+                                            <img src="{{ RvMedia::getImageUrl($photo, 'thumb') }}"
+                                                 class="img-fluid rounded border shadow-sm"
+                                                 style="height: 80px; width: 100%; object-fit: cover;">
+                                        </a>
+                                    </div>
+                                @endif
+                            @endforeach
+                        </div>
+                        @if($booking->after_photos_uploaded_at)
+                            <small class="text-muted mt-2 d-block">
+                                {{ __('Uploaded') }}: {{ $booking->after_photos_uploaded_at->format('M d, Y h:i A') }}
+                            </small>
+                        @endif
+                    @else
+                        <div class="text-center py-4 bg-white rounded">
+                            <i class="ti ti-camera-off fs-2 text-muted mb-2"></i>
+                            <p class="small text-muted mb-0">{{ __('Please upload return photos.') }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- After Photos Upload Modal --}}
+    @if($booking->status->getValue() === 'completed')
+    <div id="afterPhotosModal"
+         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
+                background: rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:#fff; border-radius:8px; width:420px; max-width:95%; box-shadow:0 8px 30px rgba(0,0,0,0.18); overflow:hidden;">
+            <div style="padding:16px 20px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between;">
+                <span style="font-size:15px; font-weight:600; color:#111827;">{{ __('Upload Return Photos') }}</span>
+                <button type="button" onclick="document.getElementById('afterPhotosModal').style.setProperty('display','none','important')"
+                    style="background:none; border:none; cursor:pointer; color:#6b7280; font-size:18px; line-height:1; padding:0;">&times;</button>
+            </div>
+            <form id="afterPhotosForm" enctype="multipart/form-data">
+                @csrf
+                <div style="padding:20px;">
+                    <input type="file" name="after_photos[]" multiple accept="image/*" id="afterPhotoInput"
+                           style="border:1px solid #d1d5db; border-radius:4px; padding:5px 8px; font-size:13px; color:#374151; width:100%;"
+                           onchange="document.getElementById('afterPhotoCount').textContent = this.files.length + ' photo(s) selected'">
+                    <p style="font-size:12px; color:#9ca3af; margin:6px 0 0;">{{ __('Select multiple photos') }}</p>
+                    <p id="afterPhotoCount" style="font-size:12px; color:#6b7280; margin:4px 0 0;"></p>
+                </div>
+                <div style="padding:12px 20px; border-top:1px solid #f3f4f6; display:flex; justify-content:flex-end; gap:8px;">
+                    <button type="button" onclick="document.getElementById('afterPhotosModal').style.setProperty('display','none','important')"
+                        style="padding:8px 18px; border:1px solid #d1d5db; border-radius:6px; background:#fff; font-size:13px; font-weight:500; cursor:pointer; color:#374151;">
+                        {{ __('Cancel') }}
+                    </button>
+                    <button type="submit" style="padding:8px 18px; border:none; border-radius:6px; background:#c0392b; color:#fff; font-size:13px; font-weight:600; cursor:pointer;">
+                        {{ __('Upload Photos') }}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('afterPhotosForm');
+        if (!form) return;
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('afterPhotoInput');
+            if (!fileInput || fileInput.files.length === 0) { alert('Please select photos first.'); return; }
+            const formData = new FormData();
+            Array.from(fileInput.files).forEach(file => formData.append('after_photos[]', file));
+            formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content);
+            const btn = form.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = 'Uploading...';
+            fetch('/bookings/{{ $booking->id }}/upload-after-photos', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('afterPhotosModal').style.setProperty('display', 'none', 'important');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Upload failed'));
+                    btn.disabled = false;
+                    btn.innerHTML = 'Upload Photos';
+                }
+            })
+            .catch(() => { alert('Upload failed. Please try again.'); btn.disabled = false; btn.innerHTML = 'Upload Photos'; });
+        });
+    });
+    </script>
+    @endif
+    @endif
+
+    {{-- Teammate's Trip Messaging Include --}}
     <div class="mt-5">
         @include('plugins/car-rentals::partials.trip-messaging', [
             'booking' => $booking,
@@ -535,139 +550,4 @@
         ])
     </div>
 
-    @if($booking->status->getValue() === 'completed')
-
-    <div class="mt-4 mb-2">
-        <h6>{{ __('After Photos (Return)') }}</h6>
-    </div>
-
-    <div class="btn-list d-flex gap-2 mt-2 mb-3">
-        <x-core::button
-            type="button"
-            icon="ti ti-camera"
-            :class="$buttonClass ?? ''"
-            onclick="document.getElementById('afterPhotosModal').style.setProperty('display','flex','important');window.scrollTo(0,0);"
-        >
-            {{ __('Upload Return Photos') }}
-        </x-core::button>
-    </div>
-
-    @if($booking->after_photos && count($booking->after_photos) > 0)
-        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:12px;">
-            @foreach($booking->after_photos as $photo)
-                <div style="width:100px; height:100px;">
-                    <img
-                        src="{{ RvMedia::getImageUrl($photo, 'thumb') }}"
-                        style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;"
-                    >
-                </div>
-            @endforeach
-        </div>
-        @if($booking->after_photos_uploaded_at)
-            <small class="text-muted mt-1 d-block">
-                {{ __('Uploaded') }}: {{ $booking->after_photos_uploaded_at->format('M d, Y h:i A') }}
-            </small>
-        @endif
-    @else
-        <p class="text-muted">{{ __('No return photos uploaded yet.') }}</p>
-    @endif
-
-    <div id="afterPhotosModal"
-         style="display:none; position:fixed; top:0; left:0; width:100%; height:100%;
-                background: rgba(0,0,0,0.65); z-index:9999; align-items:center; justify-content:center;">
-        <div style="background:#fff; border-radius:8px; width:420px; max-width:95%;
-                    box-shadow:0 8px 30px rgba(0,0,0,0.18); overflow:hidden;">
-
-            <div style="padding:16px 20px; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; justify-content:space-between;">
-                <span style="font-size:15px; font-weight:600; color:#111827;">{{ __('Upload Return Photos') }}</span>
-                <button type="button"
-                    onclick="document.getElementById('afterPhotosModal').style.setProperty('display','none','important')"
-                    style="background:none; border:none; cursor:pointer; color:#6b7280; font-size:18px; line-height:1; padding:0;">
-                    &times;
-                </button>
-            </div>
-
-            <form id="afterPhotosForm" enctype="multipart/form-data">
-                @csrf
-                <div style="padding:20px;">
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                        <input type="file" name="after_photos[]" multiple accept="image/*"
-                               id="afterPhotoInput"
-                               style="border:1px solid #d1d5db; border-radius:4px; padding:5px 8px; font-size:13px; color:#374151; flex:1;"
-                               onchange="document.getElementById('afterPhotoCount').textContent = this.files.length + ' photo(s) selected'">
-                    </div>
-                    <p style="font-size:12px; color:#9ca3af; margin:0;">{{ __('Select multiple photos') }}</p>
-                    <p id="afterPhotoCount" style="font-size:12px; color:#6b7280; margin-top:4px; margin-bottom:0;"></p>
-                </div>
-
-                <div style="padding:12px 20px; border-top:1px solid #f3f4f6; display:flex; justify-content:flex-end; gap:8px;">
-                    <button type="button"
-                        onclick="document.getElementById('afterPhotosModal').style.setProperty('display','none','important')"
-                        style="padding:8px 18px; border:1px solid #d1d5db; border-radius:6px; background:#fff;
-                               font-size:13px; font-weight:500; cursor:pointer; color:#374151;">
-                        {{ __('Cancel') }}
-                    </button>
-                    <button type="submit" id="afterUploadBtn"
-                        style="padding:8px 18px; border:none; border-radius:6px; background:#c0392b;
-                               color:#fff; font-size:13px; font-weight:600; cursor:pointer;">
-                        {{ __('Upload Photos') }}
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    @endif
-
-    </div>
-
 @endif
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('afterPhotosForm');
-    if (!form) return;
-
-    form.addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const fileInput = document.getElementById('afterPhotoInput');
-        if (!fileInput || fileInput.files.length === 0) {
-            alert('Please select photos first.');
-            return;
-        }
-
-        const formData = new FormData();
-        Array.from(fileInput.files).forEach(file => {
-            formData.append('after_photos[]', file);
-        });
-        formData.append('_token', document.querySelector('meta[name="csrf-token"]')?.content);
-
-        const btn = form.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="ti ti-loader me-1"></i>Uploading...';
-
-        fetch('/bookings/{{ $booking->id }}/upload-after-photos', {
-            method: 'POST',
-            body: formData,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' },
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('afterPhotosModal').style.setProperty('display', 'none', 'important');
-                location.reload();
-            } else {
-                alert('Error: ' + (data.error || 'Upload failed'));
-                btn.disabled = false;
-                btn.innerHTML = 'Upload Photos';
-            }
-        })
-        .catch(() => {
-            alert('Upload failed. Please try again.');
-            btn.disabled = false;
-            btn.innerHTML = 'Upload Photos';
-        });
-    });
-});
-</script>

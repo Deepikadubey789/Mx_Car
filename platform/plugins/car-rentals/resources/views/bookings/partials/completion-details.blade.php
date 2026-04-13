@@ -112,6 +112,59 @@
                     {{ $booking->completion_gas_level }}
                 </x-core::datagrid.item>
             @endif
+            
+            @if ($booking->checkin_fuel_level)
+                <x-core::datagrid.item title="Check-in Fuel Level">
+                    {{ ucfirst(str_replace('_', ' ', $booking->checkin_fuel_level)) }}
+                </x-core::datagrid.item>
+            @endif
+
+            @if ((float) $booking->fuel_difference_charge > 0)
+                <x-core::datagrid.item title="Fuel Difference Charge">
+                    <strong style="color: #d9534f;">
+                        {{ format_price($booking->fuel_difference_charge, $booking->currency_id) }}
+                    </strong>
+                </x-core::datagrid.item>
+            @endif
+
+            @if ($booking->actual_return_datetime)
+                <x-core::datagrid.item title="Actual Return Time">
+                    {{ $booking->actual_return_datetime->format('M d, Y H:i') }}
+                </x-core::datagrid.item>
+            @endif
+
+            @if ((float) $booking->late_fee_charge > 0)
+                <x-core::datagrid.item title="Late Return Fee">
+                    <strong style="color: #d9534f;">
+                        {{ format_price($booking->late_fee_charge, $booking->currency_id) }}
+                    </strong>
+                </x-core::datagrid.item>
+            @endif
+
+            @if ((float) $booking->damage_amount > 0)
+            <x-core::datagrid.item title="Damage Amount">
+                <strong style="color: #d9534f;">
+                    {{ format_price($booking->damage_amount, $booking->currency_id) }}
+                </strong>
+            </x-core::datagrid.item>
+        @endif
+
+        @if ($booking->damage_status)
+            <x-core::datagrid.item title="Damage Status">
+                @php
+                    $statusColors = [
+                        'pending' => 'warning',
+                        'accepted' => 'success',
+                        'disputed' => 'danger',
+                        'resolved' => 'info',
+                    ];
+                    $color = $statusColors[$booking->damage_status] ?? 'secondary';
+                @endphp
+                <span class="label label-{{ $color }}">
+                    {{ ucfirst($booking->damage_status) }}
+                </span>
+            </x-core::datagrid.item>
+        @endif
 
             @if ($booking->completion_notes)
                 <x-core::datagrid.item :title="trans('plugins/car-rentals::booking.completion_notes')">

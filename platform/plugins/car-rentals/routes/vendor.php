@@ -81,7 +81,19 @@ Route::group([
             'as' => 'bookings.send-key-instructions',
             'uses' => 'BookingController@sendKeyInstructions',
         ])->wherePrimaryKey('booking');
-        
+
+        // ✅ NEW: Upload Pickup Photos (Vendor)
+        Route::post('bookings/{booking}/upload-pickup-photos', [
+            'as' => 'bookings.upload-pickup-photos',
+            'uses' => 'BookingController@uploadPickupPhotos',
+        ])->wherePrimaryKey('booking');
+
+        // ✅ NEW: Delete Pickup Photo (Vendor)
+        Route::delete('bookings/{booking}/delete-pickup-photo', [
+            'as' => 'bookings.delete-pickup-photo',
+            'uses' => 'BookingController@deletePickupPhoto',
+        ])->wherePrimaryKey('booking');
+
         Route::resource('bookings', 'BookingController')
             ->parameters(['' => 'booking'])
             ->only(['index']);
