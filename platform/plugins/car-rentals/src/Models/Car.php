@@ -46,6 +46,8 @@ class Car extends BaseModel
         'number_of_doors',
         'year',
         'mileage',
+        'fuel_rate_per_liter',
+        'late_fee_per_hour',
         'horsepower',
         'rental_rate',
         'rental_type',
@@ -87,6 +89,8 @@ class Car extends BaseModel
         'rental_rate' => 'double',
         'sale_price' => 'double',
         'horsepower' => 'double',
+        'fuel_rate_per_liter' => 'double',
+        'late_fee_per_hour' => 'double',
     ];
 
     protected $appends = [

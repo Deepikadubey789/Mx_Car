@@ -488,4 +488,52 @@ class PublicController extends BaseController
             ->setData(['next_url' => route('car-rentals.vendor.dashboard')])
             ->setMessage(__('Congratulations! Your account has been upgraded to vendor status. You can now start listing your vehicles.'));
     }
+    
+    public function respondToDamageClaim($transactionId, $action)
+{
+    $customer = auth('customer')->user();
+
+    $bookingModel = \Botble\CarRentals\Models\Booking::where('transaction_id', $transactionId)
+        ->where('customer_id', $customer->id)
+        ->where('damage_status', 'pending')
+        ->firstOrFail();
+
+    if (!in_array($action, ['accept', 'dispute'])) {
+        abort(404);
+    }
+
+    if ($action === 'accept') {
+        $bookingModel->damage_status = 'accepted';
+        $bookingModel->save();
+
+        \Illuminate\Support\Facades\DB::table('admin_notifications')->insert([
+            'title' => 'Damage Claim Accepted #' . $bookingModel->booking_number,
+            'description' => $bookingModel->customer_name . ' accepted damage claim of ' . format_price($bookingModel->damage_amount, $bookingModel->currency_id),
+            'action_label' => 'View Booking',
+            'action_url' => route('car-rentals.bookings.edit', $bookingModel->id),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return redirect()->route('customer.bookings.show', $bookingModel->transaction_id)
+            ->with('success_msg', 'Damage claim accepted. Our team will contact you for payment.');
+    }
+
+    $bookingModel->damage_status = 'disputed';
+    $bookingModel->save();
+
+    \Illuminate\Support\Facades\DB::table('admin_notifications')->insert([
+        'title' => 'Damage Claim Disputed #' . $bookingModel->booking_number,
+        'description' => $bookingModel->customer_name . ' disputed the damage claim of ' . format_price($bookingModel->damage_amount, $bookingModel->currency_id),
+        'action_label' => 'View Booking',
+        'action_url' => route('car-rentals.bookings.edit', $bookingModel->id),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    return redirect()->route('customer.bookings.show', $bookingModel->transaction_id)
+        ->with('success_msg', 'Damage claim disputed. Our team will review your case.');
 }
+}
+
+

@@ -190,7 +190,60 @@ class BookingController extends BaseController
             $data['amount'] = round($baseTripAmount + (float) $data['distance_overage_amount'], 2);
         }
 
+        if (!empty($data['checkin_fuel_level']) && !empty($data['completion_gas_level'])) {
+            $fuelOrder = ['empty' => 0, 'quarter' => 1, 'half' => 2, 'three_quarters' => 3, 'full' => 4];
+            $checkinLevel = $fuelOrder[$data['checkin_fuel_level']] ?? null;
+            $checkoutLevel = $fuelOrder[$data['completion_gas_level']] ?? null;
+
+            if ($checkinLevel !== null && $checkoutLevel !== null && $checkoutLevel < $checkinLevel) {
+                $carModel = Car::query()->find($booking->car?->car_id);
+                $fuelRate = (float) ($carModel?->fuel_rate_per_liter ?? 0);
+                $fuelDiff = $checkinLevel - $checkoutLevel;
+                $liters = $fuelDiff * 15;
+                $data['fuel_difference_charge'] = round($liters * $fuelRate, 2);
+            } else {
+                $data['fuel_difference_charge'] = 0;
+            }
+        }
+
+        if (!empty($data['actual_return_datetime']) && $booking->car) {
+            $actualReturn = \Carbon\Carbon::parse($data['actual_return_datetime']);
+            $expectedReturn = \Carbon\Carbon::parse($booking->car->rental_end_date)->endOfDay();
+            
+            if ($actualReturn->gt($expectedReturn)) {
+                $lateHours = (int) ceil($expectedReturn->diffInHours($actualReturn));
+                $carModel = Car::query()->find($booking->car->car_id);
+                $lateRate = (float) ($carModel?->late_fee_per_hour ?? 0);
+                $data['late_fee_charge'] = round($lateHours * $lateRate, 2);
+            } else {
+                $data['late_fee_charge'] = 0;
+            }
+        }
+
+        if (!empty($data['damage_amount']) && (float) $data['damage_amount'] > 0) {
+            $data['damage_status'] = 'pending';
+        } else {
+            $data['damage_status'] = null;
+        }
+
         $booking->update($data);
+
+        if (!empty($data['damage_amount']) && (float) $data['damage_amount'] > 0 && $data['damage_status'] === 'pending') {
+            $acceptUrl = url('/bookings/' . $booking->transaction_id . '/damage/accept');
+            $disputeUrl = url('/bookings/' . $booking->transaction_id . '/damage/dispute');
+            try {
+                \Illuminate\Support\Facades\Mail::send(
+                    'plugins/car-rentals::emails.damage-claim',
+                    ['booking' => $booking, 'acceptUrl' => $acceptUrl, 'disputeUrl' => $disputeUrl],
+                    function ($mail) use ($booking) {
+                        $mail->to($booking->customer_email, $booking->customer_name)
+                            ->subject('Damage Claim Raised - Booking #' . $booking->booking_number);
+                    }
+                );
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error('Damage claim email failed: ' . $e->getMessage());
+            }
+        }
 
         if ($booking->deposit_hold_status === 'authorized' && ! empty($settlementAction)) {
             $settlement = app(DepositHoldSettlementService::class)->settle(

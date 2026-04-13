@@ -58,6 +58,83 @@
         @endif
     </x-core::datagrid>
 
+    {{-- Condition & Photos Comparison Section --}}
+@if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
+    <div class="row mt-4">
+        {{-- Before Photos (Host Uploads) - Read Only for Customer --}}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light">
+                    <h6 class="fw-bold mb-0">
+                        <i class="ti ti-camera-check me-2 text-primary"></i>
+                        {{ __('Car Condition at Pickup (Host)') }}
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if($booking->pickup_photos && count($booking->pickup_photos) > 0)
+                        <div class="row g-2">
+                            @foreach($booking->pickup_photos as $photo)
+                                <div class="col-4">
+                                    <a href="{{ RvMedia::getImageUrl($photo) }}" target="_blank">
+                                        <img src="{{ RvMedia::getImageUrl($photo, 'thumb') }}" 
+                                             class="img-fluid rounded border" 
+                                             style="height: 80px; width: 100%; object-fit: cover;" 
+                                             alt="Pickup condition">
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                        <p class="small text-muted mt-2 mb-0">
+                            {{ __('Verified by host on:') }} {{ $booking->pickup_photos_uploaded_at ? $booking->pickup_photos_uploaded_at->format('M d, Y') : 'N/A' }}
+                        </p>
+                    @else
+                        <div class="text-center py-3 text-muted">
+                            <i class="ti ti-photo-off fs-2"></i>
+                            <p class="small mb-0">{{ __('No pickup photos available.') }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- After Photos (Customer Uploads) --}}
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h6 class="fw-bold mb-0">
+                        <i class="ti ti-camera-plus me-2 text-success"></i>
+                        {{ __('Your Photos (Return)') }}
+                    </h6>
+                    {{-- Only allow upload if booking is processing or completed --}}
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="document.getElementById('returnPhotosModal').style.display='flex'">
+                        <i class="ti ti-plus"></i>
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if($booking->return_photos && count($booking->return_photos) > 0)
+                        <div class="row g-2">
+                            @foreach($booking->return_photos as $photo)
+                                <div class="col-4">
+                                    <a href="{{ RvMedia::getImageUrl($photo) }}" target="_blank">
+                                        <img src="{{ RvMedia::getImageUrl($photo, 'thumb') }}" 
+                                             class="img-fluid rounded border" 
+                                             style="height: 80px; width: 100%; object-fit: cover;" 
+                                             alt="Return condition">
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="text-center py-3">
+                            <p class="small text-muted mb-0">{{ __('Please upload photos of the car during return.') }}</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+@endif
+
     <div class="mb-4">
         <h4>{{ __('Car') }}</h4>
         <x-core::table>
@@ -291,7 +368,6 @@
         @include('plugins/car-rentals::bookings.partials.completion-form', ['booking' => $booking])
     @endif
 
-    {{-- ✅ Before Photos (Pickup) Section --}}
     @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
         <div class="mt-4 mb-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
@@ -344,7 +420,7 @@
         </x-core::button>
 
         @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
-            <x-core::button type="button" icon="ti ti-key" color="warning" onclick="const m=document.getElementById('keyInstructionsModal');m.classList.remove('d-none');m.style.setProperty('display','flex','important');window.scrollTo(0,0);" :class="$buttonClass ?? ''">
+            <x-core::button type="button" icon="ti ti-key" color="warning" onclick="openKeyModal()" :class="$buttonClass ?? ''">
                 {{ __('Send Key Instructions') }}
             </x-core::button>
         @endif
@@ -372,50 +448,60 @@
     </div>
 
     {{-- Key Instructions Modal --}}
-    <div id="keyInstructionsModal" class="modal d-none" tabindex="-1" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;">
-        <div class="modal-dialog modal-lg" style="margin:30px auto;max-width:600px;position:relative;top:0;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="ti ti-key me-2"></i>{{ __('Send Key Instructions') }}</h5>
-                    <button type="button" class="btn-close" onclick="document.getElementById('keyInstructionsModal').classList.add('d-none')"></button>
-                </div>
-                <form action="{{ (auth()->check() && auth()->user()->isSuperUser()) ? route('car-rentals.bookings.send-key-instructions', $booking->id) : route('car-rentals.vendor.bookings.send-key-instructions', $booking->id) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        @if($booking->car->default_pickup_instructions)
-                            <div class="alert alert-info mb-3">
-                                <strong>{{ __('Default Instructions from Car:') }}</strong><br>
-                                {{ $booking->car->default_pickup_instructions }}
-                            </div>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">{{ __('Key Instructions to Send') }} <span class="text-danger">*</span></label>
-                            <textarea name="key_instructions" class="form-control" rows="6" required placeholder="Enter pickup location, key/lock box code, and special instructions...">{{ $booking->key_instructions ?? $booking->car->default_pickup_instructions }}</textarea>
-                            <small class="text-muted">{{ __('This will be emailed to') }}: <strong>{{ $booking->customer_email }}</strong></small>
-                        </div>
-                        @if($booking->key_instructions_sent_at)
-                            <div class="alert alert-success">
-                                <i class="ti ti-check me-1"></i>
-                                {{ __('Last sent:') }} {{ $booking->key_instructions_sent_at->format('M d, Y h:i A') }}
-                            </div>
-                        @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('keyInstructionsModal').classList.add('d-none')">
-                            {{ __('Cancel') }}
-                        </button>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="ti ti-send me-1"></i>{{ __('Send to Customer') }}
-                        </button>
-                    </div>
-                </form>
+    <div id="keyInstructionsModal" class="d-none" tabindex="-1" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:12px;width:600px;max-width:95%;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+            <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+                <h5 class="modal-title mb-0"><i class="ti ti-key me-2"></i>{{ __('Send Key Instructions') }}</h5>
+                <button type="button" class="btn-close" onclick="closeKeyModal()"></button>
             </div>
+            <form action="{{ (auth()->check() && auth()->user()->isSuperUser()) ? route('car-rentals.bookings.send-key-instructions', $booking->id) : route('car-rentals.vendor.bookings.send-key-instructions', $booking->id) }}" method="POST">
+                @csrf
+                <div class="modal-body" style="padding:20px;">
+                    @if($booking->car->default_pickup_instructions)
+                        <div class="alert alert-info mb-3">
+                            <strong>{{ __('Default Instructions from Car:') }}</strong><br>
+                            {{ $booking->car->default_pickup_instructions }}
+                        </div>
+                    @endif
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ __('Key Instructions to Send') }} <span class="text-danger">*</span></label>
+                        <textarea name="key_instructions" class="form-control" rows="6" required placeholder="Enter pickup location, key/lock box code, and special instructions...">{{ $booking->key_instructions ?? $booking->car->default_pickup_instructions }}</textarea>
+                        <small class="text-muted">{{ __('This will be emailed to') }}: <strong>{{ $booking->customer_email }}</strong></small>
+                    </div>
+                    @if($booking->key_instructions_sent_at)
+                        <div class="alert alert-success">
+                            <i class="ti ti-check me-1"></i>
+                            {{ __('Last sent:') }} {{ $booking->key_instructions_sent_at->format('M d, Y h:i A') }}
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer" style="padding:16px 20px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeKeyModal()">
+                        {{ __('Cancel') }}
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="ti ti-send me-1"></i>{{ __('Send to Customer') }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
+    function openKeyModal() {
+        const m = document.getElementById('keyInstructionsModal');
+        m.classList.remove('d-none');
+        m.style.setProperty('display', 'flex', 'important');
+        window.scrollTo(0, 0);
+    }
+
+    function closeKeyModal() {
+        const m = document.getElementById('keyInstructionsModal');
+        m.classList.add('d-none');
+        m.style.setProperty('display', 'none', 'important');
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        // Pickup Photos Form Handler
         const pickupForm = document.getElementById('pickupPhotosForm');
         if(pickupForm) {
             pickupForm.addEventListener('submit', function(e) {
@@ -449,7 +535,6 @@
             });
         }
 
-        // Key Instructions Form Handler
         const keyForm = document.querySelector('#keyInstructionsModal form');
         if(keyForm) {
             keyForm.addEventListener('submit', function (e) {
@@ -465,9 +550,7 @@
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 })
                 .then(res => {
-                    const modal = document.getElementById('keyInstructionsModal');
-                    modal.style.setProperty('display', 'none', 'important');
-                    modal.classList.add('d-none');
+                    closeKeyModal();
                     const toast = document.createElement('div');
                     toast.innerHTML = `
                         <div style="position:fixed;bottom:30px;right:30px;z-index:99999;background:#2fb344;color:#fff;padding:16px 24px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:flex;align-items:center;gap:10px;">

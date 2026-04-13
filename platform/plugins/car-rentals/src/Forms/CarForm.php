@@ -393,6 +393,26 @@ class CarForm extends FormAbstract
                     ->placeholder(trans('plugins/car-rentals::car-rentals.car.placeholders.' . (CarRentalsHelper::isUsingMiles() ? 'mileage' : 'kilometers')))
             )
             ->add(
+                'fuel_rate_per_liter',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label('Fuel Rate Per Liter')
+                    ->min(0)
+                    ->step(0.01)
+                    ->placeholder('e.g. 2.50')
+                    ->helperText('Charge per liter if customer returns with less fuel')
+            )
+            ->add(
+                'late_fee_per_hour',
+                NumberField::class,
+                NumberFieldOption::make()
+                    ->label('Late Return Fee Per Hour')
+                    ->min(0)
+                    ->step(0.01)
+                    ->placeholder('e.g. 10.00')
+                    ->helperText('Charge per hour if customer returns car late')
+            )
+            ->add(
                 'horsepower',
                 NumberField::class,
                 NumberFieldOption::make()
