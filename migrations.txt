@@ -17,3 +17,4 @@
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_08_100000_add_pickup_photos_to_bookings.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_200000_add_contactless_fields.php
 
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_10_030000_add_post_trip_billing_fields.php
