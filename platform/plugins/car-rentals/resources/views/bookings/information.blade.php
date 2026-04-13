@@ -58,83 +58,6 @@
         @endif
     </x-core::datagrid>
 
-    {{-- Condition & Photos Comparison Section --}}
-@if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
-    <div class="row mt-4">
-        {{-- Before Photos (Host Uploads) - Read Only for Customer --}}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-light">
-                    <h6 class="fw-bold mb-0">
-                        <i class="ti ti-camera-check me-2 text-primary"></i>
-                        {{ __('Car Condition at Pickup (Host)') }}
-                    </h6>
-                </div>
-                <div class="card-body">
-                    @if($booking->pickup_photos && count($booking->pickup_photos) > 0)
-                        <div class="row g-2">
-                            @foreach($booking->pickup_photos as $photo)
-                                <div class="col-4">
-                                    <a href="{{ RvMedia::getImageUrl($photo) }}" target="_blank">
-                                        <img src="{{ RvMedia::getImageUrl($photo, 'thumb') }}" 
-                                             class="img-fluid rounded border" 
-                                             style="height: 80px; width: 100%; object-fit: cover;" 
-                                             alt="Pickup condition">
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                        <p class="small text-muted mt-2 mb-0">
-                            {{ __('Verified by host on:') }} {{ $booking->pickup_photos_uploaded_at ? $booking->pickup_photos_uploaded_at->format('M d, Y') : 'N/A' }}
-                        </p>
-                    @else
-                        <div class="text-center py-3 text-muted">
-                            <i class="ti ti-photo-off fs-2"></i>
-                            <p class="small mb-0">{{ __('No pickup photos available.') }}</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-
-        {{-- After Photos (Customer Uploads) --}}
-        <div class="col-md-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm">
-                <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                    <h6 class="fw-bold mb-0">
-                        <i class="ti ti-camera-plus me-2 text-success"></i>
-                        {{ __('Your Photos (Return)') }}
-                    </h6>
-                    {{-- Only allow upload if booking is processing or completed --}}
-                    <button type="button" class="btn btn-sm btn-outline-success" onclick="document.getElementById('returnPhotosModal').style.display='flex'">
-                        <i class="ti ti-plus"></i>
-                    </button>
-                </div>
-                <div class="card-body">
-                    @if($booking->return_photos && count($booking->return_photos) > 0)
-                        <div class="row g-2">
-                            @foreach($booking->return_photos as $photo)
-                                <div class="col-4">
-                                    <a href="{{ RvMedia::getImageUrl($photo) }}" target="_blank">
-                                        <img src="{{ RvMedia::getImageUrl($photo, 'thumb') }}" 
-                                             class="img-fluid rounded border" 
-                                             style="height: 80px; width: 100%; object-fit: cover;" 
-                                             alt="Return condition">
-                                    </a>
-                                </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="text-center py-3">
-                            <p class="small text-muted mb-0">{{ __('Please upload photos of the car during return.') }}</p>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-@endif
-
     <div class="mb-4">
         <h4>{{ __('Car') }}</h4>
         <x-core::table>
@@ -200,7 +123,7 @@
         @endif
     @endif
 
-    {{-- FIX: Updated Guest Protection Plan Table --}}
+    {{-- Cleaned Guest Protection Plan Table --}}
     @if ($booking->guest_protection_fee > 0)
         <div class="mb-4">
             <h4>{{ __('Guest Protection Plan') }}</h4>
@@ -226,7 +149,7 @@
         </div>
     @endif
 
-    {{-- FIX: Added Host Protection Plan Table (Crucial for Vendors) --}}
+    {{-- Host Protection Plan Table (Crucial for Vendors) --}}
     @if ($booking->host_protection_plan_id)
         <div class="mb-4">
             <h4>{{ __('Your Protection Plan (Host)') }}</h4>
@@ -390,6 +313,7 @@
         @include('plugins/car-rentals::bookings.partials.completion-form', ['booking' => $booking])
     @endif
 
+    {{-- ✅ Before Photos (Pickup) Section --}}
     @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
         <div class="mt-4 mb-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
