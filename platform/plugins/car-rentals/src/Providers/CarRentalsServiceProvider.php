@@ -51,6 +51,9 @@ use Botble\CarRentals\Repositories\Eloquent\CarCategoryRepository;
 use Botble\CarRentals\Repositories\Eloquent\CarRepository;
 use Botble\CarRentals\Repositories\Interfaces\CarCategoryInterface;
 use Botble\CarRentals\Repositories\Interfaces\CarInterface;
+use Botble\CarRentals\Services\Kyc\KycProviderInterface;
+use Botble\CarRentals\Services\Kyc\Providers\MockThirdPartyKycProvider;
+use Botble\CarRentals\Services\Kyc\Providers\StripeIdentityKycProvider;
 use Botble\LanguageAdvanced\Supports\LanguageAdvancedManager;
 use Botble\Location\Facades\Location;
 use Botble\Location\Models\City;
@@ -65,6 +68,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Broadcast;
 use Botble\CarRentals\Commands\SendTripReminderCommand;
 use Botble\CarRentals\Commands\SendReturnAlertCommand;
+use Botble\CarRentals\Commands\PruneKycPayloadsCommand;
 
 class CarRentalsServiceProvider extends ServiceProvider
 {
@@ -77,6 +81,20 @@ class CarRentalsServiceProvider extends ServiceProvider
         });
         $this->app->bind(CarInterface::class, function () {
             return new CarRepository(new Car);
+        });
+        $this->app->bind(KycProviderInterface::class, function () {
+            $provider = (string) CarRentalsHelper::getSetting('kyc_provider', 'stripe');
+            if ($provider === 'didit') {
+                $provider = 'stripe';
+            }
+
+            $stripeEnabled = (bool) CarRentalsHelper::getSetting('kyc_stripe_enabled', true);
+
+            if ($provider === 'stripe' && $stripeEnabled) {
+                return app(StripeIdentityKycProvider::class);
+            }
+
+            return app(MockThirdPartyKycProvider::class);
         });
 
         $loader = AliasLoader::getInstance();
@@ -113,7 +131,7 @@ class CarRentalsServiceProvider extends ServiceProvider
             ->loadAndPublishTranslations()
             ->publishAssets()
             ->loadHelpers()
-            ->loadRoutes(['web', 'customer', 'fronts', 'vendor', 'base'])
+            ->loadRoutes(['web', 'customer', 'fronts', 'vendor', 'base', 'kyc-webhook'])
             ->loadMigrations();
 
         if (class_exists('ApiHelper') && ApiHelper::enabled()) {
@@ -567,6 +585,13 @@ class CarRentalsServiceProvider extends ServiceProvider
                 UpdateExchangeRatesCommand::class,
                 SeedCurrenciesCommand::class,
                 SendTripReminderCommand::class,
+            ]);
+            $this->commands([
+                UpdateExchangeRatesCommand::class,
+                SeedCurrenciesCommand::class,
+                SendTripReminderCommand::class,
+                SendReturnAlertCommand::class,
+                PruneKycPayloadsCommand::class,
                 SendReturnAlertCommand::class,
             ]);
         }

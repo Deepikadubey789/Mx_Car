@@ -25,6 +25,7 @@ class Booking extends BaseModel
         'customer_email',
         'customer_phone',
         'customer_id',
+        'kyc_verification_id',
         'vendor_id',
         'amount',
         'sub_total',
@@ -43,6 +44,8 @@ class Booking extends BaseModel
         'deposit_risk_multiplier',
         'deposit_risk_level',
         'deposit_risk_reasons',
+        'eligibility_state',
+        'eligibility_reasons',
         'deposit_hold_status',
         'deposit_hold_amount',
         'deposit_authorized_at',
@@ -102,6 +105,7 @@ class Booking extends BaseModel
         'price_snapshot' => 'array',
         'is_escalated' => 'boolean',
         'deposit_risk_reasons' => 'array',
+        'eligibility_reasons' => 'array',
         'deposit_authorized_at' => 'datetime',
         'deposit_settled_at' => 'datetime',
         'start_mileage_snapshot' => 'integer',
@@ -137,6 +141,11 @@ class Booking extends BaseModel
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class, 'customer_id')->withDefault();
+    }
+
+    public function kycVerification(): BelongsTo
+    {
+        return $this->belongsTo(CustomerKycVerification::class, 'kyc_verification_id')->withDefault();
     }
 
     public function vendor(): BelongsTo

@@ -10,6 +10,7 @@ use Botble\Location\Models\City;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class FilterCarsBuilder extends BaseQueryBuilder
 {
@@ -62,6 +63,21 @@ class FilterCarsBuilder extends BaseQueryBuilder
         if ($carCategories) {
             $this->whereHas('categories', function (Builder $query) use ($carCategories) {
                 return $query->whereIn('cr_car_categories.id', $carCategories);
+            });
+        }
+
+        $customer = Auth::guard('customer')->user();
+        $restrictedCategorySetting = CarRentalsHelper::getSetting('eligibility_restricted_category_ids', []);
+        if (is_array($restrictedCategorySetting)) {
+            $restrictedCategoryIds = array_map('intval', $restrictedCategorySetting);
+        } else {
+            $decodedCategoryIds = json_decode((string) $restrictedCategorySetting, true);
+            $restrictedCategoryIds = is_array($decodedCategoryIds) ? array_map('intval', $decodedCategoryIds) : [];
+        }
+
+        if ($restrictedCategoryIds && (! $customer || $customer->kyc_level !== 'driver_verified')) {
+            $this->whereDoesntHave('categories', function (Builder $query) use ($restrictedCategoryIds) {
+                $query->whereIn('cr_car_categories.id', $restrictedCategoryIds);
             });
         }
 

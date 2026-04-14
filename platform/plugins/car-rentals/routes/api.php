@@ -84,6 +84,12 @@ Route::group([
             Route::put('/', 'ProfileController@update');
             Route::post('avatar', 'ProfileController@updateAvatar');
             Route::post('change-password', 'ProfileController@changePassword');
+            Route::post('kyc/start', 'KycController@start');
+            Route::get('kyc/bootstrap', 'KycController@bootstrap');
+            Route::post('kyc/{verificationId}/upload', 'KycController@upload');
+            Route::post('kyc/{verificationId}/submit', 'KycController@submit');
+            Route::post('kyc/{verificationId}/stripe-identity-session', 'KycController@stripeIdentitySession');
+            Route::get('kyc/status', 'KycController@status');
         });
 
         // Authentication actions

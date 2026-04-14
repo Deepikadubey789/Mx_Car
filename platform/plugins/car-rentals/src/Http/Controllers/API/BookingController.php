@@ -11,6 +11,7 @@ use Botble\CarRentals\Http\Resources\BookingResource;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Services\BookingService;
+use Botble\CarRentals\Services\PricingQuoteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -69,6 +70,18 @@ class BookingController extends BaseApiController
     {
         $customer = Auth::guard('sanctum')->user();
 
+        if ($customer && (string) $customer->kyc_status !== 'verified') {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage('Please complete KYC verification before booking a car.')
+                ->setData([
+                    'next_url' => route('customer.kyc'),
+                    'kyc_status' => (string) $customer->kyc_status,
+                ])
+                ->toApiResponse();
+        }
+
         $rules = [
             'car_id' => 'required|exists:cr_cars,id',
             'pickup_date' => 'required|date|after_or_equal:today',
@@ -126,6 +139,25 @@ class BookingController extends BaseApiController
                 ->httpResponse()
                 ->setError()
                 ->setMessage('Car is not available for the selected dates')
+                ->toApiResponse();
+        }
+
+        $quoteData = app(PricingQuoteService::class)->buildQuote(
+            $car,
+            $pickupDate,
+            $returnDate,
+            $request->input('services', []),
+            [],
+            $request->input('coupon_code'),
+            $customer
+        );
+
+        if (($quoteData['eligibility_state'] ?? null) === 'blocked') {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage('Driver is not eligible for this vehicle category.')
+                ->setData(['eligibility_reasons' => $quoteData['eligibility_reasons'] ?? []])
                 ->toApiResponse();
         }
 

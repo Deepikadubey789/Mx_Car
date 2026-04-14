@@ -38,6 +38,10 @@
                         <x-core::icon name="ti ti-settings" class="me-2" />
                         <span>{{ __('Profile') }}</span>
                     </a>
+                    <a href="{{ route('customer.kyc') }}" @class(['nav-link', 'active' => Route::is(['customer.kyc', 'customer.kyc.stripe-identity-return'])])>
+                        <x-core::icon name="ti ti-shield-check" class="me-2" />
+                        <span>{{ __('KYC Verification') }}</span>
+                    </a>
                     <a href="{{ route('customer.change-password') }}" @class(['nav-link', 'active' => Route::is('customer.change-password')])>
                         <x-core::icon name="ti ti-lock" class="me-2" />
                         <span>{{ __('Change password') }}</span>

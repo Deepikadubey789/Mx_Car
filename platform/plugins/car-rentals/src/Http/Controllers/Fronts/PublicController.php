@@ -239,6 +239,16 @@ class PublicController extends BaseController
                 ->withInput();
         }
 
+        $customer = Auth::guard('customer')->user();
+        if ($customer && (string) $customer->kyc_status !== 'verified') {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setNextUrl(route('customer.kyc'))
+                ->setMessage(__('Please complete KYC verification before booking a car.'))
+                ->withInput();
+        }
+
         $car = Car::query()
             ->findOrFail($request->input('car_id'));
 
@@ -373,6 +383,8 @@ class PublicController extends BaseController
             'depositRiskLevel' => $pricing['depositRisk']['risk_level'],
             'depositRiskMultiplier' => (float) $pricing['depositRisk']['multiplier'],
             'depositRiskReasons' => $pricing['depositRisk']['reasons'],
+            'eligibilityState' => $pricing['eligibilityState'],
+            'eligibilityReasons' => $pricing['eligibilityReasons'],
             'finalPayableAmount' => $pricing['finalPayableAmount'],
             'priceLockExpiresAt' => $pricing['priceLockExpiresAt'],
             'priceLockExpiredMessage' => $pricing['priceLockExpiredMessage'],
@@ -479,6 +491,8 @@ class PublicController extends BaseController
             'depositRiskLevel' => $pricing['depositRisk']['risk_level'],
             'depositRiskMultiplier' => (float) $pricing['depositRisk']['multiplier'],
             'depositRiskReasons' => $pricing['depositRisk']['reasons'],
+            'eligibilityState' => $pricing['eligibilityState'],
+            'eligibilityReasons' => $pricing['eligibilityReasons'],
             'finalPayableAmount' => $pricing['finalPayableAmount'],
             'priceLockExpiresAt' => $pricing['priceLockExpiresAt'],
             'priceLockExpiredMessage' => $pricing['priceLockExpiredMessage'],
@@ -577,6 +591,15 @@ class PublicController extends BaseController
             Auth::guard('customer')->user()
         );
 
+        if (($quoteData['eligibility_state'] ?? null) === 'blocked') {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage(__('Driver is not eligible for this vehicle category.'))
+                ->setData(['eligibility_reasons' => $quoteData['eligibility_reasons'] ?? []])
+                ->withInput();
+        }
+
         $services = $quoteData['services'];
         $rentalCarAmount = (float) $quoteData['rental_amount'];
         $amount = (float) $quoteData['subtotal'];
@@ -627,6 +650,9 @@ class PublicController extends BaseController
         $booking->deposit_risk_multiplier = (float) $depositRisk['multiplier'];
         $booking->deposit_risk_level = $depositRisk['risk_level'];
         $booking->deposit_risk_reasons = $depositRisk['reasons'];
+        $booking->eligibility_state = (string) ($quoteData['eligibility_state'] ?? 'eligible');
+        $booking->eligibility_reasons = $quoteData['eligibility_reasons'] ?? [];
+        $booking->kyc_verification_id = Auth::guard('customer')->user()?->kyc_current_verification_id;
         $booking->deposit_hold_status = $depositAmount > 0 ? 'pending_authorization' : null;
         $booking->deposit_hold_amount = $depositAmount;
         $booking->price_snapshot = [
@@ -1359,6 +1385,8 @@ class PublicController extends BaseController
             'depositBaseAmount' => $baseDepositAmount,
             'depositAmount' => $depositAmount,
             'depositRisk' => $depositRisk,
+            'eligibilityState' => (string) ($quoteData['eligibility_state'] ?? 'eligible'),
+            'eligibilityReasons' => $quoteData['eligibility_reasons'] ?? [],
             'totalAmount' => $totalAmount,
             'finalPayableAmount' => $finalPayableAmount,
             'priceLock' => $priceLock,

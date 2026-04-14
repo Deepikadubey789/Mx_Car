@@ -12,10 +12,12 @@ use Botble\CarRentals\Http\Requests\StoreCustomerRequest;
 use Botble\CarRentals\Http\Requests\UpdateCustomerRequest;
 use Botble\CarRentals\Http\Resources\CustomerResource;
 use Botble\CarRentals\Models\Customer;
+use Botble\CarRentals\Models\CustomerKycVerification;
 use Botble\CarRentals\Tables\CustomerTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CustomerController extends BaseController
 {
@@ -86,7 +88,13 @@ class CustomerController extends BaseController
             Assets::addScriptsDirectly('vendor/core/plugins/car-rentals/js/customer-view.js');
         }
 
-        return view('plugins/car-rentals::customers.view', compact('customer'));
+        $latestKycVerification = CustomerKycVerification::query()
+            ->where('customer_id', $customer->id)
+            ->with('documents')
+            ->latest('id')
+            ->first();
+
+        return view('plugins/car-rentals::customers.view', compact('customer', 'latestKycVerification'));
     }
 
     public function verify(Customer $customer, Request $request)
@@ -196,6 +204,72 @@ class CustomerController extends BaseController
             ->httpResponse()
             ->setData(['next_url' => route('car-rentals.vendor.dashboard')])
             ->setMessage(trans('plugins/car-rentals::car-rentals.customer.upgrade_to_vendor_success', ['name' => $customer->name]));
+    }
+
+    public function reviewKyc(Customer $customer, Request $request)
+    {
+        $request->validate([
+            'status' => ['required', 'in:approved,rejected,manual_review'],
+            'reason_code' => ['nullable', 'in:selfie_face_mismatch,document_expired,document_type_not_supported,ocr_required_fields_missing,kyc_pending_review,high_risk_deposit_profile,other'],
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $verification = CustomerKycVerification::query()
+            ->where('customer_id', $customer->id)
+            ->latest('id')
+            ->first();
+
+        if (! $verification) {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage('No KYC verification found for this customer.');
+        }
+
+        $reasonCode = (string) $request->input('reason_code', '');
+        $reason = trim((string) $request->input('reason', ''));
+        $finalReason = $reasonCode !== ''
+            ? ($reason !== '' ? sprintf('%s: %s', $reasonCode, $reason) : $reasonCode)
+            : ($reason !== '' ? $reason : null);
+
+        $verification->update([
+            'status' => $request->input('status'),
+            'rejection_reason' => $request->input('status') === 'rejected' ? $finalReason : null,
+            'reviewed_by' => Auth::id(),
+            'reviewed_at' => now(),
+        ]);
+
+        $customer->forceFill([
+            'is_verified' => $request->input('status') === 'approved',
+            'verified_at' => $request->input('status') === 'approved' ? Carbon::now() : null,
+            'verified_by' => Auth::id(),
+            'verification_note' => $finalReason,
+            'kyc_status' => match ($request->input('status')) {
+                'approved' => 'verified',
+                'rejected' => 'failed',
+                default => 'manual_review',
+            },
+            'kyc_level' => $request->input('status') === 'approved' ? 'driver_verified' : 'basic',
+            'kyc_last_verified_at' => $request->input('status') === 'approved' ? Carbon::now() : null,
+            'kyc_current_verification_id' => $verification->id,
+        ])->save();
+
+        Log::info('car_rentals_kyc_reviewed', [
+            'customer_id' => $customer->id,
+            'verification_id' => $verification->id,
+            'status' => $request->input('status'),
+            'reviewed_by' => Auth::id(),
+        ]);
+
+        if ($request->expectsJson()) {
+            return $this
+                ->httpResponse()
+                ->setMessage('KYC review updated successfully.');
+        }
+
+        return redirect()
+            ->back()
+            ->with('success_msg', __('KYC review updated successfully.'));
     }
 
     public function destroy(Customer $customer)

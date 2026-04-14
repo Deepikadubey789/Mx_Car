@@ -5,6 +5,7 @@ namespace Botble\CarRentals\Services;
 use Botble\CarRentals\Enums\BookingStatusEnum;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\Car;
+use Botble\CarRentals\Models\Customer;
 use Botble\Payment\Enums\PaymentStatusEnum;
 use Botble\Payment\Models\Payment;
 use Carbon\Carbon;
@@ -23,6 +24,10 @@ class BookingService
             $rentalDays = max(1, $pickupDate->diffInDays($returnDate));
             $serviceIds = array_values(array_unique($data['services'] ?? []));
 
+            $customer = ! empty($data['customer_id'])
+                ? Customer::query()->find($data['customer_id'])
+                : null;
+
             $quoteData = app(PricingQuoteService::class)->buildQuote(
                 $car,
                 $pickupDate,
@@ -30,8 +35,13 @@ class BookingService
                 $serviceIds,
                 [],
                 $data['coupon_code'] ?? null,
-                null
+                $customer
             );
+            $eligibility = app(DriverEligibilityService::class)->evaluate($car, $customer, $quoteData['deposit_risk'] ?? null);
+
+            if ($eligibility['state'] === 'blocked') {
+                throw new \RuntimeException('Driver verification failed for this vehicle category.');
+            }
 
             $couponAmount = (float) ($quoteData['coupon_amount'] ?? 0);
             $couponCode = ! empty($data['coupon_code']) && $couponAmount > 0 ? $data['coupon_code'] : null;
@@ -71,6 +81,9 @@ class BookingService
                 'deposit_risk_multiplier' => (float) data_get($quoteData, 'deposit_risk.multiplier', 1),
                 'deposit_risk_level' => (string) data_get($quoteData, 'deposit_risk.risk_level', 'low'),
                 'deposit_risk_reasons' => data_get($quoteData, 'deposit_risk.reasons', []),
+                'eligibility_state' => $eligibility['state'],
+                'eligibility_reasons' => $eligibility['reasons'],
+                'kyc_verification_id' => $customer?->kyc_current_verification_id,
                 'price_snapshot' => [
                     'rental_days' => (int) ($quoteData['rental_days'] ?? 1),
                     'base_rental_amount' => (float) ($quoteData['base_rental_amount'] ?? 0),
@@ -81,6 +94,19 @@ class BookingService
                         ? (float) $quoteData['policy_discount_cap_percent']
                         : null,
                     'policy_discount_source' => (string) ($quoteData['policy_discount_source'] ?? ''),
+                    'deposit_risk' => [
+                        'enabled' => (bool) data_get($quoteData, 'deposit_risk.enabled', false),
+                        'risk_level' => (string) data_get($quoteData, 'deposit_risk.risk_level', 'low'),
+                        'multiplier' => (float) data_get($quoteData, 'deposit_risk.multiplier', 1),
+                        'category_multiplier' => (float) data_get($quoteData, 'deposit_risk.category_multiplier', 1),
+                        'type_multiplier' => (float) data_get($quoteData, 'deposit_risk.type_multiplier', 1),
+                        'applied_vehicle_multiplier' => (float) data_get($quoteData, 'deposit_risk.applied_vehicle_multiplier', 1),
+                        'reasons' => (array) data_get($quoteData, 'deposit_risk.reasons', []),
+                    ],
+                    'eligibility' => [
+                        'state' => (string) $eligibility['state'],
+                        'reasons' => (array) $eligibility['reasons'],
+                    ],
                 ],
                 'distance_unit' => (string) ($quoteData['distance_unit'] ?? 'km'),
                 'start_mileage' => $car->mileage !== null ? (int) $car->mileage : null,

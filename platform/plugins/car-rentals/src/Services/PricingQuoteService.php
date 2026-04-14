@@ -126,6 +126,8 @@ class PricingQuoteService
             'deposit_base_amount' => $depositBaseAmount,
             'deposit_amount' => $depositAmount,
             'deposit_risk' => $depositRisk,
+            'eligibility_state' => (string) ($depositRisk['eligibility_state'] ?? 'eligible'),
+            'eligibility_reasons' => $depositRisk['eligibility_reasons'] ?? [],
             'total_amount' => $totalAmount,
             'final_payable_amount' => $finalPayableAmount,
             'services' => $services,

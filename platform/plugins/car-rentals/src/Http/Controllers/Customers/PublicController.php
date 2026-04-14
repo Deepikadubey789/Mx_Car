@@ -17,7 +17,10 @@ use Botble\CarRentals\Http\Requests\UpdateBookingCompletionRequest;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\CarReview;
+use Botble\CarRentals\Models\CustomerKycVerification;
+use Botble\CarRentals\Facades\CarRentalsHelper;
 use Botble\CarRentals\Models\Invoice;
+use Botble\CarRentals\Services\Kyc\KycVerificationService;
 use Botble\Media\Facades\RvMedia;
 use Botble\Media\Services\ThumbnailService;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -72,6 +75,257 @@ class PublicController extends BaseController
 
         return Theme::scope('car-rentals.customers.profile', ['form' => CustomerForm::createFromModel($customer)], 'plugins/car-rentals::themes.customers.profile')
             ->render();
+    }
+
+    public function postStartKycVerification()
+    {
+        $customer = Auth::guard('customer')->user();
+
+        try {
+            if (in_array((string) $customer->kyc_status, ['pending', 'manual_review'], true) && $customer->kyc_current_verification_id) {
+                return redirect()
+                    ->back()
+                    ->with('warning_msg', __('Your KYC verification is already in progress.'));
+            }
+
+            app(KycVerificationService::class)->start($customer);
+
+            return redirect()
+                ->back()
+                ->with('success_msg', __('KYC verification started. Please upload your license and selfie to continue.'));
+        } catch (Exception $exception) {
+            return redirect()
+                ->back()
+                ->with('error_msg', __('Unable to start KYC verification. Please try again.'));
+        }
+    }
+
+    public function getKyc(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+        $kycService = app(KycVerificationService::class);
+        $stripeIdentityModal = $kycService->stripeIdentityModalEnabled();
+        $isStripeKyc = (string) CarRentalsHelper::getSetting('kyc_provider', 'stripe') === 'stripe'
+            && (bool) CarRentalsHelper::getSetting('kyc_stripe_enabled', true);
+        $stripeIdentityRedirect = $isStripeKyc
+            && ! $stripeIdentityModal
+            && (string) $customer->kyc_status !== 'verified';
+        $useStripeIdentityTitle = $stripeIdentityModal && (string) $customer->kyc_status !== 'verified';
+
+        SeoHelper::setTitle($useStripeIdentityTitle ? __('Verify your identity') : __('KYC Verification'));
+
+        Theme::breadcrumb()
+            ->add(__('KYC Verification'), route('customer.kyc'));
+
+        $verification = $this->getOrCreateDraftVerification($customer, false);
+        $currentVerification = null;
+
+        if ($customer->kyc_current_verification_id) {
+            $currentVerification = CustomerKycVerification::query()
+                ->where('customer_id', $customer->id)
+                ->find($customer->kyc_current_verification_id);
+        }
+
+        $latestVerification = CustomerKycVerification::query()
+            ->where('customer_id', $customer->id)
+            ->latest('id')
+            ->first();
+        $detailsVerification = $verification ?: ($currentVerification ?: $latestVerification);
+
+        return Theme::scope(
+            'car-rentals.customers.kyc',
+            [
+                'customer' => $customer,
+                'verification' => $verification,
+                'detailsVerification' => $detailsVerification,
+                'kycDisplay' => $this->getKycDisplayState((string) $customer->kyc_status),
+                'returnedFromStripeIdentity' => $request->boolean('stripe_identity')
+                    || (bool) session('kyc_stripe_identity_return'),
+                'stripeIdentityModal' => $stripeIdentityModal,
+                'stripeIdentityRedirect' => $stripeIdentityRedirect,
+                'stripePublishableKey' => (string) CarRentalsHelper::getSetting('kyc_stripe_publishable_key', ''),
+                'stripeCreateSessionUrl' => route('customer.kyc.stripe-identity-session'),
+                'stripeReturnUrl' => route('customer.kyc.stripe-identity-return'),
+            ],
+            'plugins/car-rentals::themes.customers.kyc'
+        )->render();
+    }
+
+    /**
+     * Landing URL after Stripe Identity hosted verification ({@see \Botble\CarRentals\Services\Kyc\Providers\StripeIdentityKycProvider}).
+     */
+    public function getKycStripeIdentityReturn()
+    {
+        return redirect()
+            ->route('customer.kyc')
+            ->with('kyc_stripe_identity_return', true);
+    }
+
+    public function postKycStripeIdentitySession(Request $request)
+    {
+        $request->validate([
+            'license_number' => ['nullable', 'string', 'max:120'],
+        ]);
+
+        $customer = Auth::guard('customer')->user();
+        $verification = $this->getOrCreateDraftVerification($customer, true);
+
+        if (! $verification) {
+            return response()->json(['message' => __('Please start KYC verification first.')], 422);
+        }
+
+        // Modal flow can only continue on mutable verifications; create a fresh one if needed.
+        if (in_array((string) $verification->status, ['approved', 'rejected', 'manual_review'], true)) {
+            $previousVerification = $verification;
+            $verification = app(KycVerificationService::class)->start($customer)->load('documents');
+            app(KycVerificationService::class)->copyDocumentsToVerification($previousVerification, $verification);
+        }
+
+        if (! app(KycVerificationService::class)->hasRequiredDocuments($verification)) {
+            return response()->json([
+                'message' => __('Please upload license front, license back, and selfie before starting verification.'),
+            ], 422);
+        }
+
+        try {
+            $result = app(KycVerificationService::class)->createStripeIdentitySessionForModal($verification, [
+                'license_number' => (string) $request->input('license_number', ''),
+            ]);
+
+            return response()->json(['client_secret' => $result['client_secret']]);
+        } catch (\InvalidArgumentException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        } catch (\Throwable $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+    }
+
+    public function postKycUpload(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+        $verification = $this->getOrCreateDraftVerification($customer, true);
+
+        $request->validate([
+            'license_front' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
+            'license_back' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
+            'selfie' => ['nullable', 'image', 'mimes:jpeg,jpg,png', 'max:5120'],
+        ]);
+
+        if (! $request->hasFile('license_front') && ! $request->hasFile('license_back') && ! $request->hasFile('selfie')) {
+            return redirect()->back()->with('warning_msg', __('Please upload at least one document.'));
+        }
+
+        $kycService = app(KycVerificationService::class);
+
+        try {
+            if ($request->hasFile('license_front')) {
+                $kycService->uploadDocument($verification, $request->file('license_front'), 'license_front');
+            }
+
+            if ($request->hasFile('license_back')) {
+                $kycService->uploadDocument($verification, $request->file('license_back'), 'license_back');
+            }
+
+            if ($request->hasFile('selfie')) {
+                $kycService->uploadDocument($verification, $request->file('selfie'), 'selfie');
+            }
+
+            $verification = $verification->fresh(['documents']);
+            $autoSubmitted = false;
+            $awaitingWebhook = false;
+
+            if ($kycService->shouldAutoSubmit($verification)) {
+                $verification = $kycService->submit($verification, []);
+                $autoSubmitted = true;
+                $awaitingWebhook = $kycService->isAsyncProviderWebhookMode() && $verification->status === 'pending';
+            }
+
+            if ($autoSubmitted) {
+                if ($awaitingWebhook) {
+                    return redirect()->route('customer.kyc')->with(
+                        'success_msg',
+                        __('Documents uploaded. Verification submitted to provider and waiting for callback.')
+                    );
+                }
+
+                $statusMessage = match ($verification->status) {
+                    'approved' => __('KYC verified successfully.'),
+                    'manual_review' => __('Documents uploaded. KYC auto-submitted and is under review.'),
+                    'rejected' => __('Documents uploaded. KYC auto-submitted but verification failed.'),
+                    default => __('Documents uploaded and KYC auto-submitted.'),
+                };
+
+                return redirect()->route('customer.kyc')->with('success_msg', $statusMessage);
+            }
+
+            return redirect()->route('customer.kyc')->with('success_msg', __('KYC documents uploaded successfully. Upload remaining required files for auto-verification.'));
+        } catch (Exception $exception) {
+            return redirect()->back()->with('error_msg', __('Failed to upload KYC documents. Please try again.'));
+        }
+    }
+
+    public function postKycSubmit(Request $request)
+    {
+        $customer = Auth::guard('customer')->user();
+        $verification = $this->getOrCreateDraftVerification($customer, false);
+
+        if (! $verification) {
+            return redirect()->route('customer.kyc')->with('warning_msg', __('Please start KYC verification first.'));
+        }
+
+        $request->validate([
+            'license_number' => ['nullable', 'string', 'min:6', 'max:120'],
+        ]);
+
+        $isStripe = (string) CarRentalsHelper::getSetting('kyc_provider', 'stripe') === 'stripe'
+            && (bool) CarRentalsHelper::getSetting('kyc_stripe_enabled', true);
+
+        if (! $isStripe) {
+            $documents = $verification->documents()->pluck('document_type')->all();
+            $required = ['license_front', 'license_back', 'selfie'];
+            $missing = array_diff($required, $documents);
+
+            if (! empty($missing)) {
+                return redirect()->back()->with('warning_msg', __('Please upload license front, license back, and selfie. Verification will run automatically once all are uploaded.'));
+            }
+        }
+
+        $kycService = app(KycVerificationService::class);
+        if ($isStripe && $kycService->stripeIdentityModalEnabled()) {
+            return redirect()->route('customer.kyc')->with(
+                'warning_msg',
+                __('Use the “Verify identity” button to open Stripe’s secure verification window.')
+            );
+        }
+
+        try {
+            $verification = $kycService->submit($verification, [
+                'license_number' => (string) $request->input('license_number', ''),
+            ]);
+
+            $stripeUrl = data_get($verification->provider_payload, 'stripe_identity_url');
+            if (is_string($stripeUrl) && $stripeUrl !== '') {
+                return redirect()->away($stripeUrl);
+            }
+
+            if ($kycService->isAsyncProviderWebhookMode() && $verification->status === 'pending') {
+                return redirect()->route('customer.kyc')->with(
+                    'success_msg',
+                    __('Verification submitted successfully. Waiting for provider callback.')
+                );
+            }
+
+            $statusMessage = match ($verification->status) {
+                'approved' => __('KYC verified successfully.'),
+                'manual_review' => __('KYC submitted. Your verification is under manual review.'),
+                'rejected' => __('KYC submission failed validation. Please review and resubmit.'),
+                default => __('KYC submitted successfully.'),
+            };
+
+            return redirect()->route('customer.kyc')->with('success_msg', $statusMessage);
+        } catch (Exception $exception) {
+            return redirect()->back()->with('error_msg', __('KYC submission failed. Please try again.'));
+        }
     }
 
     public function postEditProfile(EditCustomerRequest $request)
@@ -487,6 +741,75 @@ class PublicController extends BaseController
         return $response
             ->setData(['next_url' => route('car-rentals.vendor.dashboard')])
             ->setMessage(__('Congratulations! Your account has been upgraded to vendor status. You can now start listing your vehicles.'));
+    }
+
+    protected function getOrCreateDraftVerification(mixed $customer, bool $createWhenMissing): ?CustomerKycVerification
+    {
+        if ($customer->kyc_current_verification_id) {
+            $current = CustomerKycVerification::query()
+                ->where('customer_id', $customer->id)
+                ->with('documents')
+                ->find($customer->kyc_current_verification_id);
+
+            if ($current && in_array($current->status, ['draft', 'manual_review', 'rejected'], true)) {
+                return $current;
+            }
+        }
+
+        $latest = CustomerKycVerification::query()
+            ->where('customer_id', $customer->id)
+            ->with('documents')
+            ->latest('id')
+            ->first();
+
+        if ($latest && in_array($latest->status, ['draft', 'manual_review', 'rejected'], true)) {
+            $customer->forceFill([
+                'kyc_current_verification_id' => $latest->id,
+                'kyc_status' => $latest->status === 'rejected' ? 'failed' : 'pending',
+            ])->save();
+
+            return $latest;
+        }
+
+        if (! $createWhenMissing) {
+            return null;
+        }
+
+        return app(KycVerificationService::class)->start($customer)->load('documents');
+    }
+
+    protected function getKycDisplayState(string $kycStatus): array
+    {
+        return match ($kycStatus) {
+            'verified' => [
+                'label' => __('Verified'),
+                'note' => __('Your identity has been verified and your KYC is complete.'),
+                'bg' => '#e8f5e9',
+                'color' => '#2e7d32',
+                'show_verify' => false,
+            ],
+            'pending', 'manual_review' => [
+                'label' => __('Under review'),
+                'note' => __('Your KYC request is in review. You will be notified after approval.'),
+                'bg' => '#fff3e0',
+                'color' => '#e65100',
+                'show_verify' => false,
+            ],
+            'failed' => [
+                'label' => __('Verification failed'),
+                'note' => __('Please verify again with clear license and selfie images.'),
+                'bg' => '#fce4ec',
+                'color' => '#c62828',
+                'show_verify' => true,
+            ],
+            default => [
+                'label' => __('Not started'),
+                'note' => __('Verify your account to complete KYC and unlock access.'),
+                'bg' => '#eceff1',
+                'color' => '#37474f',
+                'show_verify' => true,
+            ],
+        };
     }
     
     public function respondToDamageClaim($transactionId, $action)
