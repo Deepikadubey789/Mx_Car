@@ -159,6 +159,8 @@ class PublicController extends BaseController
             abort_if($car->moderation_status->getValue() !== ModerationStatusEnum::APPROVED, 404);
         }
 
+        $car->increment('views_count');
+
         $reviews = CarReview::query()
             ->with('customer')
             ->where('car_id', $car->getKey())

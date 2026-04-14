@@ -208,6 +208,8 @@
     .bg-brand-red { background-color: #da3b36 !important; }
     .bg-brand-green { background-color: #2ab651 !important; }
     .bg-brand-blue { background-color: #3b8de7 !important; }
+    .bg-brand-purple { background-color: #7928ca !important; }
+    .bg-brand-orange { background-color: #f59e0b !important; }
     
     .solid-stat-content {
         display: flex;
@@ -396,7 +398,7 @@
     @endif
 
     <div class="row mb-4">
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+        <div class="col-xl col-lg-4 col-md-6 mb-3">
             <div class="solid-stat-card bg-brand-red">
                 <div class="solid-stat-content">
                     <div class="solid-stat-label">{{ __('Cars') }}</div>
@@ -408,7 +410,7 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+        <div class="col-xl col-lg-4 col-md-6 mb-3">
             <div class="solid-stat-card bg-brand-green">
                 <div class="solid-stat-content">
                     <div class="solid-stat-label">{{ __('Bookings') }}</div>
@@ -420,11 +422,24 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
+        {{-- NEW: Booking Conversion Card --}}
+        <div class="col-xl col-lg-4 col-md-6 mb-3">
+            <div class="solid-stat-card bg-brand-orange">
+                <div class="solid-stat-content">
+                    <div class="solid-stat-label">{{ __('Conversion') }}</div>
+                    <div class="solid-stat-value">{{ $data['conversion_rate'] ?? 0 }}%</div>
+                </div>
+                <div class="solid-stat-icon">
+                    <x-core::icon name="ti ti-chart-arrows" />
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl col-lg-6 col-md-6 mb-3">
             <div class="solid-stat-card bg-brand-blue">
                 <div class="solid-stat-content">
-                    <div class="solid-stat-label">{{ __('Revenue') }}</div>
-                    <div class="solid-stat-value">{{ format_price($data['revenue']['amount'] ?? 0) }}</div>
+                    <div class="solid-stat-label">{{ __('Net Payouts') }}</div>
+                    <div class="solid-stat-value">{{ format_price($data['revenue']['net'] ?? 0) }}</div>
                 </div>
                 <div class="solid-stat-icon">
                     <x-core::icon name="ti ti-wallet" />
@@ -432,14 +447,14 @@
             </div>
         </div>
 
-        <div class="col-lg-3 col-md-6 mb-3 mb-lg-0">
-            <div class="solid-stat-card bg-brand-red">
+        <div class="col-xl col-lg-6 col-md-6 mb-3">
+            <div class="solid-stat-card bg-brand-purple">
                 <div class="solid-stat-content">
-                    <div class="solid-stat-label">{{ __('Messages') }}</div>
-                    <div class="solid-stat-value">{{ $totalMessages }}</div>
+                    <div class="solid-stat-label">{{ __('Fleet Utilization') }}</div>
+                    <div class="solid-stat-value">{{ $data['utilizationRate'] ?? 0 }}%</div>
                 </div>
                 <div class="solid-stat-icon">
-                    <x-core::icon name="ti ti-mail-check" />
+                    <x-core::icon name="ti ti-chart-pie" />
                 </div>
             </div>
         </div>
@@ -473,7 +488,7 @@
                     <div>
                         <x-core::card.title>
                             <x-core::icon name="ti ti-steering-wheel" class="me-1 text-warning" />
-                            {{ __('Revenue by Car') }}
+                            {{ __('Gross Revenue by Car') }}
                         </x-core::card.title>
                     </div>
                 </x-core::card.header>
@@ -613,90 +628,13 @@
     </div>
 
     <div class="row mb-4">
-        <div class="col-lg-8 col-md-7 mb-3">
-            <x-core::card class="shadow-sm h-100">
-                <x-core::card.header class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <x-core::card.title>
-                            <x-core::icon name="ti ti-chart-bar" class="me-1 text-primary" />
-                            {{ __('Top Performing Cars Table') }}
-                        </x-core::card.title>
-                    </div>
-                    <a href="{{ route('car-rentals.vendor.cars.index') }}" class="btn btn-sm btn-outline-secondary border-0" style="background: transparent !important;">
-                        {{ __('View All') }}
-                        <x-core::icon name="ti ti-arrow-right" />
-                    </a>
-                </x-core::card.header>
-                <x-core::card.body class="p-0">
-                    <div class="table-responsive">
-                        <table class="table table-hover mb-0">
-                            <thead>
-                                <tr>
-                                    <th>{{ __('Car Details') }}</th>
-                                    <th class="text-center">{{ __('Bookings') }}</th>
-                                    <th class="text-end">{{ __('Revenue') }}</th>
-                                    <th class="text-center">{{ __('Status') }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @if(isset($data['topCars']) && count($data['topCars']) > 0)
-                                    @foreach($data['topCars'] as $car)
-                                        <tr>
-                                            <td>
-                                                <a href="{{ route('car-rentals.vendor.cars.edit', $car->id) }}" class="text-decoration-none fw-bold d-flex align-items-center">
-                                                    <div class="rounded p-2 me-3" style="background: rgba(0,0,0,0.05);">
-                                                        <x-core::icon name="ti ti-car" />
-                                                    </div>
-                                                    {{ $car->name ?? $car->license_plate ?? __('Car #:id', ['id' => $car->id]) }}
-                                                </a>
-                                            </td>
-                                            <td class="text-center">
-                                                <span class="badge border text-dark">{{ $car->bookings_count ?? 0 }}</span>
-                                            </td>
-                                            <td class="text-end fw-bold text-success">{{ format_price($car->revenue ?? 0) }}</td>
-                                            <td class="text-center">
-                                                @if(isset($car->status) && method_exists($car->status, 'toHtml'))
-                                                    {!! $car->status->toHtml() !!}
-                                                @else
-                                                    <span class="badge bg-secondary">{{ __('Unknown') }}</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                @else
-                                    <tr>
-                                        <td colspan="4" class="text-center py-5">
-                                            <div class="empty">
-                                                <div class="empty-icon mb-3">
-                                                    <x-core::icon name="ti ti-car-off" class="opacity-50" style="width: 3rem; height: 3rem;" />
-                                                </div>
-                                                <p class="empty-title h4 fw-bold">{{ __('No cars in your fleet yet') }}</p>
-                                                <p class="empty-subtitle">
-                                                    {{ __('Start by adding your first car to begin receiving bookings and earning revenue.') }}
-                                                </p>
-                                                <div class="empty-action mt-3">
-                                                    <a href="{{ route('car-rentals.vendor.cars.create') }}" class="btn btn-primary">
-                                                        <x-core::icon name="ti ti-plus" class="me-1" /> {{ __('Add Your First Car') }}
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endif
-                            </tbody>
-                        </table>
-                    </div>
-                </x-core::card.body>
-            </x-core::card>
-        </div>
-
-        <div class="col-lg-4 col-md-5 mb-3">
-            <x-core::card class="shadow-sm h-100">
+        <div class="col-lg-12">
+            <x-core::card class="shadow-sm">
                 <x-core::card.header>
                     <div>
                         <x-core::card.title>
                             <x-core::icon name="ti ti-report-money" class="me-1 text-success" />
-                            {{ __('Revenue Summary') }}
+                            {{ __('Business Health Summary') }}
                         </x-core::card.title>
                         <x-core::card.subtitle class="mt-1">
                             {{ __('Period: :label', ['label' => $data['predefinedRange'] ?? __('Last 30 days')]) }}
@@ -705,38 +643,35 @@
                 </x-core::card.header>
                 <x-core::card.body>
                     <div class="row g-3">
-                        <div class="col-6">
+                        <div class="col-md-3 col-6">
                             <div class="rounded p-3 text-center h-100" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05);">
-                                <div class="small fw-semibold mb-1">{{ __('Gross Earnings') }}</div>
-                                <div class="h5 mb-0 fw-bold">{{ format_price($data['revenue']['sub_amount'] ?? 0) }}</div>
+                                <div class="small fw-semibold mb-1">{{ __('Gross Revenue') }}</div>
+                                <div class="h5 mb-0 fw-bold">{{ format_price($data['revenue']['gross'] ?? 0) }}</div>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-3 col-6">
                             <div class="rounded p-3 text-center h-100" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05);">
-                                <div class="small fw-semibold mb-1">{{ __('Net Revenue') }}</div>
-                                <div class="h5 mb-0 fw-bold text-success">{{ format_price(($data['revenue']['sub_amount'] ?? 0) - ($data['revenue']['fee'] ?? 0)) }}</div>
+                                <div class="small fw-semibold mb-1">{{ __('Net Payout') }}</div>
+                                <div class="h5 mb-0 fw-bold text-success">{{ format_price($data['revenue']['net'] ?? 0) }}</div>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-3 col-6">
                             <div class="rounded p-3 text-center h-100" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05);">
                                 <div class="small fw-semibold mb-1">{{ __('Platform Fees') }}</div>
-                                <div class="h5 mb-0 fw-bold text-danger">{{ format_price($data['revenue']['fee'] ?? 0) }}</div>
+                                <div class="h5 mb-0 fw-bold text-danger">{{ format_price($data['revenue']['fees'] ?? 0) }}</div>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-md-3 col-6">
                             <div class="rounded p-3 text-center h-100" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.05);">
                                 <div class="small fw-semibold mb-1">{{ __('Current Balance') }}</div>
                                 <div class="h5 mb-0 fw-bold text-primary">{{ format_price(auth('customer')->user()->balance ?? 0) }}</div>
                             </div>
                         </div>
                     </div>
-
+                    
                     <div class="d-grid gap-2 mt-4 pt-3 border-top">
-                        <a href="{{ route('car-rentals.vendor.withdrawals.create') }}" class="btn btn-primary">
+                        <a href="{{ route('car-rentals.vendor.withdrawals.create') }}" class="btn btn-primary w-auto d-inline-block text-center m-auto px-5">
                             <x-core::icon name="ti ti-cash" /> {{ __('Request Withdrawal') }}
-                        </a>
-                        <a href="{{ route('car-rentals.vendor.revenues.index') }}" class="btn btn-secondary mt-1">
-                            <x-core::icon name="ti ti-chart-line" /> {{ __('View Detailed Reports') }}
                         </a>
                     </div>
                 </x-core::card.body>
@@ -756,7 +691,7 @@
 
         var revenueOptions = {
             series: [{
-                name: '{{ __('Revenue') }}',
+                name: '{{ __('Net Revenue') }}',
                 data: revenueData 
             }, {
                 name: '{{ __('Bookings') }}',
@@ -784,7 +719,7 @@
             },
             yaxis: [
                 {
-                    title: { text: '{{ __('Revenue') }}', style: { color: 'var(--soft-text-muted)', fontWeight: 600 } },
+                    title: { text: '{{ __('Net Revenue') }}', style: { color: 'var(--soft-text-muted)', fontWeight: 600 } },
                     labels: { style: { colors: 'var(--soft-text-muted)' } }
                 },
                 {
@@ -832,7 +767,11 @@
                             total: {
                                 show: true, label: '{{ __('Top Earner') }}', color: 'var(--soft-text-muted)',
                                 formatter: function (w) {
-                                    return w.globals.seriesTotals[0] === 1 && topCarsLabels[0] === 'No Data' ? "$0" : "$" + Math.max(...w.globals.seriesTotals);
+                                    if (w.globals.seriesTotals[0] === 1 && topCarsLabels[0] === 'No Data') {
+                                        return "$0.00";
+                                    }
+                                    let maxVal = Math.max(...w.globals.seriesTotals);
+                                    return "$" + Number(maxVal).toFixed(2);
                                 }
                             }
                         }

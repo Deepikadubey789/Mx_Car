@@ -403,7 +403,16 @@ class CarRentalsServiceProvider extends ServiceProvider
                     'url' => fn () => route('car-rentals.vendor.cars.index'),
                     'icon' => 'ti ti-car',
                 ]);
-                // --- FIX: Removed the old broken Insurances vendor menu ---
+                
+                // --- NEW: Add the Fleet Calendar Sidebar Link here ---
+            $vendorMenu->registerItem([
+                'id' => 'car-rentals.vendor.fleet-calendar',
+                'priority' => 15,
+                'name' => __('Fleet Calendar'),
+                'url' => fn () => route('car-rentals.vendor.fleet-calendar'),
+                'icon' => 'ti ti-calendar-stats',
+            ]);
+            // -----------------------------------------------------
 
             if (CarRentalsHelper::isRentalBookingEnabled()) {
                 $vendorMenu

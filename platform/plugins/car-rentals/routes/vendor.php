@@ -40,6 +40,18 @@ Route::group([
             'uses' => 'DashboardController@index',
         ]);
 
+        // --- NEW: Add the Fleet Calendar Routes here! ---
+        Route::get('fleet-calendar', [
+            'as' => 'fleet-calendar',
+            'uses' => 'DashboardController@fleetCalendar',
+        ]);
+
+        Route::get('fleet-calendar/events', [
+            'as' => 'fleet-calendar.events',
+            'uses' => 'DashboardController@getFleetCalendarEvents',
+        ]);
+        // ------------------------------------------------
+
         Route::resource('cars', 'CarController')->parameters(['' => 'car']);
 
         Route::resource('insurances', 'InsuranceController')->parameters(['' => 'insurance']);
