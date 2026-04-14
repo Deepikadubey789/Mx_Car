@@ -32,6 +32,12 @@ class SettingCarRentalsPanelSection extends PanelSection
                     ->withDescription(trans('plugins/car-rentals::settings.price_lock.description'))
                     ->withPriority(25)
                     ->withRoute('car-rentals.settings.price-lock'),
+                PanelSectionItem::make('settings.car_rentals.kyc_settings')
+                    ->setTitle(trans('plugins/car-rentals::settings.kyc.title'))
+                    ->withIcon('ti ti-shield-check')
+                    ->withDescription(trans('plugins/car-rentals::settings.kyc.description'))
+                    ->withPriority(26)
+                    ->withRoute('car-rentals.settings.kyc'),
                 PanelSectionItem::make('settings.car_rentals.review_settings')
                     ->setTitle(trans('plugins/car-rentals::settings.review.title'))
                     ->withIcon('ti ti-settings')

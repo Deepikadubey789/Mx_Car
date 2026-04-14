@@ -10,6 +10,7 @@ use Botble\CarRentals\Http\Controllers\Settings\CustomerSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\GeneralSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\InvoiceSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\InvoiceTemplateSettingController;
+use Botble\CarRentals\Http\Controllers\Settings\KycSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\PriceLockSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\ReviewSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\TaxSettingController;
@@ -53,6 +54,12 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
             Route::post('customers/{customer}/upgrade-to-vendor', [
                 'as' => 'customers.upgrade-to-vendor',
                 'uses' => 'CustomerController@upgradeToVendor',
+                'permission' => 'car-rentals.customers.edit',
+            ]);
+
+            Route::post('customers/{customer}/review-kyc', [
+                'as' => 'customers.review-kyc',
+                'uses' => 'CustomerController@reviewKyc',
                 'permission' => 'car-rentals.customers.edit',
             ]);
 
@@ -278,6 +285,9 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
 
                 Route::get('price-lock', [PriceLockSettingController::class, 'edit'])->name('price-lock');
                 Route::put('price-lock', [PriceLockSettingController::class, 'update'])->name('price-lock.update');
+
+                Route::get('kyc', [KycSettingController::class, 'edit'])->name('kyc');
+                Route::put('kyc', [KycSettingController::class, 'update'])->name('kyc.update');
 
                 Route::get('customers', [CustomerSettingController::class, 'edit'])->name('customers');
                 Route::put('customers', [CustomerSettingController::class, 'update'])->name('customers.update');

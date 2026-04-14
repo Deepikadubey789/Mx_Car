@@ -45,6 +45,12 @@ Theme::registerRoutes(function (): void {
 
         Route::get('profile', 'PublicController@getEditProfile')->name('profile');
         Route::post('profile', 'PublicController@postEditProfile')->name('profile.post');
+        Route::post('profile/kyc/start', 'PublicController@postStartKycVerification')->name('kyc.start');
+        Route::get('kyc', 'PublicController@getKyc')->name('kyc');
+        Route::get('kyc/stripe-identity-return', 'PublicController@getKycStripeIdentityReturn')->name('kyc.stripe-identity-return');
+        Route::post('kyc/stripe-identity-session', 'PublicController@postKycStripeIdentitySession')->name('kyc.stripe-identity-session');
+        Route::post('kyc/upload', 'PublicController@postKycUpload')->name('kyc.upload');
+        Route::post('kyc/submit', 'PublicController@postKycSubmit')->name('kyc.submit');
 
         Route::get('change-password', 'PublicController@getChangePassword')->name('change-password');
         Route::post('change-password', 'PublicController@postChangePassword')->name('change-password.post');

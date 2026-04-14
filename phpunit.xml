@@ -27,5 +27,10 @@
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
+        <!--
+            RefreshDatabase runs migrate:fresh. This MUST NOT be your real app database.
+            Create an empty MySQL database named below (same host/user as .env). Tests only touch this DB.
+        -->
+        <env name="DB_DATABASE" value="mxcar_web_testing"/>
     </php>
 </phpunit>

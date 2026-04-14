@@ -99,6 +99,7 @@
                 </x-core::card.body>
             </x-core::card>
             @endif
+
         </div>
 
         <div class="col-md-9">

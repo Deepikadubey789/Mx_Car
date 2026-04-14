@@ -15,6 +15,8 @@ class RiskBasedDepositService
         $baseDepositAmount = round(max(0, $baseDepositAmount), 2);
 
         if (! $this->isEnabled()) {
+            $eligibility = app(DriverEligibilityService::class)->evaluate($car, $customer);
+
             return [
                 'enabled' => false,
                 'base_amount' => $baseDepositAmount,
@@ -25,6 +27,9 @@ class RiskBasedDepositService
                 'category_multiplier' => 1.0,
                 'type_multiplier' => 1.0,
                 'applied_vehicle_multiplier' => 1.0,
+                'requires_manual_review' => $eligibility['state'] === 'manual_review',
+                'eligibility_state' => $eligibility['state'],
+                'eligibility_reasons' => $eligibility['reasons'],
             ];
         }
 
@@ -42,6 +47,12 @@ class RiskBasedDepositService
                 $unverifiedMultiplier = $this->getFloat('deposit_risk_unverified_multiplier', 1.2, 0.1);
                 $profileMultiplier *= $unverifiedMultiplier;
                 $reasons[] = __('Unverified renter profile');
+            }
+
+            if (! in_array($customer->kyc_status, ['verified'], true)) {
+                $kycPendingMultiplier = $this->getFloat('deposit_risk_kyc_pending_multiplier', 1.1, 0.1);
+                $profileMultiplier *= $kycPendingMultiplier;
+                $reasons[] = __('KYC verification not fully approved');
             }
 
             $completedBookings = $customer->bookings()
@@ -97,6 +108,9 @@ class RiskBasedDepositService
 
         $multiplier = round(max(0.1, $defaultMultiplier * $profileMultiplier * $appliedVehicleMultiplier), 4);
         $finalAmount = round($baseDepositAmount * $multiplier, 2);
+        $eligibility = app(DriverEligibilityService::class)->evaluate($car, $customer, [
+            'risk_level' => $this->resolveRiskLevel($multiplier),
+        ]);
 
         return [
             'enabled' => true,
@@ -108,6 +122,9 @@ class RiskBasedDepositService
             'category_multiplier' => $categoryMultiplier,
             'type_multiplier' => $typeMultiplier,
             'applied_vehicle_multiplier' => $appliedVehicleMultiplier,
+            'requires_manual_review' => $eligibility['state'] === 'manual_review',
+            'eligibility_state' => $eligibility['state'],
+            'eligibility_reasons' => $eligibility['reasons'],
         ];
     }
 

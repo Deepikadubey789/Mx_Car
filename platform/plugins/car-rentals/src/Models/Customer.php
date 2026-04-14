@@ -53,6 +53,10 @@ class Customer extends BaseModel implements AuthenticatableContract, Authorizabl
         'payout_payment_method',
         'is_vendor',
         'is_verified',
+        'kyc_status',
+        'kyc_level',
+        'kyc_last_verified_at',
+        'kyc_current_verification_id',
         'verified_at',
         'verified_by',
         'verification_note',
@@ -71,6 +75,7 @@ class Customer extends BaseModel implements AuthenticatableContract, Authorizabl
         'bank_info' => 'array',
         'is_vendor' => 'boolean',
         'is_verified' => 'boolean',
+        'kyc_last_verified_at' => 'datetime',
         'verified_at' => 'datetime',
         'confirmed_at' => 'datetime',
         'whatsapp' => SafeContent::class,
@@ -94,6 +99,16 @@ class Customer extends BaseModel implements AuthenticatableContract, Authorizabl
     public function verifiedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'verified_by');
+    }
+
+    public function kycVerifications(): HasMany
+    {
+        return $this->hasMany(CustomerKycVerification::class, 'customer_id');
+    }
+
+    public function currentKycVerification(): BelongsTo
+    {
+        return $this->belongsTo(CustomerKycVerification::class, 'kyc_current_verification_id');
     }
 
     protected function avatarUrl(): Attribute

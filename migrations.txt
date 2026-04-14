@@ -16,3 +16,6 @@
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134722_add_is_escalated_to_cr_bookings_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_08_100000_add_pickup_photos_to_bookings.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_200000_add_contactless_fields.php
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_10_000000_create_car_pricing_policy_tables.php
+
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_10_010000_add_distance_overage_fields_to_cr_bookings_table.php

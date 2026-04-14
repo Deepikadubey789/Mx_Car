@@ -12,6 +12,36 @@
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();
+        $kycDisplay = match ((string) $customer->kyc_status) {
+            'verified' => [
+                'label' => __('Verified'),
+                'note' => __('Your identity has been verified and your KYC is complete.'),
+                'bg' => '#e8f5e9',
+                'color' => '#2e7d32',
+                'show_verify' => false,
+            ],
+            'pending', 'manual_review' => [
+                'label' => __('Under review'),
+                'note' => __('Your KYC request is in review. You will be notified after approval.'),
+                'bg' => '#fff3e0',
+                'color' => '#e65100',
+                'show_verify' => false,
+            ],
+            'failed' => [
+                'label' => __('Verification failed'),
+                'note' => __('Please verify again with clear license and selfie images.'),
+                'bg' => '#fce4ec',
+                'color' => '#c62828',
+                'show_verify' => true,
+            ],
+            default => [
+                'label' => __('Not started'),
+                'note' => __('Verify your account to complete KYC and unlock access.'),
+                'bg' => '#eceff1',
+                'color' => '#37474f',
+                'show_verify' => true,
+            ],
+        };
     @endphp
 
     <div class="breadcrumb">
@@ -101,8 +131,16 @@
                         <div style="font-size:12px;font-weight:500;background:#fff3e0;color:#e65100;padding:3px 10px;border-radius:20px;">{{ $customer->is_vendor ? __('Active') : __('Not active') }}</div>
                     </div>
                     <div style="display:flex;align-items:center;justify-content:space-between;padding:10px;background:#f5f3ef;border-radius:10px;">
-                        <div style="font-size:13px;color:#555;">{{ __('Profile verified') }}</div>
-                        <div style="font-size:12px;font-weight:500;background:#fce4ec;color:#c62828;padding:3px 10px;border-radius:20px;">{{ $customer->is_verified ? __('Verified') : __('Pending') }}</div>
+                        <div style="font-size:13px;color:#555;">{{ __('KYC status') }}</div>
+                        <div style="font-size:12px;font-weight:500;background:{{ $kycDisplay['bg'] }};color:{{ $kycDisplay['color'] }};padding:3px 10px;border-radius:20px;">
+                            {{ $kycDisplay['label'] }}
+                        </div>
+                    </div>
+                    <div style="font-size:12px;color:#666;padding:0 4px;">{{ $kycDisplay['note'] }}</div>
+                    <div style="padding:0 4px;">
+                        <a href="{{ route('customer.kyc') }}" class="btn btn-primary btn-sm">
+                            {{ $kycDisplay['show_verify'] ? __('Verify') : __('View KYC') }}
+                        </a>
                     </div>
                 </div>
             </div>
