@@ -26,7 +26,7 @@ use Botble\CarRentals\Models\CarTag;
 use Botble\CarRentals\Models\Currency;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Models\Service;
-use Botble\CarRentals\Models\Insurance;
+use Botble\CarRentals\Models\GuestProtectionPlan;
 use Botble\CarRentals\Services\BookingService;
 use Botble\CarRentals\Services\PriceLockService;
 use Botble\CarRentals\Services\PricingQuoteService;
@@ -159,15 +159,16 @@ class PublicController extends BaseController
             abort_if($car->moderation_status->getValue() !== ModerationStatusEnum::APPROVED, 404);
         }
 
+        $car->increment('views_count');
+
         $reviews = CarReview::query()
             ->with('customer')
             ->where('car_id', $car->getKey())
             ->where('status', BaseStatusEnum::PUBLISHED)
             ->paginate(CarRentalsHelper::getCarsPerPage());
 
-        // FETCH INSURANCES FOR THIS CAR'S VENDOR
-        $insurances = Insurance::query()
-            ->where('vendor_id', $car->author_id)
+        // --- FIX: Fetch global Guest Protection Plans instead of old vendor insurances ---
+        $guestProtectionPlans = GuestProtectionPlan::query()
             ->where('status', BaseStatusEnum::PUBLISHED)
             ->get();
 
@@ -191,7 +192,8 @@ class PublicController extends BaseController
             admin_bar()->registerLink(__('Edit this car'), route('car-rentals.cars.edit', $car->getKey()));
         }
 
-        return Theme::scope('car-rentals.car', compact('car', 'reviews', 'insurances'), 'plugins/car-rentals::themes.car')->render();
+        // Notice we changed 'insurances' to 'guestProtectionPlans'
+        return Theme::scope('car-rentals.car', compact('car', 'reviews', 'guestProtectionPlans'), 'plugins/car-rentals::themes.car')->render();
     }
 
     public function getService(string $slug)
@@ -366,7 +368,11 @@ class PublicController extends BaseController
             'rentalCarAmount' => $pricing['rentalCarAmount'],
             'serviceIds' => $pricing['serviceIds'],
             'services' => $pricing['services'],
-            'insurances' => $pricing['insurances'],
+            
+            // --- FIX: Removed 'insurances' and added Guest Plans ---
+            'guest_protection_plan' => $pricing['guest_protection_plan'] ?? null,
+            'guest_protection_fee' => $pricing['guest_protection_fee'] ?? 0,
+            
             'feeName' => $pricing['feeName'],
             'feeValue' => $pricing['feeValue'],
             'feeAmount' => $pricing['feeAmount'],
@@ -469,7 +475,11 @@ class PublicController extends BaseController
             'couponAmount' => $pricing['discountAmount'],
             'token' => $displayToken,
             'services' => $pricing['services'],
-            'insurances' => $pricing['insurances'],
+            
+            // --- FIX: Removed 'insurances' and added Guest Plans ---
+            'guest_protection_plan' => $pricing['guest_protection_plan'] ?? null,
+            'guest_protection_fee' => $pricing['guest_protection_fee'] ?? 0,
+            
             'rentalCarAmount' => $pricing['rentalCarAmount'],
             'feeName' => $pricing['feeName'],
             'feeValue' => $pricing['feeValue'],
@@ -538,7 +548,11 @@ class PublicController extends BaseController
         $endTime = Arr::get($sessionData, 'rental_end_time', '09:00');
 
         $serviceIds = Arr::get($sessionData, 'service_ids', []);
-        $insuranceIds = Arr::get($sessionData, 'insurance_ids', []);
+        
+        // --- FIX: Get the single Guest Plan ID instead of the old array ---
+        $guestProtectionPlanId = Arr::get($sessionData, 'guest_protection_plan_id');
+        $guestProtectionPlanId = $guestProtectionPlanId ? (int) $guestProtectionPlanId : null;
+        
         $couponCode = Arr::get($sessionData, 'coupon_code');
 
         if (! $car->isAvailableAt(['start_date' => $startDate, 'end_date' => $endDate])) {
@@ -572,7 +586,7 @@ class PublicController extends BaseController
             $startDate,
             $endDate,
             $serviceIds,
-            $insuranceIds,
+            $guestProtectionPlanId, // FIX: Pass the single ID
             $couponCode,
             Auth::guard('customer')->user()
         );
@@ -587,7 +601,6 @@ class PublicController extends BaseController
         }
 
         $services = $quoteData['services'];
-        $insurances = $quoteData['insurances'];
         $rentalCarAmount = (float) $quoteData['rental_amount'];
         $amount = (float) $quoteData['subtotal'];
         $taxAmount = (float) $quoteData['tax_amount'];
@@ -607,6 +620,20 @@ class PublicController extends BaseController
         ]);
 
         $booking = new Booking($request->validated());
+
+       // --- NEW: Snapshot the Guest and Host Protection Plans directly onto the booking! ---
+        // Safely check if the plan actually loaded in the quote before saving the ID
+        $booking->guest_protection_plan_id = $quoteData['guest_protection_plan'] ? $quoteData['guest_protection_plan']->id : null;
+        $booking->guest_protection_fee = (float) $quoteData['guest_protection_fee'];
+        $booking->guest_deductible_amount = (float) $quoteData['guest_deductible_amount'];
+        
+        $hostPlan = $car->hostProtectionPlan;
+        if ($hostPlan && $hostPlan->id) {
+            $booking->host_protection_plan_id = $hostPlan->id;
+            $booking->host_revenue_share_percentage = $hostPlan->revenue_share_percentage;
+            $booking->host_deductible_amount = $hostPlan->deductible_amount;
+        }
+        // -----------------------------------------------------------------------------------
 
         $booking->sub_total = $amount;
         $booking->coupon_code = $couponCode;
@@ -680,9 +707,7 @@ class PublicController extends BaseController
             $booking->services()->attach($services->pluck('id')->all());
         }
 
-        if ($insurances->isNotEmpty()) {
-            $booking->insurances()->attach($insurances->pluck('id')->all());
-        }
+        // --- FIX: Removed the old $booking->insurances()->attach() method completely! ---
 
         $request->merge([
             'order_id' => $booking->getKey(),
@@ -786,7 +811,8 @@ class PublicController extends BaseController
             'rental_end_date' => ['required', 'string', 'date'],
             'rental_end_time' => ['nullable', 'string', 'date_format:H:i'],
             'service_ids' => ['nullable', 'array'],
-            'insurance_ids' => ['nullable', 'array'],
+            // --- FIX: Now expects a single ID instead of an array ---
+            'guest_protection_plan_id' => ['nullable', 'integer'], 
         ]);
 
         $car = Car::query()
@@ -796,12 +822,15 @@ class PublicController extends BaseController
         $startDate = $request->input('rental_start_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_start_date')) : null;
         $endDate = $request->input('rental_end_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_end_date')) : null;
 
+        // --- FIX: Pass the single guest_protection_plan_id as an integer ---
+        $guestProtectionPlanId = $request->input('guest_protection_plan_id') ? (int) $request->input('guest_protection_plan_id') : null;
+
         $quoteData = app(PricingQuoteService::class)->buildQuote(
             $car,
             $startDate,
             $endDate,
             $request->input('service_ids', []),
-            $request->input('insurance_ids', []),
+            $guestProtectionPlanId, // Changed from insurance_ids array
             null,
             Auth::guard('customer')->user()
         );
@@ -821,7 +850,10 @@ class PublicController extends BaseController
             'policyDiscountAmount' => (float) $quoteData['policy_discount_amount'],
             'policyDiscountSource' => (string) ($quoteData['policy_discount_source'] ?? ''),
             'serviceAmount' => (float) $quoteData['service_amount'],
-            'insuranceAmount' => (float) $quoteData['insurance_amount'],
+            
+            // --- FIX: Pass the new Guest Protection Fee to the estimate view ---
+            'guestProtectionFee' => (float) $quoteData['guest_protection_fee'],
+            
             'feeName' => (string) ($quoteData['fee_name'] ?? ''),
             'depositType' => (string) ($quoteData['deposit_type'] ?? 'percentage'),
             'depositRate' => (float) ($quoteData['deposit_rate'] ?? 0),
@@ -1248,19 +1280,27 @@ class PublicController extends BaseController
     {
         $serviceIds = Arr::get($sessionData, 'service_ids', []);
         $couponCode = Arr::get($sessionData, 'coupon_code');
+        
+        // --- FIX: Extract the single Guest Plan ID from the session ---
+        $guestProtectionPlanId = Arr::get($sessionData, 'guest_protection_plan_id');
+        $guestProtectionPlanId = $guestProtectionPlanId ? (int) $guestProtectionPlanId : null;
 
         $quoteData = app(PricingQuoteService::class)->buildQuote(
             $car,
             $startDate,
             $endDate,
             $serviceIds,
-            Arr::get($sessionData, 'insurance_ids', []),
+            $guestProtectionPlanId, // Changed from insurance_ids array
             $couponCode,
             Auth::guard('customer')->user()
         );
 
         $services = $quoteData['services'];
-        $insurances = $quoteData['insurances'];
+        
+        // --- FIX: Extract the new Guest Plan Data ---
+        $guestProtectionPlan = $quoteData['guest_protection_plan'];
+        $guestProtectionFee = (float) $quoteData['guest_protection_fee'];
+        
         $rentalCarAmount = (float) $quoteData['rental_amount'];
         $serviceAmount = (float) $quoteData['service_amount'];
         $amount = (float) $quoteData['subtotal'];
@@ -1331,7 +1371,6 @@ class PublicController extends BaseController
         return [
             'serviceIds' => $serviceIds,
             'services' => $services,
-            'insurances' => $insurances,
             'rentalCarAmount' => $rentalCarAmount,
             'amount' => $amount,
             'taxAmount' => $taxAmount,
@@ -1354,6 +1393,10 @@ class PublicController extends BaseController
             'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
             'priceLockExpiredMessage' => $priceLockExpiredMessage,
             'lockWasRefreshed' => $lockWasRefreshed,
+            
+            // --- FIX: Return the new variables ---
+            'guest_protection_plan' => $guestProtectionPlan,
+            'guest_protection_fee' => $guestProtectionFee,
         ];
     }
 

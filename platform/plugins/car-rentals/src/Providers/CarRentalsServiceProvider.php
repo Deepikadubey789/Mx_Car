@@ -43,6 +43,9 @@ use Botble\CarRentals\Models\CarType;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Models\Service;
 use Botble\CarRentals\Models\Tax;
+// --- NEW: Import Protection Plan Models ---
+use Botble\CarRentals\Models\HostProtectionPlan;
+use Botble\CarRentals\Models\GuestProtectionPlan;
 use Botble\CarRentals\PanelSections\SettingCarRentalsPanelSection;
 use Botble\CarRentals\Repositories\Eloquent\CarCategoryRepository;
 use Botble\CarRentals\Repositories\Eloquent\CarRepository;
@@ -66,6 +69,7 @@ use Illuminate\Support\Facades\Broadcast;
 use Botble\CarRentals\Commands\SendTripReminderCommand;
 use Botble\CarRentals\Commands\SendReturnAlertCommand;
 use Botble\CarRentals\Commands\PruneKycPayloadsCommand;
+
 class CarRentalsServiceProvider extends ServiceProvider
 {
     use LoadAndPublishDataTrait;
@@ -145,16 +149,12 @@ class CarRentalsServiceProvider extends ServiceProvider
         SlugHelper::registering(function (): void {
             SlugHelper::registerModule(Car::class, 'Cars');
             SlugHelper::setPrefix(Car::class, 'cars');
-
             SlugHelper::registerModule(CarTag::class, 'Car Tags');
             SlugHelper::setPrefix(CarTag::class, 'car-tags');
-
             SlugHelper::registerModule(Service::class, 'Services');
             SlugHelper::setPrefix(Service::class, 'services');
-
             SlugHelper::registerModule(CarCategory::class, 'Car Categories');
             SlugHelper::setPrefix(CarCategory::class, 'car-categories');
-
             SlugHelper::registerModule(CarMake::class, 'Car Makes');
             SlugHelper::setPrefix(CarMake::class, 'makes');
         });
@@ -190,7 +190,6 @@ class CarRentalsServiceProvider extends ServiceProvider
                     'permissions' => ['car-rentals.index'],
                 ]);
 
-            // Only show rental-related menu items when car rental is enabled
             if (CarRentalsHelper::isRentalBookingEnabled()) {
                 $menu
                     ->registerItem([
@@ -232,6 +231,23 @@ class CarRentalsServiceProvider extends ServiceProvider
                         'name' => 'plugins/car-rentals::car-rentals.service.name',
                         'icon' => 'ti ti-apps',
                         'route' => 'car-rentals.services.index',
+                    ])
+                    // --- NEW: ADD ADMIN MENUS FOR HOST AND GUEST PROTECTION PLANS ---
+                    ->registerItem([
+                        'id' => 'cms-plugins-car-rentals-host-plans',
+                        'priority' => 16,
+                        'parent_id' => 'cms-plugins-car-rentals',
+                        'name' => 'Host Plans',
+                        'icon' => 'ti ti-shield-check',
+                        'route' => 'car-rentals.host-protection-plans.index',
+                    ])
+                    ->registerItem([
+                        'id' => 'cms-plugins-car-rentals-guest-plans',
+                        'priority' => 17,
+                        'parent_id' => 'cms-plugins-car-rentals',
+                        'name' => 'Guest Plans',
+                        'icon' => 'ti ti-shield-chevron',
+                        'route' => 'car-rentals.guest-protection-plans.index',
                     ]);
             }
 
@@ -404,20 +420,18 @@ class CarRentalsServiceProvider extends ServiceProvider
                     'name' => __('Cars'),
                     'url' => fn () => route('car-rentals.vendor.cars.index'),
                     'icon' => 'ti ti-car',
-                ])
-                // ========================================================
-                // NEW: INSURANCES MENU ITEM
-                // ========================================================
-                ->registerItem([
-                    'id' => 'car-rentals.vendor.insurances',
-                    'priority' => 15,
-                    'name' => __('Insurances'),
-                    'url' => fn () => route('car-rentals.vendor.insurances.index'),
-                    'icon' => 'ti ti-shield-check',
                 ]);
-                // ========================================================
+                
+                // --- NEW: Add the Fleet Calendar Sidebar Link here ---
+            $vendorMenu->registerItem([
+                'id' => 'car-rentals.vendor.fleet-calendar',
+                'priority' => 15,
+                'name' => __('Fleet Calendar'),
+                'url' => fn () => route('car-rentals.vendor.fleet-calendar'),
+                'icon' => 'ti ti-calendar-stats',
+            ]);
+            // -----------------------------------------------------
 
-            // Only show rental-related menu items when car rental is enabled
             if (CarRentalsHelper::isRentalBookingEnabled()) {
                 $vendorMenu
                     ->registerItem([
@@ -484,29 +498,15 @@ class CarRentalsServiceProvider extends ServiceProvider
         }
 
         if (defined('LANGUAGE_MODULE_SCREEN_NAME') && defined('LANGUAGE_ADVANCED_MODULE_SCREEN_NAME')) {
-            LanguageAdvancedManager::registerModule(CarTag::class, [
-                'name',
-                'description',
-            ]);
-
-            LanguageAdvancedManager::registerModule(CarCategory::class, [
-                'name',
-                'description',
-            ]);
-
-            LanguageAdvancedManager::registerModule(Tax::class, [
-                'name',
-            ]);
-
-            LanguageAdvancedManager::registerModule(CarMake::class, [
-                'name',
-            ]);
-
-            LanguageAdvancedManager::registerModule(Car::class, [
-                'name',
-                'description',
-                'content',
-            ]);
+            LanguageAdvancedManager::registerModule(CarTag::class, ['name', 'description']);
+            LanguageAdvancedManager::registerModule(CarCategory::class, ['name', 'description']);
+            LanguageAdvancedManager::registerModule(Tax::class, ['name']);
+            LanguageAdvancedManager::registerModule(CarMake::class, ['name']);
+            LanguageAdvancedManager::registerModule(Car::class, ['name', 'description', 'content']);
+            
+            // --- NEW: Register Protection Plans for Translation ---
+            LanguageAdvancedManager::registerModule(HostProtectionPlan::class, ['name', 'description']);
+            LanguageAdvancedManager::registerModule(GuestProtectionPlan::class, ['name', 'description']);
 
             if (config('plugins.car-rentals.general.enable_faq_in_car_details', false)) {
                 LanguageAdvancedManager::addTranslatableMetaBox('faq_schema_config_wrapper');
@@ -520,33 +520,13 @@ class CarRentalsServiceProvider extends ServiceProvider
                 );
             }
 
-            LanguageAdvancedManager::registerModule(CarType::class, [
-                'name',
-            ]);
-
-            LanguageAdvancedManager::registerModule(CarTransmission::class, [
-                'name',
-            ]);
-
-            LanguageAdvancedManager::registerModule(CarFuel::class, [
-                'name',
-            ]);
-
-            LanguageAdvancedManager::registerModule(CarColor::class, [
-                'name',
-            ]);
-
-            LanguageAdvancedManager::registerModule(CarMaintenanceHistory::class, [
-                'name',
-            ]);
-
-            LanguageAdvancedManager::registerModule(Service::class, [
-                'name', 'content', 'description',
-            ]);
-
-            LanguageAdvancedManager::registerModule(CarAmenity::class, [
-                'name',
-            ]);
+            LanguageAdvancedManager::registerModule(CarType::class, ['name']);
+            LanguageAdvancedManager::registerModule(CarTransmission::class, ['name']);
+            LanguageAdvancedManager::registerModule(CarFuel::class, ['name']);
+            LanguageAdvancedManager::registerModule(CarColor::class, ['name']);
+            LanguageAdvancedManager::registerModule(CarMaintenanceHistory::class, ['name']);
+            LanguageAdvancedManager::registerModule(Service::class, ['name', 'content', 'description']);
+            LanguageAdvancedManager::registerModule(CarAmenity::class, ['name']);
         }
 
         $this->app->register(HookServiceProvider::class);
@@ -604,10 +584,6 @@ class CarRentalsServiceProvider extends ServiceProvider
             $this->commands([
                 UpdateExchangeRatesCommand::class,
                 SeedCurrenciesCommand::class,
-            ]);
-            $this->commands([
-                UpdateExchangeRatesCommand::class,
-                SeedCurrenciesCommand::class,
                 SendTripReminderCommand::class,
             ]);
             $this->commands([
@@ -616,6 +592,7 @@ class CarRentalsServiceProvider extends ServiceProvider
                 SendTripReminderCommand::class,
                 SendReturnAlertCommand::class,
                 PruneKycPayloadsCommand::class,
+                SendReturnAlertCommand::class,
             ]);
         }
     }

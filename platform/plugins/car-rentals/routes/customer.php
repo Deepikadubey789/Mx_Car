@@ -70,6 +70,7 @@ Theme::registerRoutes(function (): void {
         Route::post('bookings/{booking}/messages', 'TripMessageController@store')->name('bookings.messages.store');
         Route::post('bookings/{booking}/messages/escalate', 'TripMessageController@escalate')->name('bookings.messages.escalate');
 
+        Route::get('bookings/{transactionId}/damage/{action}', 'PublicController@respondToDamageClaim')->name('bookings.damage.respond');
         Route::put('bookings/{booking}/completion', 'PublicController@updateBookingCompletion')->name('bookings.update-completion');
 
         Route::get('invoices/{invoice}/generate-invoice', 'PublicController@getGenerateInvoice')

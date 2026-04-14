@@ -123,31 +123,53 @@
         @endif
     @endif
 
-    {{-- NEW: Insurances Table --}}
-    @if($insurances = $booking->insurances)
-        @if($insurances->isNotEmpty())
-            <div class="mb-4">
-                <h4>{{ __('Insurances') }}</h4>
-                <x-core::table>
-                    <x-core::table.header>
-                        <x-core::table.header.cell>{{ __('Coverage Plan') }}</x-core::table.header.cell>
-                        <x-core::table.header.cell class="text-center" style="width: 200px;">{{ __('Price') }}</x-core::table.header.cell>
-                    </x-core::table.header>
-                    <x-core::table.body>
-                        @foreach($insurances as $insurance)
-                            <x-core::table.body.row>
-                                <x-core::table.body.cell style="vertical-align: middle !important;">
-                                    <i class="ti ti-shield-check text-success me-2"></i> {{ $insurance->name }}
-                                </x-core::table.body.cell>
-                                <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
-                                    <strong>{{ format_price($insurance->price, $booking->currency_id) }}</strong>
-                                </x-core::table.body.cell>
-                            </x-core::table.body.row>
-                        @endforeach
-                    </x-core::table.body>
-                </x-core::table>
-            </div>
-        @endif
+    {{-- Cleaned Guest Protection Plan Table --}}
+    @if ($booking->guest_protection_fee > 0)
+        <div class="mb-4">
+            <h4>{{ __('Guest Protection Plan') }}</h4>
+            <x-core::table>
+                <x-core::table.header>
+                    <x-core::table.header.cell>{{ __('Coverage Details') }}</x-core::table.header.cell>
+                    <x-core::table.header.cell class="text-center" style="width: 200px;">{{ __('Price Paid by Guest') }}</x-core::table.header.cell>
+                </x-core::table.header>
+                <x-core::table.body>
+                    <x-core::table.body.row>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">
+                            <i class="ti ti-shield-check text-success me-2"></i> {{ __('Vehicle Protection Coverage') }}
+                            @if ($booking->guest_deductible_amount > 0)
+                                <br><small class="text-muted ms-4">{{ __('Guest Out-of-pocket Deductible') }}: {{ format_price($booking->guest_deductible_amount, $booking->currency_id) }}</small>
+                            @endif
+                        </x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
+                            <strong>{{ format_price($booking->guest_protection_fee, $booking->currency_id) }}</strong>
+                        </x-core::table.body.cell>
+                    </x-core::table.body.row>
+                </x-core::table.body>
+            </x-core::table>
+        </div>
+    @endif
+
+    {{-- Host Protection Plan Table (Crucial for Vendors) --}}
+    @if ($booking->host_protection_plan_id)
+        <div class="mb-4">
+            <h4>{{ __('Your Protection Plan (Host)') }}</h4>
+            <x-core::table>
+                <x-core::table.header>
+                    <x-core::table.header.cell>{{ __('Revenue Share') }}</x-core::table.header.cell>
+                    <x-core::table.header.cell class="text-center" style="width: 200px;">{{ __('Your Deductible') }}</x-core::table.header.cell>
+                </x-core::table.header>
+                <x-core::table.body>
+                    <x-core::table.body.row>
+                        <x-core::table.body.cell style="vertical-align: middle !important;">
+                            <i class="ti ti-shield-chevron text-info me-2"></i> {{ (float) $booking->host_revenue_share_percentage }}% {{ __('Payout') }}
+                        </x-core::table.body.cell>
+                        <x-core::table.body.cell class="text-center" style="vertical-align: middle !important;">
+                            <strong>{{ format_price($booking->host_deductible_amount, $booking->currency_id) }}</strong>
+                        </x-core::table.body.cell>
+                    </x-core::table.body.row>
+                </x-core::table.body>
+            </x-core::table>
+        </div>
     @endif
 
     @php
@@ -344,7 +366,7 @@
         </x-core::button>
 
         @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
-            <x-core::button type="button" icon="ti ti-key" color="warning" onclick="const m=document.getElementById('keyInstructionsModal');m.classList.remove('d-none');m.style.setProperty('display','flex','important');window.scrollTo(0,0);" :class="$buttonClass ?? ''">
+            <x-core::button type="button" icon="ti ti-key" color="warning" onclick="openKeyModal()" :class="$buttonClass ?? ''">
                 {{ __('Send Key Instructions') }}
             </x-core::button>
         @endif
@@ -372,50 +394,60 @@
     </div>
 
     {{-- Key Instructions Modal --}}
-    <div id="keyInstructionsModal" class="modal d-none" tabindex="-1" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;">
-        <div class="modal-dialog modal-lg" style="margin:30px auto;max-width:600px;position:relative;top:0;">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title"><i class="ti ti-key me-2"></i>{{ __('Send Key Instructions') }}</h5>
-                    <button type="button" class="btn-close" onclick="document.getElementById('keyInstructionsModal').classList.add('d-none')"></button>
-                </div>
-                <form action="{{ (auth()->check() && auth()->user()->isSuperUser()) ? route('car-rentals.bookings.send-key-instructions', $booking->id) : route('car-rentals.vendor.bookings.send-key-instructions', $booking->id) }}" method="POST">
-                    @csrf
-                    <div class="modal-body">
-                        @if($booking->car->default_pickup_instructions)
-                            <div class="alert alert-info mb-3">
-                                <strong>{{ __('Default Instructions from Car:') }}</strong><br>
-                                {{ $booking->car->default_pickup_instructions }}
-                            </div>
-                        @endif
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">{{ __('Key Instructions to Send') }} <span class="text-danger">*</span></label>
-                            <textarea name="key_instructions" class="form-control" rows="6" required placeholder="Enter pickup location, key/lock box code, and special instructions...">{{ $booking->key_instructions ?? $booking->car->default_pickup_instructions }}</textarea>
-                            <small class="text-muted">{{ __('This will be emailed to') }}: <strong>{{ $booking->customer_email }}</strong></small>
-                        </div>
-                        @if($booking->key_instructions_sent_at)
-                            <div class="alert alert-success">
-                                <i class="ti ti-check me-1"></i>
-                                {{ __('Last sent:') }} {{ $booking->key_instructions_sent_at->format('M d, Y h:i A') }}
-                            </div>
-                        @endif
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('keyInstructionsModal').classList.add('d-none')">
-                            {{ __('Cancel') }}
-                        </button>
-                        <button type="submit" class="btn btn-warning">
-                            <i class="ti ti-send me-1"></i>{{ __('Send to Customer') }}
-                        </button>
-                    </div>
-                </form>
+    <div id="keyInstructionsModal" class="d-none" tabindex="-1" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:12px;width:600px;max-width:95%;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto;">
+            <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+                <h5 class="modal-title mb-0"><i class="ti ti-key me-2"></i>{{ __('Send Key Instructions') }}</h5>
+                <button type="button" class="btn-close" onclick="closeKeyModal()"></button>
             </div>
+            <form action="{{ (auth()->check() && auth()->user()->isSuperUser()) ? route('car-rentals.bookings.send-key-instructions', $booking->id) : route('car-rentals.vendor.bookings.send-key-instructions', $booking->id) }}" method="POST">
+                @csrf
+                <div class="modal-body" style="padding:20px;">
+                    @if($booking->car->default_pickup_instructions)
+                        <div class="alert alert-info mb-3">
+                            <strong>{{ __('Default Instructions from Car:') }}</strong><br>
+                            {{ $booking->car->default_pickup_instructions }}
+                        </div>
+                    @endif
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">{{ __('Key Instructions to Send') }} <span class="text-danger">*</span></label>
+                        <textarea name="key_instructions" class="form-control" rows="6" required placeholder="Enter pickup location, key/lock box code, and special instructions...">{{ $booking->key_instructions ?? $booking->car->default_pickup_instructions }}</textarea>
+                        <small class="text-muted">{{ __('This will be emailed to') }}: <strong>{{ $booking->customer_email }}</strong></small>
+                    </div>
+                    @if($booking->key_instructions_sent_at)
+                        <div class="alert alert-success">
+                            <i class="ti ti-check me-1"></i>
+                            {{ __('Last sent:') }} {{ $booking->key_instructions_sent_at->format('M d, Y h:i A') }}
+                        </div>
+                    @endif
+                </div>
+                <div class="modal-footer" style="padding:16px 20px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:8px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeKeyModal()">
+                        {{ __('Cancel') }}
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="ti ti-send me-1"></i>{{ __('Send to Customer') }}
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
+    function openKeyModal() {
+        const m = document.getElementById('keyInstructionsModal');
+        m.classList.remove('d-none');
+        m.style.setProperty('display', 'flex', 'important');
+        window.scrollTo(0, 0);
+    }
+
+    function closeKeyModal() {
+        const m = document.getElementById('keyInstructionsModal');
+        m.classList.add('d-none');
+        m.style.setProperty('display', 'none', 'important');
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
-        // Pickup Photos Form Handler
         const pickupForm = document.getElementById('pickupPhotosForm');
         if(pickupForm) {
             pickupForm.addEventListener('submit', function(e) {
@@ -449,7 +481,6 @@
             });
         }
 
-        // Key Instructions Form Handler
         const keyForm = document.querySelector('#keyInstructionsModal form');
         if(keyForm) {
             keyForm.addEventListener('submit', function (e) {
@@ -465,9 +496,7 @@
                     headers: { 'X-Requested-With': 'XMLHttpRequest' },
                 })
                 .then(res => {
-                    const modal = document.getElementById('keyInstructionsModal');
-                    modal.style.setProperty('display', 'none', 'important');
-                    modal.classList.add('d-none');
+                    closeKeyModal();
                     const toast = document.createElement('div');
                     toast.innerHTML = `
                         <div style="position:fixed;bottom:30px;right:30px;z-index:99999;background:#2fb344;color:#fff;padding:16px 24px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:flex;align-items:center;gap:10px;">

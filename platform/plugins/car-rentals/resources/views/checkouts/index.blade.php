@@ -19,6 +19,7 @@
         <div id="booking-information-block"
              data-update-service-url="{{ route('public.ajax.booking.services.update', $token) }}"
              data-url="{{ route('public.ajax.booking.update', $token) }}" class="col-lg-5 col-md-6 order-1 order-md-2">
+             
             @include('plugins/car-rentals::checkouts.partials.booking-information', [
                 'car' => $car,
                 'amount' => $amount,
@@ -32,7 +33,10 @@
                 'token' => $token,
                 'rentalCarAmount' => $rentalCarAmount,
                 'serviceIds' => $serviceIds ?? [],
-                'services' => $services ?? []
+                'services' => $services ?? [],
+                // --- NEW DATA PASSED DOWN ---
+                'guestProtectionPlan' => $guest_protection_plan ?? null,
+                'guestProtectionFee' => $guest_protection_fee ?? 0,
             ])
         </div>
     </div>
@@ -65,7 +69,6 @@
 
                 if (!expiresAt) {
                     countdown.textContent = '--:--';
-
                     return;
                 }
 
@@ -83,7 +86,6 @@
                         countdown.classList.remove('bg-warning', 'text-dark');
                         countdown.classList.add('bg-danger', 'text-white');
                         countdown.textContent = '{{ __('Expired') }}';
-
                         return;
                     }
 

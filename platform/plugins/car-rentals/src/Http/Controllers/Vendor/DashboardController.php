@@ -26,7 +26,7 @@ use Illuminate\Support\Facades\Validator;
 
 class DashboardController extends BaseController
 {
-    public function index(Request $request)
+    public function index(Request $request, \Botble\CarRentals\Services\HostAnalyticsService $analyticsService)
     {
         $this->pageTitle(__('Dashboard'));
 
@@ -39,6 +39,13 @@ class DashboardController extends BaseController
         [$startDate, $endDate] = CarRentalsHelper::getDateRangeInReport($request);
         $predefinedRange = $request->input('date_range', trans('plugins/car-rentals::reports.ranges.last_30_days'));
 
+        // --- NEW: Advanced Analytics ---
+        $financials = $analyticsService->getFinancialMetrics($vendorId, $startDate, $endDate);
+        $utilizationRate = $analyticsService->getFleetUtilization($vendorId, $startDate, $endDate);
+        
+        // --- NEW: Fetch Conversion Stats ---
+        $conversionStats = $analyticsService->getConversionStats($vendorId);
+
         // Recent bookings
         $bookings = Booking::query()
             ->where('vendor_id', $vendorId)
@@ -48,33 +55,6 @@ class DashboardController extends BaseController
             ->with(['car', 'car.car'])
             ->limit(10)
             ->get();
-
-        // Revenue data
-        $revenue = Revenue::query()
-            ->selectRaw(
-                'SUM(CASE WHEN type IS NULL OR type = ? THEN sub_amount WHEN type = ? THEN sub_amount * -1 ELSE 0 END) as sub_amount,
-                SUM(CASE WHEN type IS NULL OR type = ? THEN amount WHEN type = ? THEN amount * -1 ELSE 0 END) as amount,
-                SUM(fee) as fee',
-                [RevenueTypeEnum::ADD_AMOUNT, RevenueTypeEnum::SUBTRACT_AMOUNT, RevenueTypeEnum::ADD_AMOUNT, RevenueTypeEnum::SUBTRACT_AMOUNT]
-            )
-            ->where('customer_id', $vendorId)
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->whereDate('created_at', '>=', $startDate)
-                    ->whereDate('created_at', '<=', $endDate);
-            })
-            ->groupBy('customer_id')
-            ->first();
-
-        $withdrawal = Withdrawal::query()
-            ->selectRaw('SUM(amount) as amount, SUM(fee) as fee')
-            ->where('customer_id', $vendorId)
-            ->whereIn('status', ['completed', 'pending', 'processing'])
-            ->where(function ($query) use ($startDate, $endDate): void {
-                $query->whereDate('created_at', '>=', $startDate)
-                    ->whereDate('created_at', '<=', $endDate);
-            })
-            ->groupBy('customer_id')
-            ->first();
 
         // Top performing cars
         $topCars = Car::query()
@@ -114,8 +94,6 @@ class DashboardController extends BaseController
 
         // Maintenance alerts - simulated data
         $maintenanceAlerts = collect();
-
-        // Get all cars with booking counts
         $carsWithBookings = Car::query()
             ->where('author_type', Customer::class)
             ->where('author_id', $vendorId)
@@ -128,48 +106,36 @@ class DashboardController extends BaseController
             ) as bookings_count')
             ->get();
 
-        // Set thresholds based on the actual data
         $maxBookings = $carsWithBookings->max('bookings_count') ?: 0;
-        $highThreshold = max(2, (int) ($maxBookings * 0.7)); // 70% of max bookings
-        $mediumThreshold = max(1, (int) ($maxBookings * 0.5)); // 50% of max bookings
-        $lowThreshold = max(1, (int) ($maxBookings * 0.3)); // 30% of max bookings
+        $highThreshold = max(2, (int) ($maxBookings * 0.7)); 
+        $mediumThreshold = max(1, (int) ($maxBookings * 0.5)); 
+        $lowThreshold = max(1, (int) ($maxBookings * 0.3)); 
 
         foreach ($carsWithBookings as $car) {
-            // Only create alerts for cars with at least one booking
             if ($car->bookings_count > 0) {
-                // Simulate maintenance alerts based on booking count
                 if ($car->bookings_count >= $highThreshold) {
-                    $maintenanceAlerts->push((object) [
-                        'car' => $car,
-                        'priority' => 'high',
-                        'message' => __('This car has been booked frequently and may need maintenance.'),
-                        'last_maintenance' => null,
-                    ]);
+                    $maintenanceAlerts->push((object) ['car' => $car, 'priority' => 'high', 'message' => __('This car has been booked frequently and may need maintenance.'), 'last_maintenance' => null]);
                 } elseif ($car->bookings_count >= $mediumThreshold) {
-                    $maintenanceAlerts->push((object) [
-                        'car' => $car,
-                        'priority' => 'medium',
-                        'message' => __('Consider scheduling maintenance for this car soon.'),
-                        'last_maintenance' => null,
-                    ]);
+                    $maintenanceAlerts->push((object) ['car' => $car, 'priority' => 'medium', 'message' => __('Consider scheduling maintenance for this car soon.'), 'last_maintenance' => null]);
                 } elseif ($car->bookings_count >= $lowThreshold) {
-                    $maintenanceAlerts->push((object) [
-                        'car' => $car,
-                        'priority' => 'low',
-                        'message' => __('This car may need a routine check-up.'),
-                        'last_maintenance' => null,
-                    ]);
+                    $maintenanceAlerts->push((object) ['car' => $car, 'priority' => 'low', 'message' => __('This car may need a routine check-up.'), 'last_maintenance' => null]);
                 }
             }
         }
 
         $data = [
+            // Using our new precise analytics engine
             'revenue' => [
-                'amount' => $revenue?->amount ?: 0,
-                'fee' => $revenue?->fee ?: 0,
-                'sub_amount' => $revenue?->sub_amount ?: 0,
-                'withdrawal' => $withdrawal?->amount ?: 0,
+                'gross' => $financials['gross_revenue'],
+                'net' => $financials['net_payout'],
+                'fees' => $financials['platform_fees'],
             ],
+            'utilizationRate' => $utilizationRate,
+            
+            // --- NEW: Add the conversion variables to the array ---
+            'conversion_rate' => $conversionStats['conversion_rate'],
+            'total_views' => $conversionStats['total_views'],
+            
             'bookings' => $bookings,
             'predefinedRange' => $predefinedRange,
             'startDate' => $startDate->toDateString(),
@@ -180,30 +146,35 @@ class DashboardController extends BaseController
         ];
 
         // ==========================================
-        // NEW: PREPARE DYNAMIC DATA FOR APEXCHARTS
+        // PREPARE DYNAMIC DATA FOR APEXCHARTS
         // ==========================================
-        
-        // 1. Line Chart: Generate Revenue/Bookings for the last 7 days
         $chartDates = [];
         $chartRevenue = [];
         $chartBookings = [];
         
         for ($i = 6; $i >= 0; $i--) {
             $date = \Carbon\Carbon::today()->subDays($i);
-            $chartDates[] = $date->format('D'); // Mon, Tue, Wed...
+            $chartDates[] = $date->format('D'); 
 
             $dailyBookings = Booking::query()
                 ->where('vendor_id', $vendorId)
                 ->whereDate('created_at', $date)
                 ->count();
                 
-            $dailyRevenue = Revenue::query()
-                ->where('customer_id', $vendorId)
+            // Fetch daily net revenue
+            $dailyGross = Booking::query()
+                ->where('vendor_id', $vendorId)
+                ->whereNotIn('status', ['cancelled', 'failed'])
                 ->whereDate('created_at', $date)
-                ->sum('amount');
+                ->get();
+                
+            $dailyNet = 0;
+            foreach($dailyGross as $b) {
+                $dailyNet += ((float) $b->amount) * (((float) ($b->host_revenue_share_percentage ?? 100)) / 100);
+            }
 
             $chartBookings[] = $dailyBookings;
-            $chartRevenue[] = (float) $dailyRevenue;
+            $chartRevenue[] = (float) $dailyNet;
         }
         
         $chartData = [
@@ -212,18 +183,15 @@ class DashboardController extends BaseController
             'bookings' => $chartBookings,
         ];
 
-        // 2. Donut Chart: Top Performing Cars data
         $topCarsChart = [
             'labels' => $topCars->map(fn($car) => $car->name ?? $car->license_plate ?? 'Car #' . $car->id)->toArray(),
             'revenues' => $topCars->pluck('revenue')->map(fn($rev) => (float) $rev)->toArray(),
         ];
 
-        // Fallback if vendor has no cars/data yet
         if (empty($topCarsChart['labels'])) {
              $topCarsChart = ['labels' => ['No Data'], 'revenues' => [1]];
         }
 
-        // Return view with the new variables added to compact()
         return CarRentalsHelper::view('vendor-dashboard.index', compact('totalCars', 'totalBookings', 'totalMessages', 'data', 'chartData', 'topCarsChart'));
     }
 
@@ -437,5 +405,65 @@ class DashboardController extends BaseController
             BookingStatusEnum::CANCELLED => '#dc3545',
             default => '#6c757d',
         };
+    }
+
+
+
+    public function fleetCalendar()
+    {
+        $this->pageTitle(__('Fleet Schedule'));
+
+        Assets::addScriptsDirectly([
+            'vendor/core/plugins/car-rentals/libraries/full-calendar/index.global.min.js',
+        ]);
+
+        $vendorId = auth('customer')->id();
+        
+        // Fetch all cars for this vendor to populate the "Resources" list
+        $cars = Car::query()
+            ->where('author_id', $vendorId)
+            ->where('author_type', Customer::class)
+            ->select(['id', 'name', 'license_plate'])
+            ->get()
+            ->map(function ($car) {
+                return [
+                    'id' => $car->id,
+                    'title' => $car->name . ' (' . ($car->license_plate ?: 'No Plate') . ')',
+                ];
+            });
+
+        return CarRentalsHelper::view('vendor-dashboard.fleet-calendar', compact('cars'));
+    }
+
+    public function getFleetCalendarEvents(Request $request)
+    {
+        $vendorId = auth('customer')->id();
+        $start = $request->input('start');
+        $end = $request->input('end');
+
+        $bookings = BookingCar::query()
+            ->with(['booking', 'car'])
+            ->whereHas('car', function ($query) use ($vendorId) {
+                $query->where('author_id', $vendorId);
+            })
+            ->whereBetween('rental_start_date', [$start, $end])
+            ->get();
+
+        $events = $bookings->map(function ($item) {
+            // Get the car name, fallback to license plate if missing
+            $carName = $item->car->name ?? $item->car->license_plate ?? 'Car #' . $item->car_id;
+            
+            return [
+                'id' => $item->booking->id,
+                // Include both Car Name and Customer Name in the event bubble
+                'title' => $carName . ' (' . $item->booking->customer_name . ')',
+                'start' => $item->rental_start_date->toIso8601String(),
+                'end' => $item->rental_end_date->toIso8601String(),
+                'color' => $this->getBookingColor($item->booking->status),
+                'url' => route('car-rentals.vendor.bookings.show', $item->booking->id),
+            ];
+        });
+
+        return response()->json($events);
     }
 }

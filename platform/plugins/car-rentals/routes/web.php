@@ -102,8 +102,7 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
             ]);
 
             Route::resource('taxes', 'TaxController')->parameters(['' => 'taxes']);
-            Route::resource('bookings', 'BookingController')
-                ->parameters(['' => 'bookings']);
+            Route::resource('bookings', 'BookingController')->parameters(['' => 'bookings']);
 
             Route::group(['prefix' => 'bookings', 'as' => 'bookings.'], function (): void {
                 Route::get('{booking}/print', [
@@ -116,31 +115,26 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                     'uses' => 'BookingController@searchCars',
                     'permission' => 'car-rentals.bookings.create',
                 ]);
-
                 Route::get('search-customers', [
                     'as' => 'search-customers',
                     'uses' => 'BookingController@searchCustomers',
                     'permission' => 'car-rentals.bookings.create',
                 ]);
-
                 Route::get('get-customer', [
                     'as' => 'get-customer',
                     'uses' => 'BookingController@getCustomer',
                     'permission' => 'car-rentals.bookings.create',
                 ]);
-
                 Route::post('create-customer', [
                     'as' => 'create-customer',
                     'uses' => 'BookingController@createCustomer',
                     'permission' => 'car-rentals.bookings.create',
                 ]);
-
                 Route::put('{booking}/completion', [
                     'as' => 'update-completion',
                     'uses' => 'BookingController@updateCompletion',
                     'permission' => 'car-rentals.bookings.edit',
                 ]);
-
                 Route::get('{booking}/messages', [
                     'as' => 'messages.index',
                     'uses' => 'TripMessageController@index',
@@ -212,6 +206,11 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 ]);
             });
             Route::resource('services', 'ServiceController')->parameters(['' => 'services']);
+            
+            // --- NEW: PROTECTION PLAN ROUTES ---
+Route::resource('host-protection-plans', 'HostProtectionPlanController')->parameters(['host-protection-plans' => 'plan']);
+Route::resource('guest-protection-plans', 'GuestProtectionPlanController')->parameters(['guest-protection-plans' => 'plan']);
+            
             Route::resource('coupons', CouponController::class)->parameters(['' => 'coupons']);
             Route::group(['permission' => 'car-rentals.coupons.edit'], function (): void {
                 Route::post('coupons/generate-coupon', [CouponController::class, 'postGenerateCoupon'])
@@ -241,7 +240,6 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 'permission' => 'car-rentals.booking.reports.index',
             ]);
 
-            // Car Availability Calendar Routes
             Route::get('/car-availability-calendar', [
                 'uses' => 'CarAvailabilityCalendarController@index',
                 'as' => 'car-availability.calendar.index',
@@ -282,7 +280,6 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
             function (): void {
                 Route::get('general', [GeneralSettingController::class, 'edit'])->name('general');
                 Route::put('general', [GeneralSettingController::class, 'update'])->name('general.update');
-
                 Route::get('price-lock', [PriceLockSettingController::class, 'edit'])->name('price-lock');
                 Route::put('price-lock', [PriceLockSettingController::class, 'update'])->name('price-lock.update');
 
@@ -291,34 +288,20 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
 
                 Route::get('customers', [CustomerSettingController::class, 'edit'])->name('customers');
                 Route::put('customers', [CustomerSettingController::class, 'update'])->name('customers.update');
-
                 Route::get('reviews', [ReviewSettingController::class, 'edit'])->name('reviews');
                 Route::put('reviews', [ReviewSettingController::class, 'update'])->name('reviews.update');
-
                 Route::get('car-filters', [CarFilterSettingController::class, 'edit'])->name('car-filters');
                 Route::put('car-filters', [CarFilterSettingController::class, 'update'])->name('car-filters.update');
-
                 Route::get('currencies', [CurrencySettingController::class, 'edit'])->name('currencies');
                 Route::put('currencies', [CurrencySettingController::class, 'update'])->name('currencies.update');
                 Route::post('currencies/update-from-exchange-api', [CurrencySettingController::class, 'updateCurrenciesFromExchangeApi'])->name('update-currencies-from-exchange-api');
                 Route::post('currencies/clear-cache-rates', [CurrencySettingController::class, 'clearCacheCurrencyRates'])->name('clear-cache-currency-rates');
-
                 Route::get('invoices', [InvoiceSettingController::class, 'edit'])->name('invoices');
                 Route::put('invoices', [InvoiceSettingController::class, 'update'])->name('invoices.update');
-
-                Route::get('invoice-template', [InvoiceTemplateSettingController::class, 'edit'])->name(
-                    'invoice-template'
-                );
-                Route::put('invoice-template', [InvoiceTemplateSettingController::class, 'update'])->name(
-                    'invoice-template.update'
-                );
-                Route::post('invoice-template/reset', [InvoiceTemplateSettingController::class, 'reset'])->name(
-                    'invoice-template.reset'
-                );
-                Route::get('invoice-template/preview', [InvoiceTemplateSettingController::class, 'preview'])->name(
-                    'invoice-template.preview'
-                );
-
+                Route::get('invoice-template', [InvoiceTemplateSettingController::class, 'edit'])->name('invoice-template');
+                Route::put('invoice-template', [InvoiceTemplateSettingController::class, 'update'])->name('invoice-template.update');
+                Route::post('invoice-template/reset', [InvoiceTemplateSettingController::class, 'reset'])->name('invoice-template.reset');
+                Route::get('invoice-template/preview', [InvoiceTemplateSettingController::class, 'preview'])->name('invoice-template.preview');
                 Route::match(['GET', 'POST'], 'taxes', [TaxSettingController::class, 'edit'])->name('taxes');
                 Route::put('taxes', [TaxSettingController::class, 'update'])->name('taxes.update');
             }

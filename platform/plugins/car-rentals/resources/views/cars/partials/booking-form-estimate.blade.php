@@ -23,10 +23,11 @@
             ?? trans('plugins/car-rentals::car-rentals.price_breakdown.billing_modes.end_of_trip');
     @endphp
 
-    <details class="mb-3">
-        <summary class="fw-semibold">
+    {{-- FIX: Removed the collapsible details/summary tags and made it a standard div --}}
+    <div class="mb-3 border-bottom pb-3">
+        <h6 class="fw-semibold mb-3">
             {{ trans('plugins/car-rentals::car-rentals.price_breakdown.toggle') }}
-        </summary>
+        </h6>
 
         <div class="pt-2">
             <div class="row">
@@ -56,9 +57,11 @@
                 <div class="col-lg-8 col-7 text-muted">{{ trans('plugins/car-rentals::car-rentals.price_breakdown.services_subtotal') }}</div>
                 <div class="col-lg-4 col-5 text-end">{{ format_price($serviceAmount ?? 0, $currencyId ?? null) }}</div>
             </div>
+            
+            {{-- FIX: Changed $insuranceAmount to $guestProtectionFee --}}
             <div class="row">
                 <div class="col-lg-8 col-7 text-muted">{{ trans('plugins/car-rentals::car-rentals.price_breakdown.insurance_subtotal') }}</div>
-                <div class="col-lg-4 col-5 text-end">{{ format_price($insuranceAmount ?? 0, $currencyId ?? null) }}</div>
+                <div class="col-lg-4 col-5 text-end">{{ format_price($guestProtectionFee ?? 0, $currencyId ?? null) }}</div>
             </div>
 
             @if (($tax ?? 0) > 0)
@@ -110,7 +113,7 @@
                 </div>
             @endif
         </div>
-    </details>
+    </div>
 
     <div class="row">
         <div class="col-lg-8 col-6">{{ __('Subtotal') }}</div>

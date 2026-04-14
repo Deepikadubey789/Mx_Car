@@ -8,10 +8,12 @@ use Botble\Base\Forms\FieldOptions\ButtonFieldOption;
 use Botble\Base\Forms\FieldOptions\DatePickerFieldOption;
 use Botble\Base\Forms\FieldOptions\HtmlFieldOption;
 use Botble\Base\Forms\FieldOptions\MultiChecklistFieldOption;
+use Botble\Base\Forms\FieldOptions\RadioFieldOption; // NEW IMPORT
 use Botble\Base\Forms\FieldOptions\SelectFieldOption;
 use Botble\Base\Forms\Fields\DateField;
 use Botble\Base\Forms\Fields\HtmlField;
 use Botble\Base\Forms\Fields\MultiCheckListField;
+use Botble\Base\Forms\Fields\RadioField; // NEW IMPORT
 use Botble\Base\Forms\Fields\SelectField;
 use Botble\CarRentals\Facades\CarRentalsHelper;
 use Botble\CarRentals\Forms\Fronts\Auth\FieldOptions\TextFieldOption;
@@ -19,7 +21,7 @@ use Botble\CarRentals\Http\Requests\Fronts\BookingRequest;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\Service;
-use Botble\CarRentals\Models\Insurance; // NEW IMPORT
+use Botble\CarRentals\Models\GuestProtectionPlan; // NEW IMPORT
 use Botble\CarRentals\Services\PricingQuoteService;
 use Botble\Theme\Facades\Theme;
 use Botble\Theme\FormFront;
@@ -71,9 +73,9 @@ class BookingForm extends FormFront
             $car,
             Carbon::createFromFormat($dateFormat, $startDate),
             Carbon::createFromFormat($dateFormat, $endDate),
-            [],
-            [],
-            null,
+            [], // Empty array for serviceIds
+            null, // FIX: Pass null instead of [] for guestProtectionPlanId
+            null, // couponCode
             Auth::guard('customer')->user()
         );
 
@@ -84,15 +86,19 @@ class BookingForm extends FormFront
             $serviceOptions[$service->id] = $service->name . ' - ' . $service->price_text;
         }
 
-        // FETCH INSURANCES FOR THE CAR'S VENDOR
-        $insurances = Insurance::query()
-            ->where('vendor_id', $car->author_id)
+        // --- NEW: FETCH GUEST PROTECTION PLANS ---
+        $guestProtectionPlans = GuestProtectionPlan::query()
             ->where('status', BaseStatusEnum::PUBLISHED)
             ->get();
             
-        $insuranceOptions = [];
-        foreach ($insurances as $insurance) {
-            $insuranceOptions[$insurance->id] = $insurance->name . ' - ' . format_price($insurance->price);
+        $guestProtectionOptions = [];
+        // Add a "No Protection" option if you want to allow it
+        $guestProtectionOptions[''] = __('No Protection ($0.00/day)'); 
+        
+        foreach ($guestProtectionPlans as $plan) {
+            // Build a descriptive label: e.g., "Premier - $15.00/day (Deductible: $0.00)"
+            $label = $plan->name . ' - ' . format_price($plan->daily_fee) . '/' . __('day') . ' ' . __('(Deductible: :amount)', ['amount' => format_price($plan->deductible_amount)]);
+            $guestProtectionOptions[$plan->id] = $label;
         }
 
         // Generate time options (every 30 minutes)
@@ -161,14 +167,14 @@ class BookingForm extends FormFront
                     ->colspan(2)
             );
 
-        // ONLY ADD THE INSURANCE FIELD IF THE VENDOR HAS INSURANCES CONFIGURED
-        if (!empty($insuranceOptions)) {
+        // --- NEW: ADD THE GUEST PROTECTION PLAN FIELD AS A RADIO BUTTON ---
+        if (!empty($guestProtectionOptions)) {
             $this->add(
-                'insurance_ids[]',
-                MultiCheckListField::class,
-                MultiChecklistFieldOption::make()
-                    ->label(__('Insurance Coverage'))
-                    ->choices($insuranceOptions)
+                'guest_protection_plan_id',
+                RadioField::class,
+                RadioFieldOption::make()
+                    ->label(__('Protection Plan'))
+                    ->choices($guestProtectionOptions)
                     ->colspan(2)
             );
         }
@@ -194,7 +200,10 @@ class BookingForm extends FormFront
                         'policyDiscountAmount' => (float) $quoteData['policy_discount_amount'],
                         'policyDiscountSource' => (string) ($quoteData['policy_discount_source'] ?? ''),
                         'serviceAmount' => (float) $quoteData['service_amount'],
-                        'insuranceAmount' => (float) $quoteData['insurance_amount'],
+                        
+                        // --- FIX: Pass the new Guest Protection Fee instead of old insurance array ---
+                        'guestProtectionFee' => (float) $quoteData['guest_protection_fee'],
+                        
                         'feeName' => (string) ($quoteData['fee_name'] ?? ''),
                         'depositType' => (string) ($quoteData['deposit_type'] ?? 'percentage'),
                         'depositRate' => (float) ($quoteData['deposit_rate'] ?? 0),

@@ -15,6 +15,8 @@ class CheckoutRequest extends Request
     {
         $rules = [
             'service_ids' => ['nullable', 'array'],
+            // --- NEW: Validate the selected plan ---
+            'guest_protection_plan_id' => ['nullable', 'exists:cr_guest_protection_plans,id'],
         ];
 
         if (is_plugin_active('payment')) {

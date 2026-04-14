@@ -40,6 +40,18 @@ Route::group([
             'uses' => 'DashboardController@index',
         ]);
 
+        // --- NEW: Add the Fleet Calendar Routes here! ---
+        Route::get('fleet-calendar', [
+            'as' => 'fleet-calendar',
+            'uses' => 'DashboardController@fleetCalendar',
+        ]);
+
+        Route::get('fleet-calendar/events', [
+            'as' => 'fleet-calendar.events',
+            'uses' => 'DashboardController@getFleetCalendarEvents',
+        ]);
+        // ------------------------------------------------
+
         Route::resource('cars', 'CarController')->parameters(['' => 'car']);
 
         Route::resource('insurances', 'InsuranceController')->parameters(['' => 'insurance']);
@@ -81,7 +93,19 @@ Route::group([
             'as' => 'bookings.send-key-instructions',
             'uses' => 'BookingController@sendKeyInstructions',
         ])->wherePrimaryKey('booking');
-        
+
+        // ✅ NEW: Upload Pickup Photos (Vendor)
+        Route::post('bookings/{booking}/upload-pickup-photos', [
+            'as' => 'bookings.upload-pickup-photos',
+            'uses' => 'BookingController@uploadPickupPhotos',
+        ])->wherePrimaryKey('booking');
+
+        // ✅ NEW: Delete Pickup Photo (Vendor)
+        Route::delete('bookings/{booking}/delete-pickup-photo', [
+            'as' => 'bookings.delete-pickup-photo',
+            'uses' => 'BookingController@deletePickupPhoto',
+        ])->wherePrimaryKey('booking');
+
         Route::resource('bookings', 'BookingController')
             ->parameters(['' => 'booking'])
             ->only(['index']);

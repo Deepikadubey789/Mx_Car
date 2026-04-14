@@ -68,6 +68,8 @@ class CarRequest extends Request
             'fuel_type_id' => ['nullable', 'int'],
             'year' => ['nullable', 'int', 'min:1900', 'max:3000'],
             'mileage' => ['nullable', 'int', 'min:0', 'max:10000000'],
+            'fuel_rate_per_liter' => ['nullable', 'numeric', 'min:0'],
+            'late_fee_per_hour' => ['nullable', 'numeric', 'min:0'],
             'horsepower' => ['nullable', 'numeric', 'min:0', 'max:10000'],
             'number_of_seats' => ['nullable', 'int', 'min:0', 'max:10000'],
             'number_of_doors' => ['nullable', 'int', 'min:0', 'max:10000'],

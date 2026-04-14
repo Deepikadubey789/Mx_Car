@@ -11,9 +11,13 @@ class UpdateBookingCompletionRequest extends Request
         return [
             'completion_miles' => ['nullable', 'integer', 'min:0'],
             'completion_gas_level' => ['nullable', 'string', 'in:empty,quarter,half,three_quarters,full'],
+            'checkin_fuel_level' => ['nullable', 'string', 'in:empty,quarter,half,three_quarters,full'],
             'completion_damage_images' => ['nullable', 'array'],
             'completion_damage_images.*' => ['file', 'image', 'mimes:jpeg,jpg,png,gif', 'max:5120'], // 5MB max
             'existing_damage_images' => ['nullable', 'array'],
+            'actual_return_datetime' => ['nullable', 'date'],
+            'damage_amount' => ['nullable', 'numeric', 'min:0'],
+            'damage_notes' => ['nullable', 'string', 'max:5000'],
             'existing_damage_images.*' => ['string'],
             'completion_notes' => ['nullable', 'string', 'max:10000'],
             'deposit_settlement_action' => ['nullable', 'string', 'in:release,capture_partial,capture_full,capture_overage'],

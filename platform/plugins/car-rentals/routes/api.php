@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 Route::group([
     'middleware' => ['api', 'api.enabled'],
     'prefix' => 'api/v1/car-rentals',
-    'namespace' => 'Botble\CarRentals\Http\Controllers\API',
+    'namespace' => 'Botble\CarRentals\Http\Controllers\API', // Note: Make sure your controller is in the 'API' folder (uppercase)
 ], function (): void {
 
     // Public endpoints (no authentication required)
@@ -36,6 +36,10 @@ Route::group([
 
     // Car Amenities (simplified)
     Route::get('car-amenities', 'CarAmenityController@index');
+
+    // --- NEW: Protection Plans ---
+    Route::get('guest-protection-plans', 'ProtectionPlanController@getGuestPlans');
+    Route::get('host-protection-plans', 'ProtectionPlanController@getHostPlans');
 
     // Locations
     Route::get('locations', 'LocationController@index');
