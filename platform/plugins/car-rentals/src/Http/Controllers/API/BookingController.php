@@ -14,11 +14,14 @@ use Botble\CarRentals\Services\BookingService;
 use Botble\CarRentals\Services\PricingQuoteService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Botble\CarRentals\Services\TripModificationService;
 
 class BookingController extends BaseApiController
 {
-    public function __construct(protected BookingService $bookingService)
-    {
+    public function __construct(
+        protected BookingService $bookingService,
+        protected TripModificationService $tripModificationService,
+    ) {
     }
 
     /**
@@ -337,76 +340,76 @@ class BookingController extends BaseApiController
      *
      * @group Car Rentals
      */
-    public function cancel($id, Request $request)
-    {
-        $customer = Auth::guard('sanctum')->user();
+    // public function cancel($id, Request $request)
+    // {
+    //     $customer = Auth::guard('sanctum')->user();
 
-        $query = Booking::query();
+    //     $query = Booking::query();
 
-        if (is_numeric($id)) {
-            $query->where('id', $id);
+    //     if (is_numeric($id)) {
+    //         $query->where('id', $id);
 
-            if ($customer) {
-                $query->where('customer_id', $customer->id);
-            } else {
-                // Guest must provide email for verification
-                $request->validate([
-                    'email' => ['required', 'email'],
-                ]);
-                $query->where('customer_email', $request->input('email'));
-            }
-        } else {
-            // Access by booking code
-            $request->validate([
-                'email' => ['required', 'email'],
-            ]);
-            $query->where('code', $id)
-                ->where('customer_email', $request->input('email'));
-        }
+    //         if ($customer) {
+    //             $query->where('customer_id', $customer->id);
+    //         } else {
+    //             // Guest must provide email for verification
+    //             $request->validate([
+    //                 'email' => ['required', 'email'],
+    //             ]);
+    //             $query->where('customer_email', $request->input('email'));
+    //         }
+    //     } else {
+    //         // Access by booking code
+    //         $request->validate([
+    //             'email' => ['required', 'email'],
+    //         ]);
+    //         $query->where('code', $id)
+    //             ->where('customer_email', $request->input('email'));
+    //     }
 
-        $booking = $query->first();
+    //     $booking = $query->first();
 
-        if (! $booking) {
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setCode(404)
-                ->setMessage('Booking not found')
-                ->toApiResponse();
-        }
+    //     if (! $booking) {
+    //         return $this
+    //             ->httpResponse()
+    //             ->setError()
+    //             ->setCode(404)
+    //             ->setMessage('Booking not found')
+    //             ->toApiResponse();
+    //     }
 
-        if (! in_array($booking->status, [BookingStatusEnum::PENDING, BookingStatusEnum::CONFIRMED])) {
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setMessage('Cannot cancel booking in current status')
-                ->toApiResponse();
-        }
+    //     if (! in_array($booking->status, [BookingStatusEnum::PENDING, BookingStatusEnum::CONFIRMED])) {
+    //         return $this
+    //             ->httpResponse()
+    //             ->setError()
+    //             ->setMessage('Cannot cancel booking in current status')
+    //             ->toApiResponse();
+    //     }
 
-        $request->validate([
-            'reason' => ['nullable', 'string', 'max:500'],
-        ]);
+    //     $request->validate([
+    //         'reason' => ['nullable', 'string', 'max:500'],
+    //     ]);
 
-        try {
-            $booking->update([
-                'status' => BookingStatusEnum::CANCELLED,
-                'note' => $booking->note . "\n\nCancellation reason: " . $request->input('reason', 'No reason provided'),
-            ]);
+    //     try {
+    //         $booking->update([
+    //             'status' => BookingStatusEnum::CANCELLED,
+    //             'note' => $booking->note . "\n\nCancellation reason: " . $request->input('reason', 'No reason provided'),
+    //         ]);
 
-            return $this
-                ->httpResponse()
-                ->setData(new BookingDetailResource($booking->fresh()))
-                ->setMessage('Booking cancelled successfully')
-                ->toApiResponse();
+    //         return $this
+    //             ->httpResponse()
+    //             ->setData(new BookingDetailResource($booking->fresh()))
+    //             ->setMessage('Booking cancelled successfully')
+    //             ->toApiResponse();
 
-        } catch (\Exception $e) {
-            return $this
-                ->httpResponse()
-                ->setError()
-                ->setMessage($e->getMessage())
-                ->toApiResponse();
-        }
-    }
+    //     } catch (\Exception $e) {
+    //         return $this
+    //             ->httpResponse()
+    //             ->setError()
+    //             ->setMessage($e->getMessage())
+    //             ->toApiResponse();
+    //     }
+    // }
 
     /**
      * Delete booking
@@ -538,6 +541,217 @@ class BookingController extends BaseApiController
                 'created_at' => $booking->invoice->created_at,
                 'download_url' => route('car-rentals.invoices.download', $booking->invoice->id),
             ])
+            ->toApiResponse();
+    }
+
+    public function cancel($id, Request $request)
+    {
+        $booking = $this->findBooking($id, $request);
+
+        if (! $booking) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Booking not found')->toApiResponse();
+        }
+
+        $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $this->tripModificationService->cancelTrip(
+            $booking,
+            $request->input('reason', ''),
+            'customer'
+        );
+
+        if (! $result['success']) {
+            return $this->httpResponse()->setError()->setMessage($result['message'])->toApiResponse();
+        }
+
+        return $this->httpResponse()
+            ->setData([
+                'booking'             => new BookingDetailResource($booking->fresh()),
+                'cancellation_policy' => $result['cancellation_policy'],
+                'refund_amount'       => $result['refund_amount'],
+            ])
+            ->setMessage($result['message'])
+            ->toApiResponse();
+    }
+
+    public function extend($id, Request $request)
+    {
+        $booking = $this->findBooking($id, $request);
+
+        if (! $booking) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Booking not found')->toApiResponse();
+        }
+
+        $request->validate([
+            'new_end_date' => ['required', 'date', 'after:today'],
+            'reason'       => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $this->tripModificationService->extendTrip(
+            $booking,
+            $request->input('new_end_date'),
+            $request->input('reason', '')
+        );
+
+        if (! $result['success']) {
+            return $this->httpResponse()->setError()->setMessage($result['message'])->toApiResponse();
+        }
+
+        return $this->httpResponse()
+            ->setData([
+                'booking'      => new BookingDetailResource($booking->fresh()),
+                'extra_days'   => $result['extra_days'],
+                'extra_charge' => $result['extra_charge'],
+                'new_end_date' => $result['new_end_date'],
+                'new_total'    => $result['new_total'] ?? null,
+                'status'       => $result['status'] ?? 'approved',
+            ])
+            ->setMessage($result['message'])
+            ->toApiResponse();
+    }
+
+    public function shorten($id, Request $request)
+    {
+        $booking = $this->findBooking($id, $request);
+
+        if (! $booking) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Booking not found')->toApiResponse();
+        }
+
+        $request->validate([
+            'new_end_date' => ['required', 'date'],
+            'reason'       => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $this->tripModificationService->shortenTrip(
+            $booking,
+            $request->input('new_end_date'),
+            $request->input('reason', '')
+        );
+
+        if (! $result['success']) {
+            return $this->httpResponse()->setError()->setMessage($result['message'])->toApiResponse();
+        }
+
+        return $this->httpResponse()
+            ->setData([
+                'booking'       => new BookingDetailResource($booking->fresh()),
+                'saved_days'    => $result['saved_days'],
+                'refund_amount' => $result['refund_amount'],
+                'saved_days'    => $result['saved_days'],
+                'refund_amount' => $result['refund_amount'],
+                'new_end_date'  => $result['new_end_date'],
+                'new_total'     => $result['new_total'] ?? null,
+            ])
+            ->setMessage($result['message'])
+            ->toApiResponse();
+    }
+
+
+    public function earlyReturn($id, Request $request)
+    {
+        $booking = $this->findBooking($id, $request);
+
+        if (! $booking) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Booking not found')->toApiResponse();
+        }
+
+        $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $this->tripModificationService->earlyReturn(
+            $booking,
+            $request->input('reason', '')
+        );
+
+        if (! $result['success']) {
+            return $this->httpResponse()->setError()->setMessage($result['message'])->toApiResponse();
+        }
+
+        return $this->httpResponse()
+            ->setData([
+                'booking'       => new BookingDetailResource($booking->fresh()),
+                'saved_days'    => $result['saved_days'],
+                'refund_amount' => $result['refund_amount'],
+                'new_end_date'  => $result['new_end_date'],
+                 'new_total'     => $result['new_total'] ?? null,
+            ])
+            ->setMessage($result['message'])
+            ->toApiResponse();
+    }
+
+    private function findBooking($id, Request $request): ?Booking
+    {
+        $customer = Auth::guard('sanctum')->user();
+        $query = Booking::query()->with(['car.car', 'services', 'currency', 'payment', 'invoice']);
+
+        if (is_numeric($id)) {
+            $query->where('id', $id);
+            if ($customer) {
+                $query->where('customer_id', $customer->id);
+            } else {
+                $request->validate(['email' => ['required', 'email']]);
+                $query->where('customer_email', $request->input('email'));
+            }
+        } else {
+            $request->validate(['email' => ['required', 'email']]);
+            $query->where('code', $id)->where('customer_email', $request->input('email'));
+        }
+
+        return $query->first();
+    }
+    /**
+     * Approve modification
+     */
+    public function approveModification($id, Request $request)
+    {
+        $booking = Booking::find($id);
+
+        if (!$booking) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Booking not found')->toApiResponse();
+        }
+
+        $result = $this->tripModificationService->approveModification($booking);
+
+        if (!$result['success']) {
+            return $this->httpResponse()->setError()->setMessage($result['message'])->toApiResponse();
+        }
+
+        return $this->httpResponse()
+            ->setData(['booking' => new BookingDetailResource($booking->fresh())])
+            ->setMessage($result['message'])
+            ->toApiResponse();
+    }
+
+    /**
+     * Reject modification
+     */
+    public function rejectModification($id, Request $request)
+    {
+        $booking = Booking::find($id);
+
+        if (!$booking) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Booking not found')->toApiResponse();
+        }
+
+        $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $this->tripModificationService->rejectModification(
+            $booking,
+            $request->input('reason', '')
+        );
+
+        if (!$result['success']) {
+            return $this->httpResponse()->setError()->setMessage($result['message'])->toApiResponse();
+        }
+
+        return $this->httpResponse()
+            ->setMessage($result['message'])
             ->toApiResponse();
     }
 }

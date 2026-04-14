@@ -272,6 +272,34 @@
             {{ format_price($booking->amount, $booking->currency_id) }}
         </x-core::datagrid.item>
 
+        @if($booking->status == \Botble\CarRentals\Enums\BookingStatusEnum::CANCELLED)
+        <x-core::datagrid.item :title="__('Cancellation Policy')">
+            @if($booking->cancellation_policy === 'free')
+                <span class="badge bg-success">Full Refund</span>
+            @elseif($booking->cancellation_policy === 'partial')
+                <span class="badge bg-warning">50% Partial Refund</span>
+            @else
+                <span class="badge bg-danger">No Refund</span>
+            @endif
+        </x-core::datagrid.item>
+
+        <x-core::datagrid.item :title="__('Refund Amount')">
+            <strong class="text-success">{{ format_price($booking->refund_amount ?? 0, $booking->currency_id) }}</strong>
+        </x-core::datagrid.item>
+
+        @if($booking->cancellation_reason)
+            <x-core::datagrid.item :title="__('Cancellation Reason')">
+                {{ $booking->cancellation_reason }}
+            </x-core::datagrid.item>
+        @endif
+
+        @if($booking->cancelled_at)
+            <x-core::datagrid.item :title="__('Cancelled At')">
+                {{ $booking->cancelled_at->format('M d, Y h:i A') }}
+            </x-core::datagrid.item>
+        @endif
+    @endif
+
         <x-core::datagrid.item :title="__('Status')">
             {!! $booking->status->toHtml() !!}
         </x-core::datagrid.item>
@@ -313,7 +341,6 @@
         @include('plugins/car-rentals::bookings.partials.completion-form', ['booking' => $booking])
     @endif
 
-    {{-- ✅ Before Photos (Pickup) Section --}}
     @if(in_array($booking->status->getValue(), ['confirmed', 'processing', 'completed']))
         <div class="mt-4 mb-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
@@ -348,6 +375,25 @@
     @endif
 
     <div class="btn-list mt-5">
+    {{-- Trip Modification Approve/Reject --}}
+        @if($booking->modification_status === 'pending' && in_array($booking->modification_type, ['extend', 'shorten']))
+            <div class="alert alert-warning d-flex align-items-center justify-content-between gap-3 mb-3" style="border-radius:10px;">
+                <div>
+                    <strong><i class="ti ti-clock me-1"></i>Pending Request:</strong>
+                    {{ ucfirst($booking->modification_type) }} trip —
+                    <small class="text-muted">{{ $booking->modification_reason }}</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-success btn-sm" onclick="handleModification('approve')">
+                        <i class="ti ti-check me-1"></i>Approve
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm" onclick="handleModification('reject')">
+                        <i class="ti ti-x me-1"></i>Reject
+                    </button>
+                </div>
+            </div>
+        @endif
+
         @if ((auth()->check() || $booking->customer_id) && ($invoiceId = $booking->invoice->id) && $route)
             <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])" target="_blank" icon="ti ti-printer" :class="$buttonClass ?? ''">
                 {{ __('View Invoice') }}
@@ -434,107 +480,173 @@
     </div>
 
     <script>
-    function openKeyModal() {
-        const m = document.getElementById('keyInstructionsModal');
-        m.classList.remove('d-none');
-        m.style.setProperty('display', 'flex', 'important');
-        window.scrollTo(0, 0);
-    }
+        function openKeyModal() {
+            const m = document.getElementById('keyInstructionsModal');
+            m.classList.remove('d-none');
+            m.style.setProperty('display', 'flex', 'important');
+            window.scrollTo(0, 0);
+        }
 
-    function closeKeyModal() {
-        const m = document.getElementById('keyInstructionsModal');
-        m.classList.add('d-none');
-        m.style.setProperty('display', 'none', 'important');
-    }
+        function closeKeyModal() {
+            const m = document.getElementById('keyInstructionsModal');
+            m.classList.add('d-none');
+            m.style.setProperty('display', 'none', 'important');
+        }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        const pickupForm = document.getElementById('pickupPhotosForm');
-        if(pickupForm) {
-            pickupForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
-                const btn = this.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="ti ti-loader me-1"></i>Uploading...';
-                fetch('{{ route("car-rentals.bookings.upload-pickup-photos", $booking->id) }}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('pickupPhotosModal').style.setProperty('display','none','important');
-                        window.onbeforeunload = null;
-                        location.reload();
-                    } else {
-                        alert('Error uploading photos.');
+        document.addEventListener('DOMContentLoaded', function () {
+            const pickupForm = document.getElementById('pickupPhotosForm');
+            if(pickupForm) {
+                pickupForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formData = new FormData(this);
+                    const btn = this.querySelector('button[type="submit"]');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="ti ti-loader me-1"></i>Uploading...';
+                    fetch('{{ route("car-rentals.bookings.upload-pickup-photos", $booking->id) }}', {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('pickupPhotosModal').style.setProperty('display','none','important');
+                            window.onbeforeunload = null;
+                            location.reload();
+                        } else {
+                            alert('Error uploading photos.');
+                            btn.disabled = false;
+                            btn.innerHTML = '<i class="ti ti-upload me-1"></i>Upload Photos';
+                        }
+                    })
+                    .catch(() => {
+                        alert('Upload failed. Please try again.');
                         btn.disabled = false;
                         btn.innerHTML = '<i class="ti ti-upload me-1"></i>Upload Photos';
-                    }
-                })
-                .catch(() => {
-                    alert('Upload failed. Please try again.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="ti ti-upload me-1"></i>Upload Photos';
+                    });
                 });
-            });
-        }
-
-        const keyForm = document.querySelector('#keyInstructionsModal form');
-        if(keyForm) {
-            keyForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                const formData = new FormData(keyForm);
-                const action = keyForm.getAttribute('action');
-                const btn = keyForm.querySelector('button[type="submit"]');
-                btn.disabled = true;
-                btn.innerHTML = '<i class="ti ti-loader me-1"></i> Sending...';
-                fetch(action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                })
-                .then(res => {
-                    closeKeyModal();
-                    const toast = document.createElement('div');
-                    toast.innerHTML = `
-                        <div style="position:fixed;bottom:30px;right:30px;z-index:99999;background:#2fb344;color:#fff;padding:16px 24px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:flex;align-items:center;gap:10px;">
-                            <i class="ti ti-circle-check" style="font-size:20px;"></i>
-                            Key instructions sent successfully!
-                        </div>`;
-                    document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 4000);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
-                })
-                .catch(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
-                });
-            });
-        }
-    });
-
-    function deletePickupPhoto(index) {
-        fetch('{{ route("car-rentals.bookings.delete-pickup-photo", $booking->id) }}', {
-            method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ index: index }),
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                location.reload();
-            } else {
-                alert('Could not delete photo.');
             }
-        })
-        .catch(() => alert('Delete failed. Try again.'));
+
+            const keyForm = document.querySelector('#keyInstructionsModal form');
+            if(keyForm) {
+                keyForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const formData = new FormData(keyForm);
+                    const action = keyForm.getAttribute('action');
+                    const btn = keyForm.querySelector('button[type="submit"]');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="ti ti-loader me-1"></i> Sending...';
+                    fetch(action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    })
+                    .then(res => {
+                        closeKeyModal();
+                        const toast = document.createElement('div');
+                        toast.innerHTML = `
+                            <div style="position:fixed;bottom:30px;right:30px;z-index:99999;background:#2fb344;color:#fff;padding:16px 24px;border-radius:8px;font-weight:600;font-size:15px;box-shadow:0 4px 15px rgba(0,0,0,0.2);display:flex;align-items:center;gap:10px;">
+                                <i class="ti ti-circle-check" style="font-size:20px;"></i>
+                                Key instructions sent successfully!
+                            </div>`;
+                        document.body.appendChild(toast);
+                        setTimeout(() => toast.remove(), 4000);
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
+                    })
+                    .catch(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="ti ti-send me-1"></i> Send to Customer';
+                    });
+                });
+            }
+        });
+
+        function deletePickupPhoto(index) {
+            fetch('{{ route("car-rentals.bookings.delete-pickup-photo", $booking->id) }}', {
+                method: 'DELETE',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ index: index }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Could not delete photo.');
+                }
+            })
+            .catch(() => alert('Delete failed. Try again.'));
+        }
+
+        function handleModification(action) {
+        const bookingId = {{ $booking->id }};
+
+        if (action === 'approve') {
+        sendModification(bookingId, action, '');
+        } else {
+            document.getElementById('rejectReasonInput').value = '';
+            document.getElementById('rejectReasonModal').style.display = 'flex';
+            document.getElementById('rejectConfirmBtn').onclick = function() {
+                const reason = document.getElementById('rejectReasonInput').value;
+                document.getElementById('rejectReasonModal').style.display = 'none';
+                sendModification(bookingId, action, reason);
+            };
+        }
     }
+        function showToast(message, type) {
+            const bg = type === 'success' ? '#16a34a' : '#dc2626';
+            const icon = type === 'success' ? 'ti-circle-check' : 'ti-circle-x';
+            const toast = document.createElement('div');
+            toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:99999;padding:14px 20px;border-radius:10px;font-size:14px;font-weight:500;color:#fff;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(0,0,0,0.2);';
+            toast.style.background = bg;
+            toast.innerHTML = `<i class="ti ${icon}" style="font-size:18px;"></i>${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        }
+
+        function sendModification(bookingId, action, reason) {
+            fetch(`/api/v1/car-rentals/admin/bookings/${bookingId}/modification/${action}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                },
+                body: JSON.stringify({ reason: reason }),
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    showToast(data.message, 'danger');
+                } else {
+                    showToast(data.message, 'success');
+                    setTimeout(() => location.reload(), 1500);
+                }
+            })
+            .catch(() => showToast('Something went wrong.', 'danger'));
+        }
     </script>
+
+    {{-- Reject Reason Modal --}}
+    <div id="rejectReasonModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99999;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:12px;width:440px;max-width:95%;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+            <div style="padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:15px;font-weight:600;color:#111827;"><i class="ti ti-x-circle text-danger me-2"></i>Reject Modification</span>
+                <button onclick="document.getElementById('rejectReasonModal').style.display='none'" style="background:none;border:none;cursor:pointer;font-size:18px;color:#6b7280;">&times;</button>
+            </div>
+            <div style="padding:20px;">
+                <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:6px;">Reason for rejection <span style="color:#9ca3af;">(optional)</span></label>
+                <textarea id="rejectReasonInput" class="form-control" rows="3" placeholder="Enter reason..."></textarea>
+            </div>
+            <div style="padding:12px 20px;border-top:1px solid #f3f4f6;display:flex;justify-content:flex-end;gap:8px;">
+                <button onclick="document.getElementById('rejectReasonModal').style.display='none'" class="btn btn-secondary btn-sm">Cancel</button>
+                <button id="rejectConfirmBtn" class="btn btn-danger btn-sm"><i class="ti ti-x me-1"></i>Confirm Reject</button>
+            </div>
+        </div>
+    </div>
 @endif

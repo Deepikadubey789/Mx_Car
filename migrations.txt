@@ -27,3 +27,5 @@
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_13_091000_create_cr_customer_kyc_verifications_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_13_092000_create_cr_customer_kyc_documents_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_13_093000_add_kyc_eligibility_fields_to_cr_bookings_table.php
+
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_13_165323_add_trip_modification_fields_to_cr_bookings_table.php
