@@ -129,9 +129,9 @@ Route::group([
                 Route::post('/{id}/complete', 'Vendor\BookingController@complete')->wherePrimaryKey();
             });
 
-            // Vendor dashboard (basic)
+            // Vendor dashboard (basic & advanced)
             Route::get('dashboard', 'Vendor\DashboardController@index');
-
+            Route::get('dashboard/fleet-calendar', 'Vendor\DashboardController@getFleetCalendarEvents');
             // Vendor reviews
             Route::get('reviews', 'Vendor\ReviewController@index');
             Route::post('reviews/{id}/reply', 'Vendor\ReviewController@reply')->wherePrimaryKey();

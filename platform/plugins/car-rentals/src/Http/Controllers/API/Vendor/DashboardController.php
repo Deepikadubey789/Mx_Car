@@ -5,9 +5,11 @@ namespace Botble\CarRentals\Http\Controllers\API\Vendor;
 use Botble\Api\Http\Controllers\BaseApiController;
 use Botble\CarRentals\Enums\BookingStatusEnum;
 use Botble\CarRentals\Models\Booking;
+use Botble\CarRentals\Models\BookingCar;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\CarReview;
 use Botble\CarRentals\Models\Revenue;
+use Botble\CarRentals\Services\HostAnalyticsService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,37 +22,47 @@ class DashboardController extends BaseApiController
      *
      * @group Car Rentals - Vendor
      */
-    public function index()
+    public function index(Request $request, HostAnalyticsService $analyticsService)
     {
         $vendor = Auth::guard('sanctum')->user();
+        $vendorId = $vendor->id;
+
+        // --- NEW: Calculate standard 30-day window for Pro Analytics ---
+        $startDate = Carbon::now()->subDays(30)->startOfDay();
+        $endDate = Carbon::now()->endOfDay();
+
+        $financials = $analyticsService->getFinancialMetrics($vendorId, $startDate, $endDate);
+        $utilizationRate = $analyticsService->getFleetUtilization($vendorId, $startDate, $endDate);
+        $conversionStats = $analyticsService->getConversionStats($vendorId);
+        // ---------------------------------------------------------------
 
         // Get basic statistics
-        $totalCars = Car::where('vendor_id', $vendor->id)->count();
-        $activeCars = Car::where('vendor_id', $vendor->id)
+        $totalCars = Car::where('vendor_id', $vendorId)->count();
+        $activeCars = Car::where('vendor_id', $vendorId)
             ->where('status', 'available')
             ->count();
 
-        $totalBookings = Booking::where('vendor_id', $vendor->id)->count();
-        $pendingBookings = Booking::where('vendor_id', $vendor->id)
+        $totalBookings = Booking::where('vendor_id', $vendorId)->count();
+        $pendingBookings = Booking::where('vendor_id', $vendorId)
             ->where('status', BookingStatusEnum::PENDING)
             ->count();
-        $confirmedBookings = Booking::where('vendor_id', $vendor->id)
+        $confirmedBookings = Booking::where('vendor_id', $vendorId)
             ->where('status', BookingStatusEnum::CONFIRMED)
             ->count();
-        $completedBookings = Booking::where('vendor_id', $vendor->id)
+        $completedBookings = Booking::where('vendor_id', $vendorId)
             ->where('status', BookingStatusEnum::COMPLETED)
             ->count();
 
-        $totalReviews = CarReview::whereHas('car', function ($query) use ($vendor): void {
-            $query->where('vendor_id', $vendor->id);
+        $totalReviews = CarReview::whereHas('car', function ($query) use ($vendorId): void {
+            $query->where('vendor_id', $vendorId);
         })->count();
 
-        $averageRating = CarReview::whereHas('car', function ($query) use ($vendor): void {
-            $query->where('vendor_id', $vendor->id);
+        $averageRating = CarReview::whereHas('car', function ($query) use ($vendorId): void {
+            $query->where('vendor_id', $vendorId);
         })->avg('star') ?? 0;
 
         // Get recent bookings
-        $recentBookings = Booking::where('vendor_id', $vendor->id)
+        $recentBookings = Booking::where('vendor_id', $vendorId)
             ->with(['car.car', 'customer'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
@@ -68,7 +80,7 @@ class DashboardController extends BaseApiController
             });
 
         // Get monthly revenue for current year
-        $monthlyRevenue = Revenue::where('vendor_id', $vendor->id)
+        $monthlyRevenue = Revenue::where('vendor_id', $vendorId)
             ->whereYear('created_at', Carbon::now()->year)
             ->select(
                 DB::raw('MONTH(created_at) as month'),
@@ -101,6 +113,17 @@ class DashboardController extends BaseApiController
                     'completed_bookings' => $completedBookings,
                     'total_reviews' => $totalReviews,
                     'average_rating' => round($averageRating, 1),
+                    
+                    // --- NEW: Added Pro Metrics for Mobile App ---
+                    'fleet_utilization_percent' => $utilizationRate,
+                    'booking_conversion_percent' => $conversionStats['conversion_rate'],
+                    'total_profile_views' => $conversionStats['total_views'],
+                ],
+                // --- NEW: Added Financial Breakdown ---
+                'financials_last_30_days' => [
+                    'gross_revenue' => $financials['gross_revenue'],
+                    'net_payout' => $financials['net_payout'],
+                    'platform_fees' => $financials['platform_fees'],
                 ],
                 'recent_bookings' => $recentBookings,
                 'monthly_revenue' => $revenueData,
@@ -260,6 +283,52 @@ class DashboardController extends BaseApiController
                 'car_performance' => $carPerformance,
                 'review_statistics' => $reviewStats,
             ])
+            ->toApiResponse();
+    }
+
+    /**
+     * NEW: Get Fleet Calendar Events for Mobile App
+     *
+     * @group Car Rentals - Vendor
+     */
+    public function getFleetCalendarEvents(Request $request)
+    {
+        $vendorId = Auth::guard('sanctum')->id();
+        
+        $request->validate([
+            'start' => ['required', 'date'],
+            'end' => ['required', 'date'],
+        ]);
+
+        $start = $request->input('start');
+        $end = $request->input('end');
+
+        $bookings = BookingCar::query()
+            ->with(['booking', 'car'])
+            ->whereHas('car', function ($query) use ($vendorId) {
+                $query->where('author_id', $vendorId);
+            })
+            ->whereBetween('rental_start_date', [$start, $end])
+            ->get();
+
+        $events = $bookings->map(function ($item) {
+            $carName = $item->car->name ?? $item->car->license_plate ?? 'Car #' . $item->car_id;
+            
+            return [
+                'booking_id' => $item->booking->id,
+                'car_id' => $item->car_id,
+                'car_name' => $carName,
+                'customer_name' => $item->booking->customer_name,
+                'start_date' => $item->rental_start_date->toIso8601String(),
+                'end_date' => $item->rental_end_date->toIso8601String(),
+                'status' => $item->booking->status,
+                'amount' => (float) $item->booking->amount,
+            ];
+        });
+
+        return $this
+            ->httpResponse()
+            ->setData($events)
             ->toApiResponse();
     }
 }
