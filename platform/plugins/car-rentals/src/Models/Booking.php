@@ -85,6 +85,14 @@ class Booking extends BaseModel
         'pickup_photos_uploaded_at',
         'after_photos',
         'after_photos_uploaded_at',
+        'modification_type',
+        'modification_status',
+        'modification_reason',
+        'modified_at',
+        'cancellation_policy',
+        'refund_amount',
+        'cancellation_reason',
+        'cancelled_at',
     ];
 
     protected $casts = [
@@ -111,6 +119,10 @@ class Booking extends BaseModel
         'start_mileage_snapshot' => 'integer',
         'extra_distance_unit_price' => 'float',
         'distance_overage_amount' => 'float',
+        'original_end_date' => 'datetime',
+        'modified_at' => 'datetime',
+        'cancelled_at' => 'datetime',
+        'refund_amount' => 'float',
     ];
 
     public function car(): HasOne

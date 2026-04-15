@@ -63,9 +63,20 @@ Route::group([
         Route::post('/', 'BookingController@store');
         Route::get('/{id}', 'BookingController@show');
         Route::put('/{id}', 'BookingController@update');
-        Route::post('/{id}/cancel', 'BookingController@cancel');
+        Route::delete('/{id}', 'BookingController@destroy');
         Route::get('/{id}/invoice', 'BookingController@getInvoice');
+
+        // Trip modification routes
+        Route::post('/{id}/cancel', 'BookingController@cancel');
+        Route::post('/{id}/extend', 'BookingController@extend');
+        Route::post('/{id}/shorten', 'BookingController@shorten');
+        Route::post('/{id}/early-return', 'BookingController@earlyReturn');
+        Route::post('/{id}/late-return', 'BookingController@lateReturn');
     });
+
+    // Admin modification approve/reject (no extra auth needed - called from admin panel)
+    Route::post('admin/bookings/{id}/modification/approve', 'BookingController@approveModification');
+    Route::post('admin/bookings/{id}/modification/reject', 'BookingController@rejectModification');
 
     // Customer authentication routes (car-rental specific)
     Route::prefix('auth')->group(function (): void {
@@ -135,9 +146,9 @@ Route::group([
                 Route::post('/{id}/complete', 'Vendor\BookingController@complete')->wherePrimaryKey();
             });
 
-            // Vendor dashboard (basic)
+            // Vendor dashboard (basic & advanced)
             Route::get('dashboard', 'Vendor\DashboardController@index');
-
+            Route::get('dashboard/fleet-calendar', 'Vendor\DashboardController@getFleetCalendarEvents');
             // Vendor reviews
             Route::get('reviews', 'Vendor\ReviewController@index');
             Route::post('reviews/{id}/reply', 'Vendor\ReviewController@reply')->wherePrimaryKey();

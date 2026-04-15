@@ -31,3 +31,4 @@
 
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_15_000000_add_vendor_columns_to_demand_pricing_recommendations.php
   php artisan migrate --path=database/migrations/2026_04_15_000001_add_auto_pricing_to_car_pricing_policies.php
+  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_13_165323_add_trip_modification_fields_to_cr_bookings_table.php
