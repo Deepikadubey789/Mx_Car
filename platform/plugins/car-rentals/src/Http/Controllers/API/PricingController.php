@@ -127,6 +127,9 @@ class PricingController extends BaseApiController
                 'is_available' => $isAvailable,
                 'message' => $isAvailable ? 'Car is available for selected dates' : 'Car is not available for selected dates',
             ],
+            'meta' => [
+                'demand_recommendations' => $quoteData['demand_recommendations'] ?? [],
+            ],
         ];
 
         return $this

@@ -197,6 +197,63 @@ Route::group([
         Route::get('statements', fn () => to_route('car-rentals.vendor.revenues.index'))
             ->name('statements.index');
 
+        // ✅ NEW: Demand Pricing Recommendations Routes
+        Route::group(['prefix' => 'demand-pricing', 'as' => 'demand-pricing.'], function (): void {
+            // Main recommendations page (list with car/date view toggle)
+            Route::get('recommendations', [
+                'as' => 'recommendations.index',
+                'uses' => 'VendorDemandPricingController@index',
+            ]);
+
+            // Apply recommendation
+            Route::post('recommendations/{recommendation}/apply', [
+                'as' => 'recommendations.apply',
+                'uses' => 'VendorDemandPricingController@apply',
+            ])->wherePrimaryKey('recommendation');
+
+            // Dismiss recommendation with reason
+            Route::post('recommendations/{recommendation}/dismiss', [
+                'as' => 'recommendations.dismiss',
+                'uses' => 'VendorDemandPricingController@dismiss',
+            ])->wherePrimaryKey('recommendation');
+
+            // Adjust and apply recommendation (vendor tweaks price ±10%)
+            Route::post('recommendations/{recommendation}/adjust', [
+                'as' => 'recommendations.adjust',
+                'uses' => 'VendorDemandPricingController@adjust',
+            ])->wherePrimaryKey('recommendation');
+
+            // Calendar view of recommendations (by date)
+            Route::get('recommendations/calendar', [
+                'as' => 'recommendations.calendar',
+                'uses' => 'VendorDemandPricingController@calendar',
+            ]);
+
+            // Car-specific recommendations
+            Route::get('recommendations/car/{car}', [
+                'as' => 'recommendations.by-car',
+                'uses' => 'VendorDemandPricingController@byCar',
+            ])->wherePrimaryKey('car');
+
+            // Historical performance report
+            Route::get('performance', [
+                'as' => 'performance.index',
+                'uses' => 'VendorDemandPricingController@performance',
+            ]);
+
+            // AJAX: Get recommendations grouped by car
+            Route::get('ajax/recommendations-by-car', [
+                'as' => 'ajax.recommendations-by-car',
+                'uses' => 'VendorDemandPricingController@ajaxRecommendationsByCar',
+            ]);
+
+            // AJAX: Get recommendations grouped by date
+            Route::get('ajax/recommendations-by-date', [
+                'as' => 'ajax.recommendations-by-date',
+                'uses' => 'VendorDemandPricingController@ajaxRecommendationsByDate',
+            ]);
+        });
+
         Route::resource('withdrawals', 'WithdrawalController')
             ->parameters(['' => 'withdrawal'])
             ->only([

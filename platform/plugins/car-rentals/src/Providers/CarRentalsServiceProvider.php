@@ -69,6 +69,10 @@ use Illuminate\Support\Facades\Broadcast;
 use Botble\CarRentals\Commands\SendTripReminderCommand;
 use Botble\CarRentals\Commands\SendReturnAlertCommand;
 use Botble\CarRentals\Commands\PruneKycPayloadsCommand;
+use Botble\CarRentals\Commands\GenerateDemandPricingRecommendationsCommand;
+use Botble\CarRentals\Commands\SeedDemandSignalsCommand;
+use Botble\CarRentals\Commands\CleanupExpiredRecommendationsCommand;
+use Botble\CarRentals\Commands\AutoApplyPendingRecommendationsCommand;
 
 class CarRentalsServiceProvider extends ServiceProvider
 {
@@ -316,6 +320,14 @@ class CarRentalsServiceProvider extends ServiceProvider
                     'route' => 'car-rentals.withdrawal.index',
                 ])
                 ->registerItem([
+                    'id' => 'cms-plugins-car-rentals-auto-pricing-metrics',
+                    'priority' => 65,
+                    'parent_id' => 'cms-plugins-car-rentals',
+                    'name' => 'Auto-Pricing Metrics',
+                    'icon' => 'ti ti-chart-line',
+                    'route' => 'car-rentals.auto-pricing.metrics',
+                ])
+                ->registerItem([
                     'id' => 'cms-plugins-car-rentals-attributes',
                     'priority' => 1,
                     'parent_id' => null,
@@ -466,13 +478,21 @@ class CarRentalsServiceProvider extends ServiceProvider
                     ]);
             }
 
-            $vendorMenu->registerItem([
-                'id' => 'car-rentals.vendor.withdrawals',
-                'priority' => 25,
-                'name' => __('Withdrawals'),
-                'url' => fn () => route('car-rentals.vendor.withdrawals.index'),
-                'icon' => 'ti ti-cash',
-            ])
+            $vendorMenu
+                ->registerItem([
+                    'id' => 'car-rentals.vendor.demand-pricing',
+                    'priority' => 23,
+                    'name' => __('Demand Pricing'),
+                    'url' => fn () => route('car-rentals.vendor.demand-pricing.recommendations.index'),
+                    'icon' => 'ti ti-trending-up',
+                ])
+                ->registerItem([
+                    'id' => 'car-rentals.vendor.withdrawals',
+                    'priority' => 25,
+                    'name' => __('Withdrawals'),
+                    'url' => fn () => route('car-rentals.vendor.withdrawals.index'),
+                    'icon' => 'ti ti-cash',
+                ])
                 ->registerItem([
                     'id' => 'car-rentals.vendor.revenues',
                     'priority' => 26,
@@ -601,14 +621,12 @@ class CarRentalsServiceProvider extends ServiceProvider
                 UpdateExchangeRatesCommand::class,
                 SeedCurrenciesCommand::class,
                 SendTripReminderCommand::class,
-            ]);
-            $this->commands([
-                UpdateExchangeRatesCommand::class,
-                SeedCurrenciesCommand::class,
-                SendTripReminderCommand::class,
                 SendReturnAlertCommand::class,
                 PruneKycPayloadsCommand::class,
-                SendReturnAlertCommand::class,
+                GenerateDemandPricingRecommendationsCommand::class,
+                SeedDemandSignalsCommand::class,
+                CleanupExpiredRecommendationsCommand::class,
+                AutoApplyPendingRecommendationsCommand::class,
             ]);
         }
     }

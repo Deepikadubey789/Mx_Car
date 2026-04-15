@@ -9,12 +9,15 @@ use Botble\CarRentals\Enums\CarDateValueTypeEnum;
 use Botble\CarRentals\Enums\ModerationStatusEnum;
 use Botble\CarRentals\Forms\CarForm;
 use Botble\CarRentals\Http\Requests\CarRequest;
+use Botble\CarRentals\Http\Requests\CarAutoApplySettingsRequest;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\CarDate;
+use Botble\CarRentals\Models\DemandPricingRecommendation;
 use Botble\CarRentals\Models\CarPricingPolicy;
 use Botble\CarRentals\Models\CarTripDiscount;
 use Botble\CarRentals\Models\CarTag;
 use Botble\CarRentals\Models\Customer;
+use Botble\CarRentals\Services\DemandPricingRecommendationService;
 use Botble\CarRentals\Tables\CarTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -158,6 +161,56 @@ class CarController extends BaseController
         return DeleteResourceAction::make($car);
     }
 
+    public function applyDemandPricingRecommendation(Car $car, DemandPricingRecommendation $recommendation)
+    {
+        abort_unless($recommendation->car_id === $car->getKey(), 404);
+        abort_unless($recommendation->status === 'pending', 422);
+
+        $carDate = app(DemandPricingRecommendationService::class)->applyRecommendation($recommendation, auth()->id());
+
+        return $this
+            ->httpResponse()
+            ->setData([
+                'car_date' => $carDate,
+                'recommendation_id' => $recommendation->getKey(),
+            ])
+            ->setMessage(__('Demand pricing recommendation applied successfully.'));
+    }
+
+    public function dismissDemandPricingRecommendation(Car $car, DemandPricingRecommendation $recommendation)
+    {
+        abort_unless($recommendation->car_id === $car->getKey(), 404);
+        abort_unless($recommendation->status === 'pending', 422);
+
+        app(DemandPricingRecommendationService::class)->dismissRecommendation($recommendation, auth()->id());
+
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Demand pricing recommendation dismissed.'));
+    }
+
+    public function updateAutoApplySettings(Car $car, CarAutoApplySettingsRequest $request)
+    {
+        $this->authorize('update', $car);
+
+        $policy = $car->pricingPolicy()->firstOrNew([]);
+        $policy->fill([
+            'demand_auto_apply_enabled' => $request->boolean('demand_auto_apply_enabled', $policy->demand_auto_apply_enabled ?? false),
+            'demand_auto_apply_min_confidence' => $request->input('demand_auto_apply_min_confidence', $policy->demand_auto_apply_min_confidence ?? 0.70),
+            'demand_auto_apply_max_daily_change_percent' => $request->input('demand_auto_apply_max_daily_change_percent', $policy->demand_auto_apply_max_daily_change_percent),
+        ])->save();
+
+        // Handle pause request
+        if ($request->input('demand_auto_apply_pause_hours')) {
+            app(\Botble\CarRentals\Services\AutoApplyQueueService::class)
+                ->pauseAutoApply($car, (int) $request->input('demand_auto_apply_pause_hours'));
+        }
+
+        return $this
+            ->httpResponse()
+            ->setMessage(__('Auto-apply settings updated successfully.'));
+    }
+
     protected function syncPricingPolicy(Car $car, Request $request): void
     {
         $policyKeys = [
@@ -172,6 +225,13 @@ class CarController extends BaseController
             'distance_overage_billing_mode',
             'allow_best_discount_only',
             'max_discount_cap_percent',
+                'demand_recommendations_enabled',
+                'demand_min_price',
+                'demand_max_price',
+                'demand_max_daily_change_percent',
+                'demand_auto_apply_enabled',
+                'demand_auto_apply_min_confidence',
+                'demand_auto_apply_max_daily_change_percent',
         ];
 
         $hasPolicyInput = false;
@@ -201,6 +261,13 @@ class CarController extends BaseController
             'distance_overage_billing_mode' => $request->input('distance_overage_billing_mode', $policy->distance_overage_billing_mode ?? 'end_of_trip'),
             'allow_best_discount_only' => $request->boolean('allow_best_discount_only', $policy->allow_best_discount_only ?? true),
             'max_discount_cap_percent' => $request->input('max_discount_cap_percent', $policy->max_discount_cap_percent),
+                'demand_recommendations_enabled' => $request->boolean('demand_recommendations_enabled', $policy->demand_recommendations_enabled ?? false),
+                'demand_min_price' => $request->input('demand_min_price', $policy->demand_min_price),
+                'demand_max_price' => $request->input('demand_max_price', $policy->demand_max_price),
+                'demand_max_daily_change_percent' => $request->input('demand_max_daily_change_percent', $policy->demand_max_daily_change_percent),
+                'demand_auto_apply_enabled' => $request->boolean('demand_auto_apply_enabled', $policy->demand_auto_apply_enabled ?? false),
+                'demand_auto_apply_min_confidence' => $request->input('demand_auto_apply_min_confidence', $policy->demand_auto_apply_min_confidence ?? 0.70),
+                'demand_auto_apply_max_daily_change_percent' => $request->input('demand_auto_apply_max_daily_change_percent', $policy->demand_auto_apply_max_daily_change_percent),
             'active' => true,
         ]);
         $policy->car_id = $car->getKey();
@@ -334,6 +401,12 @@ class CarController extends BaseController
             ];
         }
 
+        $recommendationEvents = app(DemandPricingRecommendationService::class)->getCalendarEvents($car, $startDate, $endDate);
+
+        foreach ($recommendationEvents as $recommendationEvent) {
+            $events[$recommendationEvent['id']] = $recommendationEvent;
+        }
+
         return response()->json(array_values($events));
     }
 
@@ -372,6 +445,14 @@ class CarController extends BaseController
             ]);
 
             $carDate->save();
+
+            DemandPricingRecommendation::query()
+                ->where('car_id', $car->getKey())
+                ->whereDate('recommendation_date', $dateStr)
+                ->where('status', 'pending')
+                ->update([
+                    'status' => 'dismissed',
+                ]);
         }
 
         return $this

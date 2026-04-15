@@ -1,4 +1,7 @@
-<div class="car-pricing-calendar-wrapper" data-url="{{ route('car-rentals.cars.pricing-calendar', $car->getKey()) }}">
+<div class="car-pricing-calendar-wrapper"
+    data-url="{{ route('car-rentals.cars.pricing-calendar', $car->getKey()) }}"
+    data-apply-url="{{ route('car-rentals.cars.pricing-recommendations.apply', ['car' => $car->getKey(), 'recommendation' => '__RECOMMENDATION__']) }}"
+    data-dismiss-url="{{ route('car-rentals.cars.pricing-recommendations.dismiss', ['car' => $car->getKey(), 'recommendation' => '__RECOMMENDATION__']) }}">
     <div id="pricing-calendar" class="pricing-calendar mb-3"></div>
 
     <div class="d-flex flex-wrap gap-3 mb-3">
@@ -21,6 +24,10 @@
         <div class="d-flex align-items-center gap-2">
             <span class="badge bg-secondary">$0</span>
             <small class="text-muted">{{ trans('plugins/car-rentals::car-rentals.pricing_calendar.inactive') }}</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-warning text-dark">$0</span>
+            <small class="text-muted">Demand recommendation</small>
         </div>
     </div>
 
@@ -73,9 +80,17 @@
                             <div class="alert alert-info" id="pricing-amount-info" style="display: none;">
                                 {{ trans('plugins/car-rentals::car-rentals.pricing_calendar.amount_info') }}
                             </div>
+
+                            <div class="alert alert-warning d-none" id="demand-recommendation-info"></div>
                         </div>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-warning d-none" id="btn-dismiss-recommendation">
+                            Dismiss recommendation
+                        </button>
+                        <button type="button" class="btn btn-warning d-none" id="btn-apply-recommendation">
+                            Apply recommendation
+                        </button>
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             {{ trans('core/base::forms.cancel') }}
                         </button>

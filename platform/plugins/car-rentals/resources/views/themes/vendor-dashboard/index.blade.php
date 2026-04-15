@@ -460,6 +460,9 @@
         </div>
     </div>
 
+    {{-- Demand Pricing Recommendations Widget --}}
+    @include('plugins/car-rentals::themes.vendor-dashboard.partials.demand-pricing-widget')
+
     <div class="row mb-4">
         <div class="col-lg-8 mb-3 mb-lg-0">
             <x-core::card class="shadow-sm h-100">

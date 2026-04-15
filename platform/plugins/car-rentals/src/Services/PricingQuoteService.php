@@ -91,6 +91,23 @@ class PricingQuoteService
         $totalAmount = round(($subtotal + $taxAmount) - $couponAmount + $feeAmount, 2);
         $finalPayableAmount = round($totalAmount + $depositAmount, 2);
 
+        $demandRecommendations = app(DemandPricingRecommendationService::class)
+            ->getRecommendationsForRange($car, $startDate, $endDate)
+            ->map(function ($recommendation): array {
+                return [
+                    'id' => $recommendation->getKey(),
+                    'date' => $recommendation->recommendation_date?->toDateString(),
+                    'recommended_value' => (float) $recommendation->recommended_value,
+                    'value_type' => $recommendation->value_type,
+                    'demand_score' => (float) $recommendation->demand_score,
+                    'confidence_score' => (float) $recommendation->confidence_score,
+                    'reason_codes' => $recommendation->reason_codes ?? [],
+                    'status' => $recommendation->status,
+                ];
+            })
+            ->values()
+            ->all();
+
         return [
             'rental_days' => $rentalDays,
             'base_rental_amount' => round($baseRentalAmount, 2),
@@ -130,6 +147,7 @@ class PricingQuoteService
             'eligibility_reasons' => $depositRisk['eligibility_reasons'] ?? [],
             'total_amount' => $totalAmount,
             'final_payable_amount' => $finalPayableAmount,
+            'demand_recommendations' => $demandRecommendations,
             'services' => $services,
         ];
     }
