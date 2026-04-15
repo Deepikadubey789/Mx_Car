@@ -314,7 +314,7 @@
             @endif
 
             {{-- Shorten Trip Button --}}
-            @if(!$tripStarted)
+            @if(!$tripEnded)
                 <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#shortenTripModal" icon="ti ti-calendar-minus" color="warning">
                     {{ __('Shorten Trip') }}
                 </x-core::button>
@@ -331,6 +331,13 @@
             <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#cancelTripModal" icon="ti ti-x" color="danger">
                 {{ __('Cancel Trip') }}
             </x-core::button>
+
+            {{-- Late Return Button --}}
+            @if($tripEnded && !$booking->late_fee_charge && $canModify)
+                <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#lateReturnModal" icon="ti ti-clock-exclamation" color="danger">
+                    {{ __('Late Return') }}
+                </x-core::button>
+            @endif
         @endif
     </div>
 
@@ -658,7 +665,7 @@
     @endif
 
     {{-- SHORTEN TRIP MODAL --}}
-    @if(!$tripStarted)
+    @if(!$tripEnded)
     <div class="modal fade" id="shortenTripModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
             <div class="modal-content border-0 rounded-4" style="box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
@@ -760,6 +767,70 @@
     </div>
     @endif
 
+    {{-- LATE RETURN MODAL --}}
+    @if($tripEnded && !$booking->late_fee_charge && $canModify)
+    @php
+        $lateFeePerHour = (float) ($booking->car->car->late_fee_per_hour ?? 0);
+        $minutesLate = max(0, \Carbon\Carbon::parse($booking->car->rental_end_date)->diffInMinutes(now()));
+        $hoursLate = (int) ceil($minutesLate / 60);
+        $estimatedCharge = round($hoursLate * $lateFeePerHour, 2);
+    @endphp
+    <div class="modal fade" id="lateReturnModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 480px;">
+            <div class="modal-content border-0 rounded-4" style="box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
+                <div class="modal-header border-0 pb-0 pt-4 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width:42px;height:42px;background:#ede9fe;border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                            <i class="ti ti-clock-exclamation" style="color:#7c3aed;font-size:20px;"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title mb-0 fw-bold" style="font-size:16px;">{{ __('Late Return') }}</h5>
+                            <small class="text-muted">{{ __('Car returned after scheduled time') }}</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body px-4 pt-3 pb-2">
+                    <div class="rounded-3 p-3 mb-3" style="background:#f5f3ff;border:1px solid #ddd6fe;">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">{{ __('Was due back') }}</span>
+                            <span class="fw-semibold small" style="color:#7c3aed;">{{ $booking->car->rental_end_date_formatted }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">{{ __('Returning now') }}</span>
+                            <span class="fw-semibold small">{{ now()->format('M d, Y H:i') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">{{ __('Hours late') }}</span>
+                            <span class="fw-semibold small text-danger">{{ $hoursLate }} hr(s)</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">{{ __('Fee per hour') }}</span>
+                            <span class="fw-semibold small">${{ $lateFeePerHour }}</span>
+                        </div>
+                    </div>
+                    <div class="rounded-3 p-3 mb-3 d-flex align-items-center justify-content-between" style="background:#fef2f2;border:1px solid #fecaca;">
+                        <span class="fw-bold" style="color:#dc2626;">{{ __('Estimated Late Charge') }}</span>
+                        <span class="fw-bold" style="color:#dc2626;font-size:18px;">${{ $estimatedCharge }}</span>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-semibold small">{{ __('Reason') }} <span class="text-muted">({{ __('optional') }})</span></label>
+                        <textarea id="lateReturnReason" class="form-control rounded-3" rows="2"
+                            style="border-color:#e5e7eb;font-size:14px;resize:none;"
+                            placeholder="{{ __('Why are you returning late?') }}"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4 pt-2 gap-2">
+                    <button type="button" class="btn rounded-3 px-4" style="background:#f3f4f6;color:#374151;font-size:14px;font-weight:500;" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                    <button type="button" class="btn rounded-3 px-4" style="background:#7c3aed;color:#fff;font-size:14px;font-weight:600;" onclick="submitModification('late-return')">
+                        <i class="ti ti-clock-exclamation me-1"></i>{{ __('Confirm Late Return') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- CANCEL TRIP MODAL --}}
     @php
         $hoursUntilStart = now()->diffInHours(\Carbon\Carbon::parse($booking->car->rental_start_date), false);
@@ -832,7 +903,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            ['extendTripModal','shortenTripModal','earlyReturnModal','cancelTripModal'].forEach(id => {
+            ['extendTripModal','shortenTripModal','earlyReturnModal','cancelTripModal','lateReturnModal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) document.body.appendChild(el);
             });
@@ -857,6 +928,9 @@
                 body.reason = document.getElementById('earlyReturnReason').value || '';
             } else if (type === 'cancel') {
                 body.reason = document.getElementById('cancelReason').value || '';
+            }
+            else if (type === 'late-return') {
+                body.reason = document.getElementById('lateReturnReason')?.value || '';
             }
 
             const btn = event.target;

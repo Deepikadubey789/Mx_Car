@@ -683,6 +683,36 @@ class BookingController extends BaseApiController
             ->toApiResponse();
     }
 
+    public function lateReturn($id, Request $request)
+    {
+        $booking = $this->findBooking($id, $request);
+        if ($booking instanceof JsonResponse) return $booking;
+
+        $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $result = $this->tripModificationService->lateReturn(
+            $booking,
+            $request->input('reason', '')
+        );
+
+        if (! $result['success']) {
+            return $this->httpResponse()->setError()->setMessage($result['message'])->toApiResponse();
+        }
+
+        return $this->httpResponse()
+            ->setData([
+                'booking'           => new BookingDetailResource($booking->fresh()),
+                'extra_hours'       => $result['extra_hours'],
+                'late_fee_per_hour' => $result['late_fee_per_hour'],
+                'late_charge'       => $result['late_charge'],
+                'new_total'         => $result['new_total'],
+            ])
+            ->setMessage($result['message'])
+            ->toApiResponse();
+    }
+
     private function findBooking($id, Request $request): ?Booking
     {
         $customer = Auth::guard('sanctum')->user();

@@ -166,6 +166,7 @@ class TripModificationService
             $booking->modified_at = now();
             $booking->refund_amount = $refundAmount;
             $booking->amount = max(0, round((float) $booking->amount - $refundAmount, 2));
+            $booking->sub_total = max(0, round((float) $booking->sub_total - $refundAmount, 2));
             $booking->save();
 
             $booking->car->update([
@@ -195,75 +196,209 @@ class TripModificationService
         });
     }
 
-    // APPROVE MODIFICATION — Admin action
-    public function approveModification(Booking $booking): array
+    public function lateReturn(Booking $booking, string $reason = ''): array
     {
-        if ($booking->modification_status !== 'pending') {
-            return ['success' => false, 'message' => 'No pending modification found.'];
-        }
-
-        preg_match('/\[Requested End: ([^\]]+)\]/', $booking->modification_reason, $matches);
-        if (empty($matches[1])) {
-            return ['success' => false, 'message' => 'Requested end date not found.'];
-        }
-
-        $newEnd = Carbon::parse($matches[1]);
+        $now = Carbon::now();
         $currentEnd = Carbon::parse($booking->car->rental_end_date);
 
-        return DB::transaction(function () use ($booking, $newEnd, $currentEnd) {
-            $type = $booking->modification_type;
+        if ($now->lte($currentEnd)) {
+            return ['success' => false, 'message' => 'Trip has not ended yet. No late fee applicable.'];
+        }
 
-            if ($type === 'extend') {
-                $extraDays = $currentEnd->diffInDays($newEnd);
-                $car = $booking->car->car;
-                $startDate = Carbon::parse($booking->car->rental_start_date);
-                $serviceIds = $booking->services ? $booking->services->pluck('id')->toArray() : [];
-                $newQuote = $this->pricingQuoteService->buildQuote($car, $startDate, $newEnd, $serviceIds);
-                $oldAmount = (float) $booking->sub_total;
-                $newAmount = (float) ($newQuote['subtotal'] ?? $newQuote['sub_total'] ?? 0);
-                $extraCharge = round(max(0, $newAmount - $oldAmount), 2);
+        $car = $booking->car->car;
+        $lateFeePerHour = (float) ($car->late_fee_per_hour ?? 0);
 
-                $booking->amount = round((float) $booking->amount + $extraCharge, 2);
-                $booking->car->update([
-                    'rental_end_date' => $newEnd,
-                    'number_of_days' => (int) $booking->car->number_of_days + $extraDays,
-                ]);
-                $this->syncInvoiceAmount($booking, $extraCharge, 'add');
+        if ($lateFeePerHour <= 0) {
+            return ['success' => false, 'message' => 'No late return fee configured for this car.'];
+        }
 
-            } elseif ($type === 'shorten') {
-                $savedDays = $newEnd->diffInDays($currentEnd);
-                preg_match('/\[Refund: \$([^\]]+)\]/', $booking->modification_reason, $refundMatches);
-                $refundAmount = (float) ($refundMatches[1] ?? 0);
+        $extraHours = (int) ceil($currentEnd->diffInMinutes($now) / 60);
+        $lateCharge = round($extraHours * $lateFeePerHour, 2);
 
-                $booking->refund_amount = $refundAmount;
-                $booking->amount = max(0, round((float) $booking->amount - $refundAmount, 2));
-                $booking->car->update([
-                    'rental_end_date' => $newEnd,
-                    'number_of_days' => max(1, (int) $booking->car->number_of_days - $savedDays),
-                ]);
-                $this->syncInvoiceAmount($booking, $refundAmount, 'subtract');
-            }
-
+        return DB::transaction(function () use ($booking, $now, $extraHours, $lateCharge, $lateFeePerHour, $reason) {
+            $booking->late_fee_charge = $lateCharge;
+            $booking->actual_return_datetime = $now;
+            $booking->amount = round((float) $booking->amount + $lateCharge, 2);
+            $booking->modification_type = 'late_return';
             $booking->modification_status = 'approved';
+            $booking->modification_reason = $reason ?: 'Late return by customer';
+            $booking->modified_at = now();
             $booking->save();
 
+            $this->syncInvoiceAmount($booking, $lateCharge, 'add');
+
             DB::table('admin_notifications')->insert([
-                'title' => 'Modification Approved #' . $booking->booking_number,
-                'description' => 'Admin approved ' . $type . ' request for ' . $booking->customer_name,
+                'title'        => 'Late Return #' . $booking->booking_number,
+                'description'  => $booking->customer_name . ' returned car ' . $extraHours . ' hour(s) late. Charge: $' . $lateCharge,
                 'action_label' => 'View Booking',
-                'action_url' => route('car-rentals.bookings.edit', $booking->id),
-                'created_at' => now(),
-                'updated_at' => now(),
+                'action_url'   => route('car-rentals.bookings.edit', $booking->id),
+                'created_at'   => now(),
+                'updated_at'   => now(),
             ]);
 
             return [
-                'success' => true,
-                'message' => 'Modification approved successfully.',
-                'type' => $type,
-                'new_end_date' => $newEnd->format('Y-m-d H:i:s'),
+                'success'          => true,
+                'message'          => 'Late return recorded. Extra charge: $' . $lateCharge,
+                'extra_hours'      => $extraHours,
+                'late_fee_per_hour'=> $lateFeePerHour,
+                'late_charge'      => $lateCharge,
+                'new_total'        => $booking->fresh()->amount,
             ];
         });
     }
+
+    // APPROVE MODIFICATION — Admin action
+    // public function approveModification(Booking $booking): array
+    // {
+    //     if ($booking->modification_status !== 'pending') {
+    //         return ['success' => false, 'message' => 'No pending modification found.'];
+    //     }
+
+    //     preg_match('/\[Requested End: ([^\]]+)\]/', $booking->modification_reason, $matches);
+    //     if (empty($matches[1])) {
+    //         return ['success' => false, 'message' => 'Requested end date not found.'];
+    //     }
+
+    //     $newEnd = Carbon::parse($matches[1]);
+    //     $currentEnd = Carbon::parse($booking->car->rental_end_date);
+
+    //     return DB::transaction(function () use ($booking, $newEnd, $currentEnd) {
+    //         $type = $booking->modification_type;
+
+    //         if ($type === 'extend') {
+    //             $extraDays = $currentEnd->diffInDays($newEnd);
+    //             $car = $booking->car->car;
+    //             $startDate = Carbon::parse($booking->car->rental_start_date);
+    //             $serviceIds = $booking->services ? $booking->services->pluck('id')->toArray() : [];
+    //             $newQuote = $this->pricingQuoteService->buildQuote($car, $startDate, $newEnd, $serviceIds);
+    //             $oldAmount = (float) $booking->sub_total;
+    //             $newAmount = (float) ($newQuote['subtotal'] ?? $newQuote['sub_total'] ?? 0);
+    //             $extraCharge = round(max(0, $newAmount - $oldAmount), 2);
+
+    //             $booking->amount = round((float) $booking->amount + $extraCharge, 2);
+    //             $booking->car->update([
+    //                 'rental_end_date' => $newEnd,
+    //                 'number_of_days' => (int) $booking->car->number_of_days + $extraDays,
+    //             ]);
+    //             $this->syncInvoiceAmount($booking, $extraCharge, 'add');
+
+    //         } elseif ($type === 'shorten') {
+    //             $savedDays = $newEnd->diffInDays($currentEnd);
+    //             preg_match('/\[Refund: \$([^\]]+)\]/', $booking->modification_reason, $refundMatches);
+    //             $refundAmount = (float) ($refundMatches[1] ?? 0);
+
+    //             $booking->refund_amount = $refundAmount;
+    //             $booking->amount = max(0, round((float) $booking->amount - $refundAmount, 2));
+    //             $booking->car->update([
+    //                 'rental_end_date' => $newEnd,
+    //                 'number_of_days' => max(1, (int) $booking->car->number_of_days - $savedDays),
+    //             ]);
+    //             $this->syncInvoiceAmount($booking, $refundAmount, 'subtract');
+    //         }
+
+    //         $booking->modification_status = 'approved';
+    //         $booking->save();
+
+    //         DB::table('admin_notifications')->insert([
+    //             'title' => 'Modification Approved #' . $booking->booking_number,
+    //             'description' => 'Admin approved ' . $type . ' request for ' . $booking->customer_name,
+    //             'action_label' => 'View Booking',
+    //             'action_url' => route('car-rentals.bookings.edit', $booking->id),
+    //             'created_at' => now(),
+    //             'updated_at' => now(),
+    //         ]);
+
+    //         return [
+    //             'success' => true,
+    //             'message' => 'Modification approved successfully.',
+    //             'type' => $type,
+    //             'new_end_date' => $newEnd->format('Y-m-d H:i:s'),
+    //         ];
+    //     });
+    // }
+
+    public function approveModification(Booking $booking): array
+{
+    if ($booking->modification_status !== 'pending') {
+        return ['success' => false, 'message' => 'No pending modification found.'];
+    }
+
+    preg_match('/\[Requested End: ([^\]]+)\]/', $booking->modification_reason, $matches);
+    if (empty($matches[1])) {
+        return ['success' => false, 'message' => 'Requested end date not found.'];
+    }
+
+    $newEnd     = Carbon::parse($matches[1]);
+    $currentEnd = Carbon::parse($booking->car->rental_end_date);
+    $startDate  = Carbon::parse($booking->car->rental_start_date);
+    $car        = $booking->car->car;
+    $serviceIds = $booking->services ? $booking->services->pluck('id')->toArray() : [];
+
+    // ✅ Fresh recalculate — dono cases mein
+    $oldQuote   = $this->pricingQuoteService->buildQuote($car, $startDate, $currentEnd, $serviceIds);
+    $newQuote   = $this->pricingQuoteService->buildQuote($car, $startDate, $newEnd, $serviceIds);
+
+    $oldAmount  = (float) ($oldQuote['subtotal'] ?? $oldQuote['sub_total'] ?? 0);
+    $newAmount  = (float) ($newQuote['subtotal'] ?? $newQuote['sub_total'] ?? 0);
+
+    return DB::transaction(function () use ($booking, $newEnd, $currentEnd, $oldAmount, $newAmount) {
+        $type = $booking->modification_type;
+
+        if ($type === 'extend') {
+            $extraDays   = (int) $currentEnd->diffInDays($newEnd);
+            $extraCharge = round(max(0, $newAmount - $oldAmount), 2);
+
+            $booking->amount    = round((float) $booking->amount + $extraCharge, 2);
+            $booking->sub_total = round((float) $booking->sub_total + $extraCharge, 2); // ✅ sub_total bhi sync
+
+            $booking->car->update([
+                'rental_end_date' => $newEnd,
+                'number_of_days'  => (int) $booking->car->number_of_days + $extraDays,
+            ]);
+
+            $this->syncInvoiceAmount($booking, $extraCharge, 'add');
+
+        } elseif ($type === 'shorten') {
+            $savedDays    = (int) $newEnd->diffInDays($currentEnd);
+            $refundAmount = round(max(0, $oldAmount - $newAmount), 2); // ✅ live recalculate
+
+            $booking->refund_amount = $refundAmount;
+            $booking->amount        = max(0, round((float) $booking->amount - $refundAmount, 2));
+            $booking->sub_total     = max(0, round((float) $booking->sub_total - $refundAmount, 2)); // ✅
+
+            $booking->car->update([
+                'rental_end_date' => $newEnd,
+                'number_of_days'  => max(1, (int) $booking->car->number_of_days - $savedDays),
+            ]);
+
+            $this->syncInvoiceAmount($booking, $refundAmount, 'subtract');
+        }
+
+        $booking->modification_status = 'approved';
+        $booking->modification_type = null;    // ✅ ADD
+        $booking->modification_reason = null;  
+        $booking->save();
+
+        DB::table('admin_notifications')->insert([
+            'title'        => 'Modification Approved #' . $booking->booking_number,
+            'description'  => 'Admin approved ' . $type . ' for ' . $booking->customer_name
+                            . '. Old: $' . $oldAmount . ' → New: $' . $newAmount,
+            'action_label' => 'View Booking',
+            'action_url'   => route('car-rentals.bookings.edit', $booking->id),
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
+        return [
+            'success'      => true,
+            'message'      => 'Modification approved successfully.',
+            'type'         => $type,
+            'old_amount'   => $oldAmount,
+            'new_amount'   => $newAmount,
+            'new_end_date' => $newEnd->format('Y-m-d H:i:s'),
+        ];
+    });
+}
 
     // REJECT MODIFICATION — Admin action
     public function rejectModification(Booking $booking, string $reason = ''): array

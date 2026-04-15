@@ -71,6 +71,7 @@ Route::group([
         Route::post('/{id}/extend', 'BookingController@extend');
         Route::post('/{id}/shorten', 'BookingController@shorten');
         Route::post('/{id}/early-return', 'BookingController@earlyReturn');
+        Route::post('/{id}/late-return', 'BookingController@lateReturn');
     });
 
     // Admin modification approve/reject (no extra auth needed - called from admin panel)
