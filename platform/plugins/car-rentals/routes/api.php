@@ -155,6 +155,25 @@ Route::group([
 
             // Vendor earnings
             Route::get('earnings', 'Vendor\EarningsController@index');
+
+            // Vendor demand pricing recommendations (mobile API)
+            Route::prefix('recommendations')->group(function (): void {
+                Route::get('/', 'Vendor\RecommendationApiController@index');
+                Route::get('/{recommendation}', 'Vendor\RecommendationApiController@show')->wherePrimaryKey();
+                Route::post('/{recommendation}/apply', 'Vendor\RecommendationApiController@apply')->wherePrimaryKey();
+                Route::post('/{recommendation}/dismiss', 'Vendor\RecommendationApiController@dismiss')->wherePrimaryKey();
+                Route::post('/{recommendation}/adjust', 'Vendor\RecommendationApiController@adjust')->wherePrimaryKey();
+                Route::get('/metrics/summary', 'Vendor\RecommendationApiController@summary');
+            });
+
+            // Vendor auto-pricing settings (mobile API)
+            Route::prefix('cars/{car}/auto-pricing')->group(function (): void {
+                Route::get('/', 'Vendor\AutoPricingApiController@show')->wherePrimaryKey('car');
+                Route::put('/', 'Vendor\AutoPricingApiController@update')->wherePrimaryKey('car');
+                Route::post('/pause', 'Vendor\AutoPricingApiController@pause')->wherePrimaryKey('car');
+                Route::post('/resume', 'Vendor\AutoPricingApiController@resume')->wherePrimaryKey('car');
+                Route::get('/history', 'Vendor\AutoPricingApiController@history')->wherePrimaryKey('car');
+            });
         });
     });
 });
