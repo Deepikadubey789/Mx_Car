@@ -21,6 +21,28 @@ class CarRequest extends Request
             'sale_price' => $this->formatPriceValue($this->input('sale_price')),
             'is_for_sale' => $this->input('car_purpose') === 'sale',
         ]);
+
+        // Filter out empty trip discount rows to avoid validation errors
+        $tripDiscounts = $this->input('trip_discounts');
+        if (is_array($tripDiscounts) && count($tripDiscounts) > 0) {
+            $filteredDiscounts = [];
+            foreach ($tripDiscounts as $discount) {
+                if (!is_array($discount)) {
+                    continue;
+                }
+                // Keep row if it has ANY meaningful data
+                $min_days = trim((string)($discount['min_days'] ?? ''));
+                $max_days = trim((string)($discount['max_days'] ?? ''));
+                $discount_type = trim((string)($discount['discount_type'] ?? ''));
+                $discount_value = trim((string)($discount['discount_value'] ?? ''));
+                
+                if ($min_days || $max_days || $discount_type || $discount_value) {
+                    $filteredDiscounts[] = $discount;
+                }
+            }
+            // Set to null if no valid rows, otherwise re-index array
+            $this->merge(['trip_discounts' => count($filteredDiscounts) > 0 ? array_values($filteredDiscounts) : null]);
+        }
     }
 
     protected function formatPriceValue(string|float|null $number): float
@@ -144,12 +166,16 @@ class CarRequest extends Request
             'distance_overage_billing_mode' => ['nullable', 'string', Rule::in(['end_of_trip', 'prepaid_estimate', 'both'])],
             'allow_best_discount_only' => ['nullable', 'boolean'],
             'max_discount_cap_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'demand_recommendations_enabled' => ['nullable', 'boolean'],
+            'demand_min_price' => ['nullable', 'numeric', 'min:0'],
+            'demand_max_price' => ['nullable', 'numeric', 'min:0'],
+            'demand_max_daily_change_percent' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'trip_discounts' => ['nullable', 'array'],
             'trip_discounts.*.id' => ['nullable', 'integer'],
-            'trip_discounts.*.min_days' => ['required_with:trip_discounts', 'integer', 'min:1'],
+            'trip_discounts.*.min_days' => ['nullable', 'integer', 'min:1'],
             'trip_discounts.*.max_days' => ['nullable', 'integer', 'min:1'],
-            'trip_discounts.*.discount_type' => ['required_with:trip_discounts', 'string', Rule::in(['percentage', 'fixed'])],
-            'trip_discounts.*.discount_value' => ['required_with:trip_discounts', 'numeric', 'min:0'],
+            'trip_discounts.*.discount_type' => ['nullable', 'string', Rule::in(['percentage', 'fixed'])],
+            'trip_discounts.*.discount_value' => ['nullable', 'numeric', 'min:0'],
             'trip_discounts.*.priority' => ['nullable', 'integer', 'min:0'],
             'trip_discounts.*.active' => ['nullable', 'boolean'],
             'trip_discounts.*.description' => ['nullable', 'string', 'max:255'],

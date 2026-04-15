@@ -24,6 +24,15 @@ class CarPricingPolicy extends BaseModel
         'allow_best_discount_only',
         'max_discount_cap_percent',
         'active',
+        'demand_recommendations_enabled',
+        'demand_min_price',
+        'demand_max_price',
+        'demand_max_daily_change_percent',
+        'demand_last_generated_at',
+        'demand_auto_apply_enabled',
+        'demand_auto_apply_min_confidence',
+        'demand_auto_apply_max_daily_change_percent',
+        'demand_auto_apply_paused_until',
     ];
 
     protected $casts = [
@@ -35,6 +44,16 @@ class CarPricingPolicy extends BaseModel
         'allow_best_discount_only' => 'boolean',
         'max_discount_cap_percent' => 'float',
         'active' => 'boolean',
+        'demand_recommendations_enabled' => 'boolean',
+        'demand_min_price' => 'float',
+        'demand_max_price' => 'float',
+        'demand_max_daily_change_percent' => 'float',
+        'demand_last_generated_at' => 'datetime',
+        'demand_auto_apply_enabled' => 'boolean',
+        'demand_auto_apply_min_confidence' => 'float',
+        'demand_auto_apply_max_daily_change_percent' => 'float',
+        'demand_auto_apply_paused_until' => 'datetime',
+        'demand_auto_apply_last_applied_at' => 'datetime',
     ];
 
     public function car(): BelongsTo

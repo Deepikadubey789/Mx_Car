@@ -182,6 +182,17 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 Route::post('{car}/pricing-calendar', [CarController::class, 'storeCarPricing'])
                     ->name('cars.pricing-calendar.store')
                     ->wherePrimaryKey();
+
+                Route::post('{car}/pricing-recommendations/{recommendation}/apply', [CarController::class, 'applyDemandPricingRecommendation'])
+                    ->name('cars.pricing-recommendations.apply')
+                    ->wherePrimaryKey('recommendation');
+
+                Route::post('{car}/pricing-recommendations/{recommendation}/dismiss', [CarController::class, 'dismissDemandPricingRecommendation'])
+                    ->name('cars.pricing-recommendations.dismiss')
+                    ->wherePrimaryKey('recommendation');
+
+                Route::post('{car}/auto-apply-settings', [CarController::class, 'updateAutoApplySettings'])
+                    ->name('cars.auto-apply-settings.update');
             });
 
             Route::resource('car-makes', 'Cars\CarMakeController')->parameters(['' => 'car-makes']);
@@ -196,6 +207,25 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
             Route::resource('car-amenity-categories', 'Cars\CarAmenityCategoryController')->parameters(['' => 'car-amenity-categories']);
             Route::resource('car-amenities', 'Cars\CarAmenityController')->parameters(['' => 'car-amenities']);
             Route::resource('car-maintenance-histories', 'Cars\CarMaintenanceHistoryController')->parameters(['' => 'car-maintenance-histories']);
+
+            // Auto-Pricing Metrics Routes
+            Route::group(['prefix' => 'auto-pricing', 'as' => 'auto-pricing.'], function (): void {
+                Route::get('metrics', [
+                    'uses' => 'Settings\AutoPricingMetricsController@index',
+                    'as' => 'metrics',
+                    'permission' => 'car-rentals.index',
+                ]);
+                Route::post('toggle-global-pause', [
+                    'uses' => 'Settings\AutoPricingMetricsController@toggleGlobalPause',
+                    'as' => 'toggle-pause',
+                    'permission' => 'update.settings',
+                ]);
+                Route::post('settings', [
+                    'uses' => 'Settings\AutoPricingMetricsController@updateSettings',
+                    'as' => 'settings.update',
+                    'permission' => 'update.settings',
+                ]);
+            });
 
             Route::group(['prefix' => 'car-categories', 'as' => 'car-categories.'], function (): void {
                 Route::resource('', 'Cars\CarCategoryController')->parameters(['' => 'carCategory']);

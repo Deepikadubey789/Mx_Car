@@ -12,6 +12,7 @@ use Botble\CarRentals\Http\Requests\Vendor\CarRequest;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\CarTag;
 use Botble\CarRentals\Models\Customer;
+use Botble\CarRentals\Services\VendorDemandPricingService;
 use Botble\CarRentals\Tables\Vendor\CarTable;
 use Illuminate\Http\Request;
 
@@ -87,14 +88,22 @@ class CarController extends BaseController
             ->withCreatedSuccessMessage();
     }
 
-    public function edit(Car $car)
+    public function edit(Car $car, VendorDemandPricingService $vendorPricingService)
     {
         abort_if($car->author_type != Customer::class || $car->author_id != auth('customer')->id(), 403);
 
         $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $car->name]));
 
-        return CarForm::createFromModel($car)
-            ->renderForm();
+        $vendorId = auth('customer')->id();
+        $recommendations = $vendorPricingService->getRecommendationsByCar($vendorId, $car->id, 'pending');
+
+        // Share view data for the form template
+        view()->share([
+            'carRecommendations' => $recommendations,
+            'carRecommendationCount' => $recommendations->count(),
+        ]);
+
+        return CarForm::createFromModel($car)->renderForm();
     }
 
     public function update(Car $car, CarRequest $request)
@@ -128,6 +137,18 @@ class CarController extends BaseController
             $car->colors()->sync($colors);
 
             $car->amenities()->sync($request->input('amenities', []));
+
+            // Handle pricing policy auto-apply settings
+            $pricingPolicyData = [
+                'demand_auto_apply_enabled' => (bool) $request->input('demand_auto_apply_enabled', 0),
+                'demand_auto_apply_min_confidence' => (float) $request->input('demand_auto_apply_min_confidence', 0.70),
+            ];
+
+            if ($request->has('demand_auto_apply_max_daily_change_percent') && $request->input('demand_auto_apply_max_daily_change_percent') !== '') {
+                $pricingPolicyData['demand_auto_apply_max_daily_change_percent'] = (float) $request->input('demand_auto_apply_max_daily_change_percent');
+            }
+
+            $car->pricingPolicy()->updateOrCreate([], $pricingPolicyData);
 
             $form->fireModelEvents($car);
         });

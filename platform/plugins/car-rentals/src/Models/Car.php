@@ -164,6 +164,11 @@ class Car extends BaseModel
         return $this->hasMany(CarDate::class, 'car_id');
     }
 
+    public function demandPricingRecommendations(): HasMany
+    {
+        return $this->hasMany(DemandPricingRecommendation::class, 'car_id');
+    }
+
     public function tax(): BelongsTo
     {
         return $this->belongsTo(Tax::class, 'tax_id');

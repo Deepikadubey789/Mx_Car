@@ -24,6 +24,15 @@
 @endphp
 
 <div class="pricing-policy-wrapper">
+    <!-- Quick Links -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <a href="{{ route('car-rentals.auto-pricing.metrics') }}" class="btn btn-sm btn-info" target="_blank">
+                <i class="ti ti-chart-line me-1"></i> View Auto-Pricing Metrics
+            </a>
+        </div>
+    </div>
+
     <div class="row g-3">
         <div class="col-12">
             <p class="text-muted mb-0">
@@ -105,6 +114,37 @@
             <input name="max_discount_cap_percent" type="number" min="0" max="100" step="0.01" class="form-control" value="{{ old('max_discount_cap_percent', optional($pricingPolicy)->max_discount_cap_percent ?? '') }}">
         </div>
 
+        <div class="col-12">
+            <hr class="my-2">
+            <h5 class="mb-0">Demand pricing recommendations</h5>
+            <small class="text-muted">Generate suggested prices from demand signals and let hosts apply them manually first.</small>
+        </div>
+
+        <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check form-switch mb-2">
+                <input type="hidden" name="demand_recommendations_enabled" value="0">
+                <input class="form-check-input" type="checkbox" id="demand_recommendations_enabled" name="demand_recommendations_enabled" value="1" @checked(old('demand_recommendations_enabled', optional($pricingPolicy)->demand_recommendations_enabled ?? false))>
+                <label class="form-check-label" for="demand_recommendations_enabled">
+                    Enable demand recommendations
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Minimum recommended price</label>
+            <input name="demand_min_price" type="number" min="0" step="0.01" class="form-control" value="{{ old('demand_min_price', optional($pricingPolicy)->demand_min_price ?? '') }}">
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Maximum recommended price</label>
+            <input name="demand_max_price" type="number" min="0" step="0.01" class="form-control" value="{{ old('demand_max_price', optional($pricingPolicy)->demand_max_price ?? '') }}">
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Max daily change percentage</label>
+            <input name="demand_max_daily_change_percent" type="number" min="0" max="100" step="0.01" class="form-control" value="{{ old('demand_max_daily_change_percent', optional($pricingPolicy)->demand_max_daily_change_percent ?? '') }}">
+        </div>
+
         <div class="col-md-6 d-flex align-items-end">
             <div class="form-check form-switch mb-2">
                 <input type="hidden" name="allow_best_discount_only" value="0">
@@ -112,6 +152,47 @@
                 <label class="form-check-label" for="allow_best_discount_only">
                     {{ trans('plugins/car-rentals::car-rentals.pricing_policy.allow_best_discount_only') }}
                 </label>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <hr class="my-2">
+            <h5 class="mb-0">Auto-apply demand recommendations</h5>
+            <small class="text-muted">Automatically apply high-confidence recommendations without manual review. You can pause at any time.</small>
+        </div>
+
+        <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check form-switch mb-2">
+                <input type="hidden" name="demand_auto_apply_enabled" value="0">
+                <input class="form-check-input" type="checkbox" id="demand_auto_apply_enabled" name="demand_auto_apply_enabled" value="1" @checked(old('demand_auto_apply_enabled', optional($pricingPolicy)->demand_auto_apply_enabled ?? false))>
+                <label class="form-check-label" for="demand_auto_apply_enabled">
+                    Enable auto-apply
+                </label>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Minimum confidence threshold (0-1)</label>
+            <input name="demand_auto_apply_min_confidence" type="number" min="0" max="1" step="0.01" class="form-control" value="{{ old('demand_auto_apply_min_confidence', optional($pricingPolicy)->demand_auto_apply_min_confidence ?? 0.70) }}" placeholder="0.70">
+            <small class="text-muted d-block mt-1">Default: 0.70 (70%). Higher = more conservative, only applies confident recommendations</small>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Max daily change percentage (optional)</label>
+            <input name="demand_auto_apply_max_daily_change_percent" type="number" min="0" max="100" step="0.01" class="form-control" value="{{ old('demand_auto_apply_max_daily_change_percent', optional($pricingPolicy)->demand_auto_apply_max_daily_change_percent ?? '') }}">
+            <small class="text-muted d-block mt-1">Leave empty to use global setting. Limits how much price can change per day.</small>
+        </div>
+
+        <div class="col-md-6 d-flex align-items-end gap-2">
+            <div class="flex-grow-1">
+                <label class="form-label">Pause auto-apply for</label>
+                <div class="input-group">
+                    <input type="number" min="1" max="336" class="form-control" id="demand_auto_apply_pause_hours" name="demand_auto_apply_pause_hours" placeholder="Hours">
+                    <button class="btn btn-outline-warning" type="button" id="btn-pause-auto-apply">
+                        <i class="ti ti-player-pause me-1"></i> Pause
+                    </button>
+                </div>
+                <small class="text-muted d-block mt-1">Temporarily stop auto-applying prices. Max 2 weeks (336 hours).</small>
             </div>
         </div>
     </div>

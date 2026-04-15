@@ -10,6 +10,7 @@ use Botble\CarRentals\Facades\CarRentalsHelper;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\BookingCar;
 use Botble\CarRentals\Models\Car;
+use Botble\CarRentals\Services\VendorDemandPricingService;
 use Botble\CarRentals\Models\CarReview;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Models\Message;
@@ -26,7 +27,7 @@ use Illuminate\Support\Facades\Validator;
 
 class DashboardController extends BaseController
 {
-    public function index(Request $request, \Botble\CarRentals\Services\HostAnalyticsService $analyticsService)
+    public function index(Request $request, \Botble\CarRentals\Services\HostAnalyticsService $analyticsService, VendorDemandPricingService $vendorPricingService)
     {
         $this->pageTitle(__('Dashboard'));
 
@@ -35,6 +36,10 @@ class DashboardController extends BaseController
         $totalCars = Car::query()->where('author_type', Customer::class)->where('author_id', $vendorId)->count();
         $totalBookings = Booking::query()->where('vendor_id', $vendorId)->count();
         $totalMessages = Message::query()->where('vendor_id', $vendorId)->count();
+
+        // ✅ NEW: Get pending demand pricing recommendations
+        $pendingRecommendations = $vendorPricingService->getTopRecommendations($vendorId, 5);
+        $pendingCount = $vendorPricingService->getPendingCount($vendorId);
 
         [$startDate, $endDate] = CarRentalsHelper::getDateRangeInReport($request);
         $predefinedRange = $request->input('date_range', trans('plugins/car-rentals::reports.ranges.last_30_days'));
@@ -135,6 +140,10 @@ class DashboardController extends BaseController
             // --- NEW: Add the conversion variables to the array ---
             'conversion_rate' => $conversionStats['conversion_rate'],
             'total_views' => $conversionStats['total_views'],
+
+            // ✅ NEW: Add demand pricing recommendations
+            'pendingRecommendations' => $pendingRecommendations,
+            'pendingCount' => $pendingCount,
             
             'bookings' => $bookings,
             'predefinedRange' => $predefinedRange,
@@ -192,7 +201,7 @@ class DashboardController extends BaseController
              $topCarsChart = ['labels' => ['No Data'], 'revenues' => [1]];
         }
 
-        return CarRentalsHelper::view('vendor-dashboard.index', compact('totalCars', 'totalBookings', 'totalMessages', 'data', 'chartData', 'topCarsChart'));
+        return CarRentalsHelper::view('vendor-dashboard.index', compact('totalCars', 'totalBookings', 'totalMessages', 'data', 'chartData', 'topCarsChart', 'pendingCount', 'pendingRecommendations'));
     }
 
     public function postUpload(Request $request)

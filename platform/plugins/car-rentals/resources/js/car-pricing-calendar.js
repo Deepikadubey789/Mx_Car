@@ -2,8 +2,11 @@ class CarPricingCalendar {
     constructor(element) {
         this.container = element
         this.url = element.dataset.url
+        this.applyUrl = element.dataset.applyUrl
+        this.dismissUrl = element.dataset.dismissUrl
         this.calendar = null
         this.modal = null
+        this.recommendation = null
         this.form = {
             id: '',
             value: '',
@@ -78,6 +81,8 @@ class CarPricingCalendar {
         const activeCheckbox = modal.querySelector('#pricing-active')
         const conditionalFields = modal.querySelector('#conditional-fields')
         const valueTypeSelect = modal.querySelector('#pricing-value-type')
+        const applyRecommendationBtn = modal.querySelector('#btn-apply-recommendation')
+        const dismissRecommendationBtn = modal.querySelector('#btn-dismiss-recommendation')
 
         // Toggle conditional fields visibility
         activeCheckbox?.addEventListener('change', () => {
@@ -98,6 +103,14 @@ class CarPricingCalendar {
         // Handle save button click
         modal.querySelector('.btn-save')?.addEventListener('click', () => {
             this.saveForm()
+        })
+
+        applyRecommendationBtn?.addEventListener('click', () => {
+            this.applyRecommendation()
+        })
+
+        dismissRecommendationBtn?.addEventListener('click', () => {
+            this.dismissRecommendation()
         })
     }
 
@@ -159,6 +172,7 @@ class CarPricingCalendar {
 
     showModal(data) {
         this.form = { ...data }
+        this.recommendation = data.recommendation_id ? { ...data } : null
         const modal = this.resolveModal()
         if (!modal) return
 
@@ -173,6 +187,29 @@ class CarPricingCalendar {
         activeCheckbox.checked = data.active == 1
         modal.querySelector('#pricing-value').value = data.value || ''
         modal.querySelector('#pricing-value-type').value = data.value_type || 'fixed'
+
+        const recommendationInfo = modal.querySelector('#demand-recommendation-info')
+        const applyRecommendationBtn = modal.querySelector('#btn-apply-recommendation')
+        const dismissRecommendationBtn = modal.querySelector('#btn-dismiss-recommendation')
+
+        if (this.recommendation) {
+            const reasons = Array.isArray(data.reason_codes) ? data.reason_codes.join(', ') : ''
+            recommendationInfo.textContent = `Recommended price: ${data.recommended_value || data.value || ''}${reasons ? ' | Reasons: ' + reasons : ''}`
+            recommendationInfo.classList.remove('d-none')
+            const isPendingRecommendation = data.recommendation_status === 'pending'
+
+            if (isPendingRecommendation) {
+                applyRecommendationBtn?.classList.remove('d-none')
+                dismissRecommendationBtn?.classList.remove('d-none')
+            } else {
+                applyRecommendationBtn?.classList.add('d-none')
+                dismissRecommendationBtn?.classList.add('d-none')
+            }
+        } else {
+            recommendationInfo?.classList.add('d-none')
+            applyRecommendationBtn?.classList.add('d-none')
+            dismissRecommendationBtn?.classList.add('d-none')
+        }
 
         // Show/hide conditional fields
         const conditionalFields = modal.querySelector('#conditional-fields')
@@ -230,6 +267,54 @@ class CarPricingCalendar {
             },
             error: (xhr) => {
                 saveBtn.classList.remove('button-loading')
+                if (xhr.responseJSON?.message) {
+                    Botble.showError(xhr.responseJSON.message)
+                }
+            },
+        })
+    }
+
+    applyRecommendation() {
+        if (!this.recommendation || !this.applyUrl) return
+
+        $.ajax({
+            url: this.applyUrl.replace('__RECOMMENDATION__', this.recommendation.recommendation_id),
+            method: 'POST',
+            dataType: 'json',
+            success: (res) => {
+                if (!res.error) {
+                    this.calendar?.refetchEvents()
+                    this.hideModal()
+                    Botble.showSuccess(res.message)
+                } else {
+                    Botble.showError(res.message)
+                }
+            },
+            error: (xhr) => {
+                if (xhr.responseJSON?.message) {
+                    Botble.showError(xhr.responseJSON.message)
+                }
+            },
+        })
+    }
+
+    dismissRecommendation() {
+        if (!this.recommendation || !this.dismissUrl) return
+
+        $.ajax({
+            url: this.dismissUrl.replace('__RECOMMENDATION__', this.recommendation.recommendation_id),
+            method: 'POST',
+            dataType: 'json',
+            success: (res) => {
+                if (!res.error) {
+                    this.calendar?.refetchEvents()
+                    this.hideModal()
+                    Botble.showSuccess(res.message)
+                } else {
+                    Botble.showError(res.message)
+                }
+            },
+            error: (xhr) => {
                 if (xhr.responseJSON?.message) {
                     Botble.showError(xhr.responseJSON.message)
                 }
