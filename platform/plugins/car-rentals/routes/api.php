@@ -57,6 +57,13 @@ Route::group([
     // Contact/Inquiry
     Route::post('inquiries', 'InquiryController@store');
 
+    // --- YOUR NEW ROUTE SHOULD BE RIGHT HERE ---
+    Route::post('webhooks/telematics', [
+        'uses' => 'Webhook\TelematicsWebhookController@handle',
+        'as' => 'api.car-rentals.webhooks.telematics',
+    ]);
+    // -------------------------------------------
+
     // Booking routes (accessible to both guest and authenticated users)
     Route::prefix('bookings')->group(function (): void {
         Route::get('/', 'BookingController@index');

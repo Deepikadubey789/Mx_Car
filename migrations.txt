@@ -12,6 +12,7 @@
   php artisan migrate --path=database/migrations/2026_04_07_062534_create_cr_booking_insurances_table.php
   php artisan migrate --path=/database/migrations/2026_04_13_104215_upgrade_insurance_to_protection_engine.php
   php artisan migrate --path=/database\migrations\2026_04_14_120611_add_views_count_to_cr_cars_table.php
+  php artisan migrate --path=/database\migrations\2026_04_15_092425_create_telematics_tables.php
 
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134719_create_cr_trip_messages_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134722_add_is_escalated_to_cr_bookings_table.php
