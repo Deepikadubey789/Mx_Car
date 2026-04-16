@@ -331,4 +331,119 @@ class DashboardController extends BaseApiController
             ->setData($events)
             ->toApiResponse();
     }
+
+
+    public function getFleetLocations(Request $request)
+    {
+        $vendorId = Auth::guard('sanctum')->id();
+
+        // Get all cars for this vendor that have a registered tracker
+        $cars = Car::query()
+            ->where('author_id', $vendorId)
+            ->where('author_type', \Botble\CarRentals\Models\Customer::class)
+            ->whereNotNull('telematics_device_id')
+            ->get();
+
+        $locations = $cars->map(function ($car) {
+            // Fetch the most recent ping for this specific car
+            $lastLog = \Botble\CarRentals\Models\VehicleTelematicsLog::where('car_id', $car->id)
+                ->latest()
+                ->first();
+
+            // Skip if the car has never sent a GPS ping
+            if (!$lastLog || $lastLog->latitude === null) {
+                return null;
+            }
+
+            return [
+                'car_id' => $car->id,
+                'name' => $car->name,
+                'license_plate' => $car->license_plate,
+                'image_url' => \RvMedia::getImageUrl($car->image, 'thumb', false, \RvMedia::getDefaultImage()),
+                'coordinates' => [
+                    'latitude' => (float) $lastLog->latitude,
+                    'longitude' => (float) $lastLog->longitude,
+                ],
+                'telematics' => [
+                    'speed_mph' => (float) $lastLog->speed_mph,
+                    'odometer_miles' => (float) $lastLog->odometer_miles,
+                    'fuel_percentage' => (float) $lastLog->fuel_percentage,
+                    'event_type' => $lastLog->event_type,
+                    'status_color' => $this->getMapMarkerColor($lastLog), 
+                    'last_updated' => $lastLog->created_at->toIso8601String(),
+                    'last_updated_human' => $lastLog->created_at->diffForHumans(),
+                ]
+            ];
+        })->filter()->values(); // Remove nulls and re-index array
+
+        return $this
+            ->httpResponse()
+            ->setData($locations)
+            ->toApiResponse();
+    }
+
+    /**
+     * Helper method to determine the marker color for the mobile app
+     */
+    protected function getMapMarkerColor($log): string
+    {
+        if (!$log) return 'gray';
+        if ($log->event_type === 'geofence_exit') return 'red';
+        if ($log->speed_mph > 80) return 'orange';
+        return 'green';
+    }
+
+    
+    public function getTelematicsLogs(Request $request)
+    {
+        $vendorId = Auth::guard('sanctum')->id();
+
+        $query = \Botble\CarRentals\Models\VehicleTelematicsLog::query()
+            ->with(['car' => function($q) {
+                $q->select('id', 'name', 'license_plate');
+            }])
+            ->whereHas('car', function ($q) use ($vendorId) {
+                $q->where('author_id', $vendorId)
+                  ->where('author_type', \Botble\CarRentals\Models\Customer::class);
+            });
+
+        // Optional filter: By specific car
+        if ($request->filled('car_id')) {
+            $query->where('car_id', $request->input('car_id'));
+        }
+
+        // Optional filter: By event type (e.g., 'speeding', 'geofence_exit')
+        if ($request->filled('event_type')) {
+            $query->where('event_type', $request->input('event_type'));
+        }
+
+        $logs = $query->latest()->paginate($request->input('per_page', 20));
+
+        // Format the collection inside the paginator for mobile consumption
+        $logs->getCollection()->transform(function ($log) {
+            return [
+                'id' => $log->id,
+                'car_id' => $log->car_id,
+                'car_name' => $log->car->name ?? 'Unknown',
+                'license_plate' => $log->car->license_plate ?? '',
+                'event_type' => $log->event_type,
+                'event_label' => ucfirst(str_replace('_', ' ', $log->event_type)),
+                'speed_mph' => (float) $log->speed_mph,
+                'odometer_miles' => (float) $log->odometer_miles,
+                'coordinates' => [
+                    'latitude' => (float) $log->latitude,
+                    'longitude' => (float) $log->longitude,
+                ],
+                'created_at' => $log->created_at->toIso8601String(),
+                'formatted_time' => $log->created_at->format('M d, Y h:i A'),
+                // Tell the app if this should be highlighted in red/orange
+                'is_alert' => in_array($log->event_type, ['speeding', 'geofence_exit', 'hard_braking'])
+            ];
+        });
+
+        return $this
+            ->httpResponse()
+            ->setData($logs)
+            ->toApiResponse();
+    }
 }

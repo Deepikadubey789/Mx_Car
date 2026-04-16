@@ -450,6 +450,22 @@ class CarRentalsServiceProvider extends ServiceProvider
                 'name' => __('Fleet Calendar'),
                 'url' => fn () => route('car-rentals.vendor.fleet-calendar'),
                 'icon' => 'ti ti-calendar-stats',
+            ])
+            // --- NEW: Add the Live Tracking Sidebar Link here ---
+            ->registerItem([
+                'id' => 'car-rentals.vendor.live-tracking',
+                'priority' => 16,
+                'name' => __('Live Tracking'),
+                'url' => fn () => route('car-rentals.vendor.live-tracking'),
+                'icon' => 'ti ti-map-pin-cog',
+            ])
+            // --- NEW: Add the Logs link ---
+            ->registerItem([
+                'id' => 'car-rentals.vendor.telematics-logs',
+                'priority' => 17,
+                'name' => __('Activity Logs'),
+                'url' => fn () => route('car-rentals.vendor.telematics-logs'),
+                'icon' => 'ti ti-history',
             ]);
             // -----------------------------------------------------
 

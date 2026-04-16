@@ -416,7 +416,37 @@ class DashboardController extends BaseController
         };
     }
 
+    public function telematicsLogs(Request $request)
+        {
+            $this->pageTitle(__('Telematics Logs'));
+            $vendorId = auth('customer')->id();
 
+            // Get cars with trackers for the filter dropdown
+            $cars = Car::query()
+                ->where('author_id', $vendorId)
+                ->where('author_type', Customer::class)
+                ->whereNotNull('telematics_device_id')
+                ->pluck('name', 'id');
+
+            $query = \Botble\CarRentals\Models\VehicleTelematicsLog::query()
+                ->with('car')
+                ->whereHas('car', function ($q) use ($vendorId) {
+                    $q->where('author_id', $vendorId);
+                });
+
+            // Apply filters if selected
+            if ($request->filled('car_id')) {
+                $query->where('car_id', $request->input('car_id'));
+            }
+
+            if ($request->filled('event_type')) {
+                $query->where('event_type', $request->input('event_type'));
+            }
+
+            $logs = $query->latest()->paginate(20);
+
+            return CarRentalsHelper::view('vendor-dashboard.telematics-logs', compact('logs', 'cars'));
+        }
 
     public function fleetCalendar()
     {
@@ -474,5 +504,52 @@ class DashboardController extends BaseController
         });
 
         return response()->json($events);
+    }
+
+    public function getFleetLocations()
+    {
+        $vendorId = auth('customer')->id();
+
+        // Get all cars for this vendor that have a registered device
+        $cars = Car::query()
+            ->where('author_id', $vendorId)
+            ->whereNotNull('telematics_device_id')
+            ->get();
+
+        $locations = $cars->map(function ($car) {
+            // Fetch the very last log entry for this car
+            $lastLog = \Botble\CarRentals\Models\VehicleTelematicsLog::where('car_id', $car->id)
+                ->latest()
+                ->first();
+
+            return [
+                'id' => $car->id,
+                'name' => $car->name,
+                'plate' => $car->license_plate,
+                'lat' => $lastLog ? (float) $lastLog->latitude : null,
+                'lng' => $lastLog ? (float) $lastLog->longitude : null,
+                'speed' => $lastLog ? $lastLog->speed_mph : 0,
+                'event' => $lastLog ? $lastLog->event_type : 'offline',
+                'last_ping' => $lastLog ? $lastLog->created_at->diffForHumans() : 'Never',
+                'status_color' => $this->getMapMarkerColor($lastLog),
+            ];
+        })->filter(fn($loc) => $loc['lat'] !== null); // Only show cars with data
+
+        return response()->json($locations);
+    }
+
+    protected function getMapMarkerColor($log): string
+    {
+        if (!$log) return 'gray';
+        if ($log->event_type === 'geofence_exit') return 'red';
+        if ($log->speed_mph > 80) return 'orange';
+        return 'green';
+    }
+
+    public function liveTrackingView()
+    {
+        $this->pageTitle(__('Live Fleet Tracking'));
+
+        return CarRentalsHelper::view('vendor-dashboard.live-map');
     }
 }

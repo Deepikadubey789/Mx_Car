@@ -57,6 +57,13 @@ Route::group([
     // Contact/Inquiry
     Route::post('inquiries', 'InquiryController@store');
 
+    // --- GPS Telematics ---
+    Route::post('webhooks/telematics', [
+        'uses' => 'Webhook\TelematicsWebhookController@handle',
+        'as' => 'api.car-rentals.webhooks.telematics',
+    ]);
+    // -------------------------------------------
+
     // Booking routes (accessible to both guest and authenticated users)
     Route::prefix('bookings')->group(function (): void {
         Route::get('/', 'BookingController@index');
@@ -149,6 +156,12 @@ Route::group([
             // Vendor dashboard (basic & advanced)
             Route::get('dashboard', 'Vendor\DashboardController@index');
             Route::get('dashboard/fleet-calendar', 'Vendor\DashboardController@getFleetCalendarEvents');
+            
+            // --- Mobile GPS Tracking APIs ---
+            Route::get('dashboard/fleet-locations', 'Vendor\DashboardController@getFleetLocations');
+            Route::get('dashboard/telematics-logs', 'Vendor\DashboardController@getTelematicsLogs');
+            // ---------------------------------
+
             // Vendor reviews
             Route::get('reviews', 'Vendor\ReviewController@index');
             Route::post('reviews/{id}/reply', 'Vendor\ReviewController@reply')->wherePrimaryKey();

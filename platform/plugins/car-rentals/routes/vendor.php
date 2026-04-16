@@ -50,6 +50,22 @@ Route::group([
             'as' => 'fleet-calendar.events',
             'uses' => 'DashboardController@getFleetCalendarEvents',
         ]);
+
+        Route::get('fleet-locations', [
+            'as' => 'fleet-locations',
+            'uses' => 'DashboardController@getFleetLocations',
+        ]);
+
+        Route::get('live-tracking', [
+            'as' => 'live-tracking',
+            'uses' => 'DashboardController@liveTrackingView', // Create a simple method that returns the view above
+        ]);
+
+        // --- NEW: Historical Logs Route ---
+        Route::get('telematics-logs', [
+            'as' => 'telematics-logs',
+            'uses' => 'DashboardController@telematicsLogs',
+        ]);
         // ------------------------------------------------
 
         Route::resource('cars', 'CarController')->parameters(['' => 'car']);
