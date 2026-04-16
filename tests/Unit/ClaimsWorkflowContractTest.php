@@ -35,7 +35,8 @@ class ClaimsWorkflowContractTest extends TestCase
         $this->assertStringContainsString("'outcome_action'", $claimModel);
         $this->assertStringContainsString("'resolution_due_at'", $claimModel);
 
-        $this->assertStringContainsString('protected const TRANSITIONS', $claimController);
+        $this->assertStringContainsString('assertValidTransition', $claimController);
+        $this->assertStringContainsString("in_array(\$to, ['ready_for_decision', 'resolved', 'rejected', 'closed_no_action']", $claimController);
         $this->assertStringContainsString('notifyAssignmentIfChanged', $claimController);
         $this->assertStringContainsString('notifySlaBreachIfNeeded', $claimController);
         $this->assertStringContainsString("car-rentals.bookings.claims.financial", $claimController);

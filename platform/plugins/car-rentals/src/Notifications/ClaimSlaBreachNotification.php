@@ -6,6 +6,7 @@ use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\BookingClaim;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\Schema;
 
 class ClaimSlaBreachNotification extends Notification
 {
@@ -19,7 +20,7 @@ class ClaimSlaBreachNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        return (Schema::hasTable('notifications') || Schema::hasTable('notification')) ? ['database'] : [];
     }
 
     public function toDatabase(object $notifiable): array

@@ -99,6 +99,8 @@
                         'buttonClass' => 'btn-primary'
                     ])
 
+                    @include('plugins/car-rentals::bookings.partials.claims-readonly', ['booking' => $booking])
+
                     @php
                         $distanceUnit = (string) ($booking->distance_unit ?: 'km');
                         $startMileageValue = $booking->start_mileage_snapshot ?? $booking->start_mileage;

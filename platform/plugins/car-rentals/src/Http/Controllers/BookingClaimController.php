@@ -9,6 +9,7 @@ use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\BookingClaim;
 use Botble\CarRentals\Notifications\ClaimAssignmentNotification;
 use Botble\CarRentals\Notifications\ClaimSlaBreachNotification;
+use Botble\CarRentals\Services\ClaimNotificationDispatcher;
 use Botble\CarRentals\Services\ClaimResolutionSettlementService;
 use Botble\CarRentals\Services\SupportActionRecorder;
 use Illuminate\Http\JsonResponse;
@@ -220,6 +221,8 @@ class BookingClaimController extends BaseController
             'resolution_due_at' => optional($claim->resolution_due_at)->toIso8601String(),
             'escalated_at' => optional($claim->escalated_at)->toIso8601String(),
             'settlement_status' => $claim->settlement_status,
+            'requires_additional_docs' => (bool) $claim->requires_additional_docs,
+            'outcome_action' => $claim->outcome_action,
         ];
 
         $this->assertValidTransition((string) $claim->status, (string) $data['status']);
@@ -305,6 +308,7 @@ class BookingClaimController extends BaseController
 
         $this->notifyAssignmentIfChanged($booking, $claim, $previousAssigneeId, $claim->assignee_id);
         $this->notifySlaBreachIfNeeded($booking, $claim);
+        $this->notifyPublicClaimChanges($booking, $claim, $before);
 
         if ($request->expectsJson()) {
             return $response
@@ -387,5 +391,34 @@ class BookingClaimController extends BaseController
         $claim->forceFill([
             'last_notified_at' => now(),
         ])->save();
+    }
+
+    protected function notifyPublicClaimChanges(Booking $booking, BookingClaim $claim, array $before): void
+    {
+        $dispatcher = app(ClaimNotificationDispatcher::class);
+
+        $docsNowRequired = (bool) $claim->requires_additional_docs;
+        $docsBeforeRequired = (bool) ($before['requires_additional_docs'] ?? false);
+
+        if (! $docsBeforeRequired && $docsNowRequired) {
+            $dispatcher->notifyDocsRequested($booking, $claim);
+        }
+
+        $statusChanged = ($before['status'] ?? null) !== $claim->status;
+        $isClosed = in_array($claim->status, ['resolved', 'rejected', 'closed_no_action'], true);
+
+        if ($statusChanged && $isClosed) {
+            $dispatcher->notifyClosed($booking, $claim);
+        } elseif ($statusChanged) {
+            $dispatcher->notifyStatusUpdated($booking, $claim);
+        }
+
+        $financialOutcomeCompleted = ($before['settlement_status'] ?? null) !== $claim->settlement_status
+            && in_array($claim->settlement_status, ['completed', 'manual'], true)
+            && ($claim->outcome_action ?? 'manual_only') !== 'manual_only';
+
+        if ($financialOutcomeCompleted) {
+            $dispatcher->notifyFinancialOutcome($booking, $claim);
+        }
     }
 }

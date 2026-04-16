@@ -668,6 +668,27 @@
         const updateModal = (updateModalEl && bootstrapApi?.Modal) ? new bootstrapApi.Modal(updateModalEl) : null;
         const modalForm = updateModalEl?.querySelector('.claim-modal-form');
 
+        const hideUpdateModalFallback = () => {
+            if (!updateModalEl) {
+                return;
+            }
+
+            updateModalEl.style.display = 'none';
+            updateModalEl.classList.remove('show');
+            updateModalEl.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+        };
+
+        updateModalEl?.querySelectorAll('[data-bs-dismiss="modal"]').forEach((btn) => {
+            btn.addEventListener('click', (event) => {
+                // If Bootstrap JS isn't available, the built-in `data-bs-dismiss` won't run.
+                if (!window.bootstrap?.Modal) {
+                    event.preventDefault();
+                    hideUpdateModalFallback();
+                }
+            });
+        });
+
         casefile.querySelector('.claim-create-submit')?.addEventListener('click', async (event) => {
             event.preventDefault();
             const wrapper = casefile.querySelector('.claim-create-form');
