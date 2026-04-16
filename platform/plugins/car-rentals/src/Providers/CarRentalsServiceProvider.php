@@ -229,6 +229,15 @@ class CarRentalsServiceProvider extends ServiceProvider
                         'route' => 'car-rentals.bookings.index',
                     ])
                     ->registerItem([
+                        'id' => 'cms-plugins-car-rentals-bookings-claims-queue',
+                        'priority' => 11,
+                        'parent_id' => 'cms-plugins-car-rentals',
+                        'name' => 'plugins/car-rentals::disputes.claims_queue_title',
+                        'icon' => 'ti ti-list-details',
+                        'route' => 'car-rentals.bookings.claims.index',
+                        'permissions' => ['car-rentals.bookings.claims.index'],
+                    ])
+                    ->registerItem([
                         'id' => 'cms-plugins-car-rentals-service',
                         'priority' => 15,
                         'parent_id' => 'cms-plugins-car-rentals',

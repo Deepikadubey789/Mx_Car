@@ -32,6 +32,7 @@ class BookingController extends BaseController
             'payment',
             'currency',
             'invoice',
+            'claims',
         ]);
 
         $this->pageTitle(trans('plugins/car-rentals::booking.booking_details') . ' ' . $booking->booking_number);

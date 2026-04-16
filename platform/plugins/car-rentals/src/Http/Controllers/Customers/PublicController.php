@@ -434,7 +434,7 @@ class PublicController extends BaseController
     public function getBookingDetail(int|string $transactionId)
     {
         $booking = Booking::query()
-            ->with('invoice')
+            ->with(['invoice', 'claims'])
             ->where([
                 'transaction_id' => $transactionId,
                 'customer_id' => auth('customer')->id(),

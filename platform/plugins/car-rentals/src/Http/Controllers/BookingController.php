@@ -22,6 +22,7 @@ use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Services\DepositHoldSettlementService;
 use Botble\CarRentals\Services\PricingQuoteService;
+use Botble\CarRentals\Services\SupportActionRecorder;
 use Botble\CarRentals\Tables\BookingTable;
 use Botble\Media\Facades\RvMedia;
 use Botble\Payment\Enums\PaymentMethodEnum;
@@ -190,7 +191,7 @@ class BookingController extends BaseController
             $data['amount'] = round($baseTripAmount + (float) $data['distance_overage_amount'], 2);
         }
 
-        if (!empty($data['checkin_fuel_level']) && !empty($data['completion_gas_level'])) {
+        if (! empty($data['checkin_fuel_level']) && ! empty($data['completion_gas_level'])) {
             $fuelOrder = ['empty' => 0, 'quarter' => 1, 'half' => 2, 'three_quarters' => 3, 'full' => 4];
             $checkinLevel = $fuelOrder[$data['checkin_fuel_level']] ?? null;
             $checkoutLevel = $fuelOrder[$data['completion_gas_level']] ?? null;
@@ -206,10 +207,10 @@ class BookingController extends BaseController
             }
         }
 
-        if (!empty($data['actual_return_datetime']) && $booking->car) {
+        if (! empty($data['actual_return_datetime']) && $booking->car) {
             $actualReturn = \Carbon\Carbon::parse($data['actual_return_datetime']);
             $expectedReturn = \Carbon\Carbon::parse($booking->car->rental_end_date)->endOfDay();
-            
+
             if ($actualReturn->gt($expectedReturn)) {
                 $lateHours = (int) ceil($expectedReturn->diffInHours($actualReturn));
                 $carModel = Car::query()->find($booking->car->car_id);
@@ -220,28 +221,42 @@ class BookingController extends BaseController
             }
         }
 
-        if (!empty($data['damage_amount']) && (float) $data['damage_amount'] > 0) {
+        if (! empty($data['damage_amount']) && (float) $data['damage_amount'] > 0) {
             $data['damage_status'] = 'pending';
         } else {
             $data['damage_status'] = null;
         }
 
+        $beforeSnapshot = [
+            'damage_amount' => round((float) ($booking->damage_amount ?? 0), 2),
+            'damage_status' => $booking->damage_status,
+            'damage_dispute_reason' => $booking->damage_dispute_reason,
+            'deposit_hold_status' => (string) ($booking->deposit_hold_status ?? ''),
+            'deposit_captured_amount' => round((float) ($booking->deposit_captured_amount ?? 0), 2),
+            'deposit_released_amount' => round((float) ($booking->deposit_released_amount ?? 0), 2),
+            'deposit_hold_amount' => round((float) ($booking->deposit_hold_amount ?? 0), 2),
+            'fuel_difference_charge' => round((float) ($booking->fuel_difference_charge ?? 0), 2),
+            'late_fee_charge' => round((float) ($booking->late_fee_charge ?? 0), 2),
+            'distance_overage_amount' => round((float) ($booking->distance_overage_amount ?? 0), 2),
+            'completion_damage_images_count' => count($booking->completion_damage_images ?? []),
+        ];
+
         $booking->update($data);
 
-        if (!empty($data['damage_amount']) && (float) $data['damage_amount'] > 0 && $data['damage_status'] === 'pending') {
-            $acceptUrl = url('/bookings/' . $booking->transaction_id . '/damage/accept');
-            $disputeUrl = url('/bookings/' . $booking->transaction_id . '/damage/dispute');
+        if (! empty($data['damage_amount']) && (float) $data['damage_amount'] > 0 && $data['damage_status'] === 'pending') {
+            $acceptUrl = url('/bookings/'.$booking->transaction_id.'/damage/accept');
+            $disputeUrl = url('/bookings/'.$booking->transaction_id.'/damage/dispute');
             try {
                 \Illuminate\Support\Facades\Mail::send(
                     'plugins/car-rentals::emails.damage-claim',
                     ['booking' => $booking, 'acceptUrl' => $acceptUrl, 'disputeUrl' => $disputeUrl],
                     function ($mail) use ($booking) {
                         $mail->to($booking->customer_email, $booking->customer_name)
-                            ->subject('Damage Claim Raised - Booking #' . $booking->booking_number);
+                            ->subject('Damage Claim Raised - Booking #'.$booking->booking_number);
                     }
                 );
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Damage claim email failed: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Damage claim email failed: '.$e->getMessage());
             }
         }
 
@@ -266,7 +281,7 @@ class BookingController extends BaseController
                 && $overageAmountForSettlement > (float) $settlementCaptureAmount
             ) {
                 $remainingOverage = round($overageAmountForSettlement - (float) $settlementCaptureAmount, 2);
-                $settlementMessage .= ' ' . trans('plugins/car-rentals::booking.deposit_capture_overage_insufficient_hold', [
+                $settlementMessage .= ' '.trans('plugins/car-rentals::booking.deposit_capture_overage_insufficient_hold', [
                     'captured' => format_price((float) $settlementCaptureAmount, $booking->currency_id),
                     'remaining' => format_price($remainingOverage, $booking->currency_id),
                 ]);
@@ -275,11 +290,57 @@ class BookingController extends BaseController
 
         $this->syncDistanceOverageInvoiceItem($booking);
 
+        $booking->refresh();
+
+        $afterSnapshot = [
+            'damage_amount' => round((float) ($booking->damage_amount ?? 0), 2),
+            'damage_status' => $booking->damage_status,
+            'damage_dispute_reason' => $booking->damage_dispute_reason,
+            'deposit_hold_status' => (string) ($booking->deposit_hold_status ?? ''),
+            'deposit_captured_amount' => round((float) ($booking->deposit_captured_amount ?? 0), 2),
+            'deposit_released_amount' => round((float) ($booking->deposit_released_amount ?? 0), 2),
+            'deposit_hold_amount' => round((float) ($booking->deposit_hold_amount ?? 0), 2),
+            'fuel_difference_charge' => round((float) ($booking->fuel_difference_charge ?? 0), 2),
+            'late_fee_charge' => round((float) ($booking->late_fee_charge ?? 0), 2),
+            'distance_overage_amount' => round((float) ($booking->distance_overage_amount ?? 0), 2),
+            'completion_damage_images_count' => count($booking->completion_damage_images ?? []),
+        ];
+
+        $diff = [];
+        foreach ($beforeSnapshot as $key => $beforeVal) {
+            $afterVal = $afterSnapshot[$key] ?? null;
+            if ($beforeVal !== $afterVal) {
+                $diff[$key] = ['before' => $beforeVal, 'after' => $afterVal];
+            }
+        }
+
+        $relevantKeys = [
+            'damage_amount',
+            'damage_status',
+            'damage_dispute_reason',
+            'deposit_hold_status',
+            'deposit_captured_amount',
+            'deposit_released_amount',
+            'deposit_hold_amount',
+            'fuel_difference_charge',
+            'late_fee_charge',
+            'distance_overage_amount',
+            'completion_damage_images_count',
+        ];
+        $filteredDiff = array_intersect_key($diff, array_flip($relevantKeys));
+
+        if ($filteredDiff !== [] || ! empty($settlementAction)) {
+            app(SupportActionRecorder::class)->record($booking, 'completion_update', null, [
+                'diff' => $diff,
+                'deposit_settlement_action' => $settlementAction ?: null,
+            ]);
+        }
+
         return $this
             ->httpResponse()
             ->setMessage(
                 $settlementMessage
-                    ? trans('plugins/car-rentals::booking.completion_details_updated_successfully') . ' ' . $settlementMessage
+                    ? trans('plugins/car-rentals::booking.completion_details_updated_successfully').' '.$settlementMessage
                     : trans('plugins/car-rentals::booking.completion_details_updated_successfully')
             );
     }
@@ -332,14 +393,14 @@ class BookingController extends BaseController
 
     public function uploadPickupPhotos(Request $request, Booking $booking)
     {
-        if (!$request->hasFile('pickup_photos')) {
+        if (! $request->hasFile('pickup_photos')) {
             return response()->json(['error' => 'No photos uploaded.'], 422);
         }
 
         $uploadedPaths = [];
         foreach ($request->file('pickup_photos') as $photo) {
             $result = RvMedia::handleUpload($photo, 0, 'bookings/pickup-photos');
-            if (!$result['error']) {
+            if (! $result['error']) {
                 $uploadedPaths[] = $result['data']->url;
             }
         }
@@ -350,26 +411,37 @@ class BookingController extends BaseController
             'pickup_photos_uploaded_at' => now(),
         ]);
 
+        app(SupportActionRecorder::class)->record($booking, 'pickup_photos_upload', null, [
+            'added_count' => count($uploadedPaths),
+        ]);
+
         return response()->json([
             'success' => true,
             'photos' => $booking->fresh()->pickup_photos,
             'uploaded_at' => $booking->pickup_photos_uploaded_at->format('M d, Y h:i A'),
         ]);
     }
+
     public function deletePickupPhoto(Request $request, Booking $booking)
     {
         $index = $request->input('index');
         $photos = $booking->pickup_photos ?? [];
-    
-        if (!isset($photos[$index])) {
+
+        if (! isset($photos[$index])) {
             return response()->json(['error' => 'Photo not found.'], 404);
         }
-    
+
         array_splice($photos, $index, 1);
         $booking->update(['pickup_photos' => array_values($photos)]);
-    
+
+        app(SupportActionRecorder::class)->record($booking, 'pickup_photo_deleted', null, [
+            'index' => (int) $index,
+            'remaining_count' => count($photos),
+        ]);
+
         return response()->json(['success' => true]);
     }
+
     public function sendKeyInstructions(Request $request, Booking $booking)
     {
         $request->validate([
@@ -381,17 +453,22 @@ class BookingController extends BaseController
             'key_instructions_sent_at' => now(),
         ]);
 
+        app(SupportActionRecorder::class)->record($booking, 'key_instructions_sent', null, [
+            'instructions_length' => strlen((string) $request->key_instructions),
+            'sent_at' => optional($booking->key_instructions_sent_at)->toIso8601String(),
+        ]);
+
         // Send email to customer
         \Illuminate\Support\Facades\Mail::send(
             'plugins/car-rentals::emails.key-instructions',
             ['booking' => $booking, 'instructions' => $request->key_instructions],
             function ($mail) use ($booking) {
                 $mail->to($booking->customer_email, $booking->customer_name)
-                    ->subject('Your Car Pickup Instructions - Booking #' . $booking->booking_number);
+                    ->subject('Your Car Pickup Instructions - Booking #'.$booking->booking_number);
             }
         );
 
-        return redirect()->back()->with('success', 'Key instructions sent to ' . $booking->customer_email . ' successfully!');
+        return redirect()->back()->with('success', 'Key instructions sent to '.$booking->customer_email.' successfully!');
     }
 
     public function create()
@@ -581,7 +658,7 @@ class BookingController extends BaseController
             null
         );
 
-        $booking = new Booking();
+        $booking = new Booking;
         $booking->fill([
             'status' => $request->input('status'),
             'customer_id' => $customerId,

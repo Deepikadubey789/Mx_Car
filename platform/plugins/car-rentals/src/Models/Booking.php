@@ -135,6 +135,16 @@ class Booking extends BaseModel
         return $this->hasMany(TripMessage::class, 'booking_id')->oldest('id');
     }
 
+    public function supportActions(): HasMany
+    {
+        return $this->hasMany(BookingSupportAction::class, 'booking_id')->oldest('id');
+    }
+
+    public function claims(): HasMany
+    {
+        return $this->hasMany(BookingClaim::class, 'booking_id')->latest('id');
+    }
+
     public function payment(): BelongsTo
     {
         return $this->belongsTo(Payment::class, 'payment_id')->withDefault();

@@ -7,6 +7,7 @@ use Botble\Base\Http\Responses\BaseHttpResponse;
 use Botble\CarRentals\Events\NewTripMessage;
 use Botble\CarRentals\Models\Booking;
 use Botble\CarRentals\Models\TripMessage;
+use Botble\CarRentals\Services\SupportActionRecorder;
 use Illuminate\Http\Request;
 
 class TripMessageController extends BaseController
@@ -14,8 +15,9 @@ class TripMessageController extends BaseController
     public function index(Booking $booking, BaseHttpResponse $response)
     {
         $messages = $booking->tripMessages()->with('sender')->oldest('id')->get();
+
         return $response->setData([
-            'html' => view('plugins/car-rentals::partials.trip-messaging-list', compact('messages', 'booking'))->render()
+            'html' => view('plugins/car-rentals::partials.trip-messaging-list', compact('messages', 'booking'))->render(),
         ]);
     }
 
@@ -23,7 +25,7 @@ class TripMessageController extends BaseController
     {
         $request->validate(['message' => 'required|string']);
 
-        $message = new TripMessage();
+        $message = new TripMessage;
         $message->booking_id = $booking->id;
         $message->sender_id = auth()->id();
         $message->sender_type = get_class(auth()->user());
@@ -41,7 +43,7 @@ class TripMessageController extends BaseController
         $booking->is_escalated = false;
         $booking->save();
 
-        $message = new TripMessage();
+        $message = new TripMessage;
         $message->booking_id = $booking->id;
         $message->sender_id = auth()->id();
         $message->sender_type = get_class(auth()->user());
@@ -50,6 +52,8 @@ class TripMessageController extends BaseController
         $message->save();
 
         event(new NewTripMessage($message, ''));
+
+        app(SupportActionRecorder::class)->record($booking, 'deescalate', null, []);
 
         return $this->index($booking, $response)->setMessage('Escalation resolved.');
     }

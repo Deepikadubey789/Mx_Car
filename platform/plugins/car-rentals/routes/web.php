@@ -105,6 +105,16 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
             Route::resource('bookings', 'BookingController')->parameters(['' => 'bookings']);
 
             Route::group(['prefix' => 'bookings', 'as' => 'bookings.'], function (): void {
+                Route::get('claims', [
+                    'as' => 'claims.index',
+                    'uses' => 'BookingClaimController@index',
+                    'permission' => 'car-rentals.bookings.claims.index',
+                ]);
+                Route::get('claims/metrics', [
+                    'as' => 'claims.metrics',
+                    'uses' => 'BookingClaimController@metrics',
+                    'permission' => 'car-rentals.bookings.claims.index',
+                ]);
                 Route::get('{booking}/print', [
                     'as' => 'print',
                     'uses' => 'BookingController@print',
@@ -148,7 +158,23 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 Route::post('{booking}/messages/deescalate', [
                     'as' => 'messages.deescalate',
                     'uses' => 'TripMessageController@deescalate',
-                ]);   
+                    'permission' => 'car-rentals.bookings.edit',
+                ]);
+                Route::get('{booking}/timeline', [
+                    'as' => 'timeline',
+                    'uses' => 'BookingTripTimelineController@show',
+                    'permission' => 'car-rentals.bookings.edit',
+                ]);
+                Route::post('{booking}/claims', [
+                    'as' => 'claims.store',
+                    'uses' => 'BookingClaimController@store',
+                    'permission' => 'car-rentals.bookings.claims.assign',
+                ]);
+                Route::put('{booking}/claims/{claim}', [
+                    'as' => 'claims.update',
+                    'uses' => 'BookingClaimController@update',
+                    'permission' => 'car-rentals.bookings.claims.resolve',
+                ]);
                 Route::post('{booking}/send-key-instructions', [
                     'as' => 'send-key-instructions',
                     'uses' => 'BookingController@sendKeyInstructions',
@@ -236,11 +262,11 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 ]);
             });
             Route::resource('services', 'ServiceController')->parameters(['' => 'services']);
-            
+
             // --- NEW: PROTECTION PLAN ROUTES ---
-Route::resource('host-protection-plans', 'HostProtectionPlanController')->parameters(['host-protection-plans' => 'plan']);
-Route::resource('guest-protection-plans', 'GuestProtectionPlanController')->parameters(['guest-protection-plans' => 'plan']);
-            
+            Route::resource('host-protection-plans', 'HostProtectionPlanController')->parameters(['host-protection-plans' => 'plan']);
+            Route::resource('guest-protection-plans', 'GuestProtectionPlanController')->parameters(['guest-protection-plans' => 'plan']);
+
             Route::resource('coupons', CouponController::class)->parameters(['' => 'coupons']);
             Route::group(['permission' => 'car-rentals.coupons.edit'], function (): void {
                 Route::post('coupons/generate-coupon', [CouponController::class, 'postGenerateCoupon'])

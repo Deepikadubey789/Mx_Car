@@ -129,6 +129,13 @@ Route::group([
         Route::post('coupons/apply', 'CouponController@apply');
         Route::post('coupons/remove', 'CouponController@remove');
 
+        // Customer claims (mobile public-safe)
+        Route::prefix('bookings/{booking}/claims')->group(function (): void {
+            Route::get('/', 'Claims\CustomerClaimController@index')->wherePrimaryKey('booking');
+            Route::get('/{claim}', 'Claims\CustomerClaimController@show')->wherePrimaryKey('booking')->wherePrimaryKey('claim');
+            Route::get('/timeline', 'Claims\CustomerClaimController@timeline')->wherePrimaryKey('booking');
+        });
+
         // Vendor routes (require vendor verification)
         Route::middleware(['vendor'])->prefix('vendor')->group(function (): void {
             // Vendor profile
@@ -151,6 +158,12 @@ Route::group([
                 Route::get('/{id}', 'Vendor\BookingController@show')->wherePrimaryKey();
                 Route::put('/{id}/status', 'Vendor\BookingController@updateStatus')->wherePrimaryKey();
                 Route::post('/{id}/complete', 'Vendor\BookingController@complete')->wherePrimaryKey();
+            });
+
+            Route::prefix('bookings/{booking}/claims')->group(function (): void {
+                Route::get('/', 'Claims\VendorClaimController@index')->wherePrimaryKey('booking');
+                Route::get('/{claim}', 'Claims\VendorClaimController@show')->wherePrimaryKey('booking')->wherePrimaryKey('claim');
+                Route::get('/timeline', 'Claims\VendorClaimController@timeline')->wherePrimaryKey('booking');
             });
 
             // Vendor dashboard (basic & advanced)
@@ -187,6 +200,17 @@ Route::group([
                 Route::post('/resume', 'Vendor\AutoPricingApiController@resume')->wherePrimaryKey('car');
                 Route::get('/history', 'Vendor\AutoPricingApiController@history')->wherePrimaryKey('car');
             });
+        });
+
+        // Admin/support claims (mobile internal)
+        Route::prefix('admin/bookings')->group(function (): void {
+            Route::get('claims', 'Claims\AdminClaimController@queue');
+            Route::get('claims/metrics', 'Claims\AdminClaimController@metrics');
+            Route::get('{booking}/claims', 'Claims\AdminClaimController@index')->wherePrimaryKey('booking');
+            Route::post('{booking}/claims', 'Claims\AdminClaimController@store')->wherePrimaryKey('booking');
+            Route::get('{booking}/claims/timeline', 'Claims\AdminClaimController@timeline')->wherePrimaryKey('booking');
+            Route::get('{booking}/claims/{claim}', 'Claims\AdminClaimController@show')->wherePrimaryKey('booking')->wherePrimaryKey('claim');
+            Route::put('{booking}/claims/{claim}', 'Claims\AdminClaimController@update')->wherePrimaryKey('booking')->wherePrimaryKey('claim');
         });
     });
 });
