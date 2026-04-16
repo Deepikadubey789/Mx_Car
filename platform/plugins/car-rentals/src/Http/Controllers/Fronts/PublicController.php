@@ -260,6 +260,28 @@ class PublicController extends BaseController
                 ->withInput();
         }
 
+        // --- NEW: VERIFY DISTANCE BEFORE ALLOWING CHECKOUT ---
+        $deliveryLocationId = $request->input('delivery_location_id');
+        $customAddress = $request->input('custom_delivery_address');
+
+        if ($deliveryLocationId && $customAddress) {
+            $car->loadMissing('deliveryLocations');
+            $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
+
+            if ($requestedZone && (stripos($requestedZone->name, 'custom') !== false || stripos($requestedZone->name, 'address') !== false)) {
+                $distanceCheck = $this->validateCustomDeliveryDistance($car, $customAddress);
+
+                if (!$distanceCheck['valid']) {
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setMessage($distanceCheck['error'])
+                        ->withInput(); // Flashes the error and stops them from proceeding!
+                }
+            }
+        }
+        // -----------------------------------------------------
+
         $token = md5(Str::random(40));
 
         session([
@@ -555,6 +577,30 @@ class PublicController extends BaseController
         
         $couponCode = Arr::get($sessionData, 'coupon_code');
 
+        // --- NEW: VERIFY CUSTOM DELIVERY DISTANCE ---
+        $deliveryLocationId = Arr::get($sessionData, 'delivery_location_id');
+        $customAddress = Arr::get($sessionData, 'custom_delivery_address');
+
+        if ($deliveryLocationId && $customAddress) {
+            $car->loadMissing('deliveryLocations');
+            $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
+
+            // If this is the "Custom" zone, verify the distance!
+            if ($requestedZone && (stripos($requestedZone->name, 'custom') !== false || stripos($requestedZone->name, 'address') !== false)) {
+                
+                $distanceCheck = $this->validateCustomDeliveryDistance($car, $customAddress);
+                
+                if (!$distanceCheck['valid']) {
+                    return $this
+                        ->httpResponse()
+                        ->setError()
+                        ->setMessage($distanceCheck['error'])
+                        ->withInput();
+                }
+            }
+        }
+        // --------------------------------------------
+
         if (! $car->isAvailableAt(['start_date' => $startDate, 'end_date' => $endDate])) {
             return $this
                 ->httpResponse()
@@ -611,9 +657,28 @@ class PublicController extends BaseController
         $depositType = (string) $quoteData['deposit_type'];
         $depositRate = (float) $quoteData['deposit_rate'];
         $baseDepositAmount = (float) $quoteData['deposit_base_amount'];
-        $depositRisk = $quoteData['deposit_risk'];
+       $depositRisk = $quoteData['deposit_risk'];
         $depositAmount = (float) $quoteData['deposit_amount'];
         $finalPayableAmount = (float) $quoteData['final_payable_amount'];
+
+        // --- NEW: Calculate Delivery Fee for the Final Database Save ---
+        $deliveryFee = 0.00;
+        $deliveryLocationId = Arr::get($sessionData, 'delivery_location_id');
+        
+        if ($deliveryLocationId && $car->is_delivery_enabled) {
+            $car->loadMissing('deliveryLocations');
+            $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
+            
+            if ($requestedZone && $car->deliveryLocations->contains('id', $requestedZone->id)) {
+                $deliveryFee = (float) $requestedZone->fee_amount;
+                
+                $rentalDays = (int) ($quoteData['rental_days'] ?? 1);
+                if ($car->free_delivery_days_threshold && $rentalDays >= $car->free_delivery_days_threshold) {
+                    $deliveryFee = 0.00;
+                }
+            }
+        }
+        // ---------------------------------------------------------------
 
         BookingHelper::saveCheckoutData([
             'coupon_amount' => $discountAmount,
@@ -621,7 +686,7 @@ class PublicController extends BaseController
 
         $booking = new Booking($request->validated());
 
-       // --- NEW: Snapshot the Guest and Host Protection Plans directly onto the booking! ---
+        // --- NEW: Snapshot the Guest and Host Protection Plans directly onto the booking! ---
         // Safely check if the plan actually loaded in the quote before saving the ID
         $booking->guest_protection_plan_id = $quoteData['guest_protection_plan'] ? $quoteData['guest_protection_plan']->id : null;
         $booking->guest_protection_fee = (float) $quoteData['guest_protection_fee'];
@@ -635,10 +700,20 @@ class PublicController extends BaseController
         }
         // -----------------------------------------------------------------------------------
 
+        // --- NEW: Save Delivery Columns ---
+        $booking->delivery_location_id = $deliveryLocationId;
+        $booking->delivery_fee = $deliveryFee;
+        $booking->custom_delivery_address = Arr::get($sessionData, 'custom_delivery_address');
+        // ----------------------------------
+
         $booking->sub_total = $amount;
         $booking->coupon_code = $couponCode;
         $booking->coupon_amount = $discountAmount;
-        $booking->amount = $finalPayableAmount;
+        
+        // --- FIX: Add Delivery Fee to Final Amount ---
+        $booking->amount = $finalPayableAmount + $deliveryFee;
+        // ---------------------------------------------
+        
         $booking->tax_amount = $taxAmount;
         $booking->fee_name = $feeName;
         $booking->fee_value = $feeValue;
@@ -811,18 +886,18 @@ class PublicController extends BaseController
             'rental_end_date' => ['required', 'string', 'date'],
             'rental_end_time' => ['nullable', 'string', 'date_format:H:i'],
             'service_ids' => ['nullable', 'array'],
-            // --- FIX: Now expects a single ID instead of an array ---
             'guest_protection_plan_id' => ['nullable', 'integer'], 
+            // --- NEW: Validate the delivery field ---
+            'delivery_location_id' => ['nullable', 'integer', 'exists:cr_delivery_locations,id'],
+            'custom_delivery_address' => ['nullable', 'string', 'max:255'],
         ]);
 
-        $car = Car::query()
-            ->whereKey($request->input('car_id'))
-            ->first();
+        // Eager load deliveryLocations so we can calculate the fee
+        $car = Car::query()->with('deliveryLocations')->whereKey($request->input('car_id'))->first();
 
         $startDate = $request->input('rental_start_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_start_date')) : null;
         $endDate = $request->input('rental_end_date') ? CarRentalsHelper::dateFromRequest($request->input('rental_end_date')) : null;
 
-        // --- FIX: Pass the single guest_protection_plan_id as an integer ---
         $guestProtectionPlanId = $request->input('guest_protection_plan_id') ? (int) $request->input('guest_protection_plan_id') : null;
 
         $quoteData = app(PricingQuoteService::class)->buildQuote(
@@ -830,14 +905,48 @@ class PublicController extends BaseController
             $startDate,
             $endDate,
             $request->input('service_ids', []),
-            $guestProtectionPlanId, // Changed from insurance_ids array
+            $guestProtectionPlanId,
             null,
             Auth::guard('customer')->user()
         );
 
+      // --- NEW: Calculate Delivery Fee & Validate Distance for Web Estimate ---
+        $deliveryFee = 0.00;
+        $distanceError = null; // Track the error to pass to the view
+        $deliveryLocationId = $request->input('delivery_location_id');
+        $customAddress = $request->input('custom_delivery_address'); 
+        
+        if ($deliveryLocationId && $car->is_delivery_enabled) {
+            $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
+            
+            if ($requestedZone && $car->deliveryLocations->contains('id', $requestedZone->id)) {
+                
+                // 1. VERIFY CUSTOM ADDRESS DISTANCE
+                if (stripos($requestedZone->name, 'custom') !== false || stripos($requestedZone->name, 'address') !== false) {
+                    if (!empty($customAddress)) {
+                        $distanceCheck = $this->validateCustomDeliveryDistance($car, $customAddress);
+                        if (!$distanceCheck['valid']) {
+                            $distanceError = $distanceCheck['error'];
+                        }
+                    }
+                }
+
+                // 2. Calculate the Fee (Only if there is no distance error)
+                if (!$distanceError) {
+                    $deliveryFee = (float) $requestedZone->fee_amount;
+                    
+                    $rentalDays = (int) $quoteData['rental_days'];
+                    if ($car->free_delivery_days_threshold && $rentalDays >= $car->free_delivery_days_threshold) {
+                        $deliveryFee = 0.00;
+                    }
+                }
+            }
+        }
+        // --------------------------------------------------------
+
         $data = [
             'subtotal' => (float) $quoteData['subtotal'],
-            'total' => (float) $quoteData['final_payable_amount'],
+            'total' => (float) $quoteData['final_payable_amount'] + $deliveryFee,
             'tax' => (float) $quoteData['tax_amount'],
             'taxInfo' => (string) $quoteData['tax_title'],
             'discount' => (float) $quoteData['coupon_amount'],
@@ -850,25 +959,27 @@ class PublicController extends BaseController
             'policyDiscountAmount' => (float) $quoteData['policy_discount_amount'],
             'policyDiscountSource' => (string) ($quoteData['policy_discount_source'] ?? ''),
             'serviceAmount' => (float) $quoteData['service_amount'],
-            
-            // --- FIX: Pass the new Guest Protection Fee to the estimate view ---
             'guestProtectionFee' => (float) $quoteData['guest_protection_fee'],
-            
             'feeName' => (string) ($quoteData['fee_name'] ?? ''),
             'depositType' => (string) ($quoteData['deposit_type'] ?? 'percentage'),
             'depositRate' => (float) ($quoteData['deposit_rate'] ?? 0),
             'depositBaseAmount' => (float) ($quoteData['deposit_base_amount'] ?? 0),
-            'includedDistanceLimit' => $quoteData['included_distance_limit'] !== null
-                ? (int) $quoteData['included_distance_limit']
-                : null,
+            'includedDistanceLimit' => $quoteData['included_distance_limit'] !== null ? (int) $quoteData['included_distance_limit'] : null,
             'distanceUnit' => (string) ($quoteData['distance_unit'] ?? 'km'),
             'extraDistanceUnitPrice' => (float) ($quoteData['extra_distance_unit_price'] ?? 0),
             'distanceOverageBillingMode' => (string) ($quoteData['distance_overage_billing_mode'] ?? 'end_of_trip'),
+            'deliveryFee' => $deliveryFee, 
+            'distanceError' => $distanceError, // NEW: Pass the error to the frontend HTML
         ];
 
-        return $this
-            ->httpResponse()
-            ->setData(view('plugins/car-rentals::cars.partials.booking-form-estimate', [...$data])->render());
+        $response = $this->httpResponse()->setData(view('plugins/car-rentals::cars.partials.booking-form-estimate', [...$data])->render());
+
+        // If there was an error, return the HTML but flag the response as an error so the toast pops up
+        if ($distanceError) {
+            return $response->setError()->setMessage($distanceError);
+        }
+
+        return $response;
     }
 
    public function postCarReviews(ReviewRequest $request)
@@ -1281,7 +1392,6 @@ class PublicController extends BaseController
         $serviceIds = Arr::get($sessionData, 'service_ids', []);
         $couponCode = Arr::get($sessionData, 'coupon_code');
         
-        // --- FIX: Extract the single Guest Plan ID from the session ---
         $guestProtectionPlanId = Arr::get($sessionData, 'guest_protection_plan_id');
         $guestProtectionPlanId = $guestProtectionPlanId ? (int) $guestProtectionPlanId : null;
 
@@ -1290,14 +1400,12 @@ class PublicController extends BaseController
             $startDate,
             $endDate,
             $serviceIds,
-            $guestProtectionPlanId, // Changed from insurance_ids array
+            $guestProtectionPlanId, 
             $couponCode,
             Auth::guard('customer')->user()
         );
 
         $services = $quoteData['services'];
-        
-        // --- FIX: Extract the new Guest Plan Data ---
         $guestProtectionPlan = $quoteData['guest_protection_plan'];
         $guestProtectionFee = (float) $quoteData['guest_protection_fee'];
         
@@ -1316,11 +1424,33 @@ class PublicController extends BaseController
         $baseDepositAmount = (float) $quoteData['deposit_base_amount'];
         $depositRisk = $quoteData['deposit_risk'];
         $depositAmount = (float) $quoteData['deposit_amount'];
-        $totalAmount = (float) $quoteData['total_amount'];
-        $finalPayableAmount = (float) $quoteData['final_payable_amount'];
+        
+        // --- NEW: Calculate Delivery Fee for Final Checkout ---
+        $deliveryFee = 0.00;
+        $deliveryLocationId = Arr::get($sessionData, 'delivery_location_id');
+        
+        if ($deliveryLocationId && $car->is_delivery_enabled) {
+            $car->loadMissing('deliveryLocations');
+            $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
+            
+            if ($requestedZone && $car->deliveryLocations->contains('id', $requestedZone->id)) {
+                $deliveryFee = (float) $requestedZone->fee_amount;
+                
+                $rentalDays = (int) $quoteData['rental_days'];
+                if ($car->free_delivery_days_threshold && $rentalDays >= $car->free_delivery_days_threshold) {
+                    $deliveryFee = 0.00;
+                }
+            }
+        }
+        
+        $totalAmount = (float) $quoteData['total_amount'] + $deliveryFee;
+        $finalPayableAmount = (float) $quoteData['final_payable_amount'] + $deliveryFee;
+        // -----------------------------------------------------
 
         BookingHelper::saveCheckoutData([
             'coupon_amount' => $discountAmount,
+            // Keep the delivery ID in session so the Payment screen knows about it
+            'delivery_location_id' => $deliveryLocationId, 
         ]);
 
         $priceLockService = app(PriceLockService::class);
@@ -1344,7 +1474,7 @@ class PublicController extends BaseController
             'deposit_risk_multiplier' => (float) $depositRisk['multiplier'],
             'deposit_risk_level' => $depositRisk['risk_level'],
             'deposit_risk_reasons' => $depositRisk['reasons'],
-            'total_amount' => $finalPayableAmount,
+            'total_amount' => $finalPayableAmount, // Now includes delivery
             'currency_id' => $car->currency_id,
             'tax_title' => $taxTitle,
             'services' => $services->map(fn (Service $service) => [
@@ -1355,6 +1485,7 @@ class PublicController extends BaseController
             ])->values()->all(),
         ];
 
+        // ... (The rest of the price lock code remains identical) ...
         $freshSession = BookingHelper::getCheckoutData();
         $priceLock = Arr::get($freshSession, 'price_lock');
         $lockWasRefreshed = false;
@@ -1393,10 +1524,10 @@ class PublicController extends BaseController
             'priceLockExpiresAt' => Arr::get($priceLock, 'expires_at'),
             'priceLockExpiredMessage' => $priceLockExpiredMessage,
             'lockWasRefreshed' => $lockWasRefreshed,
-            
-            // --- FIX: Return the new variables ---
             'guest_protection_plan' => $guestProtectionPlan,
             'guest_protection_fee' => $guestProtectionFee,
+            // Pass it out just in case you need it on the checkout UI
+            'delivery_fee' => $deliveryFee, 
         ];
     }
 
@@ -1437,5 +1568,117 @@ class PublicController extends BaseController
             'booking_locations' => $bookingLocations,
             'total' => $locations->count() + $bookingLocations->count(),
         ]);
+    }
+
+   /**
+     * Get coordinates from address and calculate distance to the car.
+     */
+    private function validateCustomDeliveryDistance($car, $guestAddress)
+    {
+        $carLat = $car->latitude;
+        $carLng = $car->longitude;
+
+        // 1. If the car has no saved coordinates, geocode its text address!
+        if (!$carLat || !$carLng) {
+            
+            $city = $car->city ? $car->city->name : null;
+            $state = $car->state ? $car->state->name : null;
+            $country = $car->country ? $car->country->name : null;
+
+            // First attempt: Full exact address
+            $hostAddressString = implode(', ', array_filter([$car->address, $city, $state, $country]));
+            // Second attempt: Just City, State, Country
+            $hostFallbackString = implode(', ', array_filter([$city, $state, $country]));
+
+            if (empty($hostFallbackString)) {
+                return ['valid' => false, 'error' => __('Host location is missing. Cannot verify delivery distance.')];
+            }
+
+            try {
+                // FIX: Added withoutVerifying() to bypass local XAMPP/Laragon SSL issues
+                $hostResp = \Illuminate\Support\Facades\Http::withoutVerifying()
+                    ->withHeaders(['User-Agent' => 'BotbleCarRental/1.0 (contact@yourdomain.com)'])
+                    ->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
+                    'format' => 'json',
+                    'q' => $hostAddressString,
+                    'limit' => 1
+                ]);
+
+                $hostData = $hostResp->json();
+
+                if (empty($hostData)) {
+                    $hostResp = \Illuminate\Support\Facades\Http::withoutVerifying()
+                        ->withHeaders(['User-Agent' => 'BotbleCarRental/1.0 (contact@yourdomain.com)'])
+                        ->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
+                        'format' => 'json',
+                        'q' => $hostFallbackString,
+                        'limit' => 1
+                    ]);
+                    $hostData = $hostResp->json();
+                }
+
+                if (empty($hostData)) {
+                    return ['valid' => false, 'error' => __('We could not locate the host on the map to verify distance.')];
+                }
+
+                $carLat = $hostData[0]['lat'];
+                $carLng = $hostData[0]['lon'];
+            } catch (\Exception $e) {
+                // FIX: Do not fail silently. Show the API connection error!
+                return ['valid' => false, 'error' => 'Host Map API Error: ' . $e->getMessage()];
+            }
+        }
+
+        // 2. Ping the FREE OpenStreetMap API to get the Guest's coordinates
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->withHeaders(['User-Agent' => 'BotbleCarRental/1.0 (contact@yourdomain.com)'])
+                ->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
+                'format' => 'json',
+                'q' => $guestAddress,
+                'limit' => 1
+            ]);
+
+            $data = $response->json();
+
+            if (empty($data)) {
+                return ['valid' => false, 'error' => __('We could not find your delivery address. Please check for typos.')];
+            }
+
+            $guestLat = $data[0]['lat'];
+            $guestLng = $data[0]['lon'];
+
+            // 3. The Haversine Formula
+            $earthRadius = 3959; // Miles
+            
+            $latFrom = deg2rad((float)$carLat);
+            $lonFrom = deg2rad((float)$carLng);
+            $latTo = deg2rad((float)$guestLat);
+            $lonTo = deg2rad((float)$guestLng);
+
+            $latDelta = $latTo - $latFrom;
+            $lonDelta = $lonTo - $lonFrom;
+
+            $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+              cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+              
+            $distance = $angle * $earthRadius;
+            
+            // 4. Check against the host's max distance
+            $maxDistance = $car->max_delivery_distance_miles ?? 10;
+
+            if ($distance > $maxDistance) {
+                return [
+                    'valid' => false, 
+                    'error' => __('This address is :dist miles away. Delivery is only available within :max miles of the host\'s location.', ['dist' => round($distance, 1), 'max' => $maxDistance])
+                ];
+            }
+
+            return ['valid' => true, 'distance' => $distance];
+
+        } catch (\Exception $e) {
+            // FIX: Do not fail silently. Show the API connection error!
+            return ['valid' => false, 'error' => 'Guest Map API Error: ' . $e->getMessage()]; 
+        }
     }
 }

@@ -16,7 +16,7 @@ class BookingService
     public function createBooking(array $data): Booking
     {
         return DB::transaction(function () use ($data) {
-            $car = Car::query()->find($data['car_id']);
+            $car = Car::query()->with('deliveryLocations')->find($data['car_id']);
 
             // Calculate rental days
             $pickupDate = $data['pickup_date'] instanceof Carbon ? $data['pickup_date'] : Carbon::parse($data['pickup_date']);
@@ -46,6 +46,32 @@ class BookingService
             $couponAmount = (float) ($quoteData['coupon_amount'] ?? 0);
             $couponCode = ! empty($data['coupon_code']) && $couponAmount > 0 ? $data['coupon_code'] : null;
 
+            // --- NEW: Process Delivery Settings ---
+            $deliveryFee = 0.00;
+            $deliveryLocationId = $data['delivery_location_id'] ?? null;
+            $customDeliveryAddress = null;
+
+            if ($deliveryLocationId && $car->is_delivery_enabled) {
+                // Find the zone the user requested
+                $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
+
+                // Verify the car actually supports this zone
+                if ($requestedZone && $car->deliveryLocations->contains('id', $requestedZone->id)) {
+                    $deliveryFee = (float) $requestedZone->fee_amount;
+
+                    // If it's a custom address type, save the address string the user typed in
+                    if ($requestedZone->type === 'custom_address' && !empty($data['custom_delivery_address'])) {
+                        $customDeliveryAddress = $data['custom_delivery_address'];
+                    }
+
+                    // Check for Free Delivery Threshold!
+                    if ($car->free_delivery_days_threshold && $rentalDays >= $car->free_delivery_days_threshold) {
+                        $deliveryFee = 0.00; 
+                    }
+                }
+            }
+            // --------------------------------------
+
             // Create booking
             $booking = Booking::create([
                 'customer_id' => $data['customer_id'] ?? null,
@@ -64,9 +90,18 @@ class BookingService
                 'return_location_id' => get_car_rentals_setting('disable_one_way_rental', false)
                     ? ($data['pickup_location_id'] ?? null)
                     : ($data['return_location_id'] ?? null),
+                
+                // --- NEW: Save Delivery Columns ---
+                'delivery_location_id' => $deliveryLocationId,
+                'custom_delivery_address' => $customDeliveryAddress,
+                'delivery_fee' => $deliveryFee,
+                
                 'number_of_days' => $rentalDays,
                 'sub_total' => (float) $quoteData['subtotal'],
-                'amount' => (float) $quoteData['final_payable_amount'],
+                
+                // --- NEW: Add Delivery Fee to Final Amount ---
+                'amount' => (float) $quoteData['final_payable_amount'] + $deliveryFee,
+                
                 'discount_amount' => $couponAmount,
                 'coupon_code' => $couponCode,
                 'coupon_amount' => $couponAmount,
@@ -87,6 +122,7 @@ class BookingService
                 'price_snapshot' => [
                     'rental_days' => (int) ($quoteData['rental_days'] ?? 1),
                     'base_rental_amount' => (float) ($quoteData['base_rental_amount'] ?? 0),
+                    // ... (keep the rest of the existing price_snapshot array identical)
                     'policy_discount_amount' => (float) ($quoteData['policy_discount_amount'] ?? 0),
                     'policy_discount_pre_cap_amount' => (float) ($quoteData['policy_discount_pre_cap_amount'] ?? 0),
                     'policy_discount_capped' => (bool) ($quoteData['policy_discount_capped'] ?? false),
@@ -107,6 +143,12 @@ class BookingService
                         'state' => (string) $eligibility['state'],
                         'reasons' => (array) $eligibility['reasons'],
                     ],
+                    // NEW: Add delivery to the JSON snapshot for permanent receipt history
+                    'delivery_snapshot' => [
+                        'zone_id' => $deliveryLocationId,
+                        'fee_charged' => $deliveryFee,
+                        'was_free_threshold_met' => ($car->free_delivery_days_threshold && $rentalDays >= $car->free_delivery_days_threshold)
+                    ]
                 ],
                 'distance_unit' => (string) ($quoteData['distance_unit'] ?? 'km'),
                 'start_mileage' => $car->mileage !== null ? (int) $car->mileage : null,

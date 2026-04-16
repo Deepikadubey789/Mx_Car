@@ -157,6 +157,18 @@
             </div>
         @endif
 
+        {{-- NEW: Delivery Fee Breakdown --}}
+        @if ($booking->delivery_location_id)
+            <div class="col-lg-4">
+                <strong>{{ __('Delivery Fee') }}:</strong>
+                @if($booking->delivery_fee > 0)
+                    {{ format_price($booking->delivery_fee, $booking->currency_id) }}
+                @else
+                    <span class="text-success fw-bold">{{ __('Free') }}</span>
+                @endif
+            </div>
+        @endif
+
         @if ($booking->deposit_amount > 0)
             <div class="col-lg-4">
                 <strong>

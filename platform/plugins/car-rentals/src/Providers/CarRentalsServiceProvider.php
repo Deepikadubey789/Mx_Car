@@ -457,6 +457,15 @@ class CarRentalsServiceProvider extends ServiceProvider
                 'name' => __('Activity Logs'),
                 'url' => fn () => route('car-rentals.vendor.telematics-logs'),
                 'icon' => 'ti ti-history',
+            ])
+
+            // --- NEW: Add the Delivery Zones link ---
+            ->registerItem([
+                'id' => 'car-rentals.vendor.delivery-locations',
+                'priority' => 18,
+                'name' => __('Delivery Zones'),
+                'url' => fn () => route('car-rentals.vendor.delivery-locations.index'),
+                'icon' => 'ti ti-map-pin',
             ]);
             // -----------------------------------------------------
 

@@ -224,6 +224,17 @@
             </x-core::datagrid.item>
         @endif
 
+        {{-- NEW: Delivery Fee Breakdown --}}
+        @if ($booking->delivery_location_id)
+            <x-core::datagrid.item :title="__('Delivery Fee')">
+                @if($booking->delivery_fee > 0)
+                    {{ format_price($booking->delivery_fee, $booking->currency_id) }}
+                @else
+                    <span class="badge bg-success-lt fw-bold">{{ __('Free') }}</span>
+                @endif
+            </x-core::datagrid.item>
+        @endif
+
         @if ($booking->deposit_amount > 0)
             <x-core::datagrid.item :title="__('Refundable Deposit') . ' ' . ($booking->deposit_type === 'fixed' ? '(' . __('Fixed') . ')' : '(' . (float) ($booking->deposit_rate ?? 0) . '%)')">
                 {{ format_price($booking->deposit_amount, $booking->currency_id) }}

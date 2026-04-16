@@ -68,6 +68,22 @@ Route::group([
         ]);
         // ------------------------------------------------
 
+
+        // --- NEW: Delivery Locations Management ---
+        Route::get('delivery-locations', [
+            'as' => 'delivery-locations.index',
+            'uses' => 'DeliveryLocationController@index',
+        ]);
+        Route::post('delivery-locations', [
+            'as' => 'delivery-locations.store',
+            'uses' => 'DeliveryLocationController@store',
+        ]);
+        Route::delete('delivery-locations/{id}', [
+            'as' => 'delivery-locations.destroy',
+            'uses' => 'DeliveryLocationController@destroy',
+        ]);
+
+        
         Route::resource('cars', 'CarController')->parameters(['' => 'car']);
 
         Route::resource('insurances', 'InsuranceController')->parameters(['' => 'insurance']);
