@@ -77,6 +77,31 @@ return [
         'flag' => 'car-rentals.bookings.destroy',
         'parent_flag' => 'car-rentals.bookings.index',
     ],
+    [
+        'name' => 'Disputes & trip timeline',
+        'flag' => 'car-rentals.bookings.disputes.view',
+        'parent_flag' => 'car-rentals.bookings.index',
+    ],
+    [
+        'name' => 'Claims Queue',
+        'flag' => 'car-rentals.bookings.claims.index',
+        'parent_flag' => 'car-rentals.bookings.index',
+    ],
+    [
+        'name' => 'Claims Assign/Reassign',
+        'flag' => 'car-rentals.bookings.claims.assign',
+        'parent_flag' => 'car-rentals.bookings.claims.index',
+    ],
+    [
+        'name' => 'Claims Resolve/Update',
+        'flag' => 'car-rentals.bookings.claims.resolve',
+        'parent_flag' => 'car-rentals.bookings.claims.index',
+    ],
+    [
+        'name' => 'Claims Financial Actions',
+        'flag' => 'car-rentals.bookings.claims.financial',
+        'parent_flag' => 'car-rentals.bookings.claims.index',
+    ],
 
     /**
      * Invoices

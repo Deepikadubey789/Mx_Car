@@ -1,11 +1,18 @@
 @php
     Theme::asset()->usePath(false)->add('animate-css', 'https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css');
+    $compactAdmin = $compactAdmin ?? false;
 @endphp
 
-<div class="trip-chat-wrapper card shadow-sm border-0 rounded-4 mt-4" data-fetch-url="{{ $fetchUrl }}" data-store-url="{{ $storeUrl }}" data-escalate-url="{{ $escalateUrl ?? '' }}">
-    <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center rounded-top-4">
-        <h5 class="mb-0 d-flex align-items-center fw-bold">
-            <i class="ti ti-messages text-primary me-2 fs-4"></i> Trip Messaging
+<div
+    class="trip-chat-wrapper card shadow-sm border-0 {{ $compactAdmin ? 'rounded trip-chat-wrapper--admin mt-0' : 'rounded-4 mt-4' }}"
+    data-fetch-url="{{ $fetchUrl }}"
+    data-store-url="{{ $storeUrl }}"
+    data-escalate-url="{{ $escalateUrl ?? '' }}"
+>
+    <div class="card-header bg-white border-bottom {{ $compactAdmin ? 'py-2 px-3' : 'py-3' }} d-flex justify-content-between align-items-center {{ $compactAdmin ? 'rounded-top' : 'rounded-top-4' }}">
+        <h5 class="mb-0 d-flex align-items-center {{ $compactAdmin ? 'fw-semibold fs-6' : 'fw-bold' }}">
+            <i class="ti ti-messages text-primary me-2 {{ $compactAdmin ? 'fs-5' : 'fs-4' }}"></i>
+            {{ __('plugins/car-rentals::disputes.trip_messaging_title') }}
         </h5>
         <div class="actions">
             @if(!empty($deescalateUrl) && $booking->is_escalated)
@@ -24,19 +31,22 @@
         </div>
     </div>
     
-    <div class="card-body p-0 chat-container-body" style="background: #f8fafc; overflow-y: auto; height: 400px; display: flex; flex-direction: column;">
+    <div
+        class="card-body p-0 chat-container-body"
+        style="background: #f8fafc; overflow-y: auto; height: {{ $compactAdmin ? '260px' : '400px' }}; display: flex; flex-direction: column;"
+    >
         <div class="trip-chat-list p-4 flex-grow-1" id="trip-chat-messages">
             <!-- Messages load here via JS -->
             <div class="text-center text-muted my-3"><span class="spinner-border spinner-border-sm" role="status"></span> Loading messages...</div>
         </div>
     </div>
 
-    <div class="card-footer bg-white border-top p-3 rounded-bottom-4">
+    <div class="card-footer bg-white border-top {{ $compactAdmin ? 'p-2' : 'p-3' }} {{ $compactAdmin ? 'rounded-bottom' : 'rounded-bottom-4' }}">
         <div class="trip-chat-form position-relative">
             @csrf
-            <div class="input-group input-group-lg rounded-pill shadow-sm overflow-hidden border">
-                <input type="text" name="message" class="form-control border-0 px-4" placeholder="Type your message here..." required autocomplete="off" style="box-shadow: none;">
-                <button type="button" class="btn btn-primary px-4 d-flex align-items-center transition-all trip-chat-send-btn">
+            <div class="input-group {{ $compactAdmin ? '' : 'input-group-lg' }} rounded-pill shadow-sm overflow-hidden border">
+                <input type="text" name="message" class="form-control border-0 {{ $compactAdmin ? 'px-3 py-2' : 'px-4' }}" placeholder="{{ __('Type your message here...') }}" required autocomplete="off" style="box-shadow: none;">
+                <button type="button" class="btn btn-primary {{ $compactAdmin ? 'px-3' : 'px-4' }} d-flex align-items-center transition-all trip-chat-send-btn">
                     <span class="me-2 d-none d-sm-inline">Send</span> <i class="ti ti-send-2"></i>
                 </button>
             </div>
@@ -182,6 +192,14 @@
     .chat-container-body::-webkit-scrollbar-thumb {
         background-color: #cbd5e1;
         border-radius: 20px;
+    }
+
+    .trip-chat-wrapper--admin {
+        border: 1px solid var(--bs-border-color, rgba(0, 0, 0, 0.08)) !important;
+        box-shadow: none !important;
+    }
+    .trip-chat-wrapper--admin .trip-chat-list {
+        padding: 0.75rem 1rem !important;
     }
 </style>
 
