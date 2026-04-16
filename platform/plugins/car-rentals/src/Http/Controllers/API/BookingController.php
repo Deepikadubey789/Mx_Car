@@ -784,4 +784,189 @@ class BookingController extends BaseApiController
             ->setMessage($result['message'])
             ->toApiResponse();
     }
+
+    /**
+     * Estimate booking price for the Mobile App
+     *
+     * @group Car Rentals - Public
+     */
+    public function estimateBooking(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'car_id' => 'required|exists:cr_cars,id',
+            'rental_start_date' => 'required|date',
+            'rental_end_date' => 'required|date',
+            'service_ids' => 'nullable|array',
+            'guest_protection_plan_id' => 'nullable|integer', 
+            // --- NEW RULES ---
+            'delivery_location_id' => 'nullable|integer|exists:cr_delivery_locations,id',
+            'custom_delivery_address' => 'nullable|string|max:255',
+        ]);
+
+        $car = \Botble\CarRentals\Models\Car::query()->with('deliveryLocations')->findOrFail($request->input('car_id'));
+        
+        $startDate = $request->input('rental_start_date') ? \Carbon\Carbon::parse($request->input('rental_start_date')) : null;
+        $endDate = $request->input('rental_end_date') ? \Carbon\Carbon::parse($request->input('rental_end_date')) : null;
+        $guestProtectionPlanId = $request->input('guest_protection_plan_id') ? (int) $request->input('guest_protection_plan_id') : null;
+
+        $quoteData = app(\Botble\CarRentals\Services\PricingQuoteService::class)->buildQuote(
+            $car,
+            $startDate,
+            $endDate,
+            $request->input('service_ids', []),
+            $guestProtectionPlanId,
+            null,
+            \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
+        );
+        
+        $deliveryFee = 0.00;
+        $deliveryLocationId = $request->input('delivery_location_id');
+        $customAddress = $request->input('custom_delivery_address');
+
+        if ($deliveryLocationId && $car->is_delivery_enabled) {
+            $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
+
+            if ($requestedZone && $car->deliveryLocations->contains('id', $requestedZone->id)) {
+                
+                // 1. Verify custom distance
+                if (stripos($requestedZone->name, 'custom') !== false || stripos($requestedZone->name, 'address') !== false) {
+                    if (!empty($customAddress)) {
+                        $distanceCheck = $this->validateCustomDeliveryDistance($car, $customAddress);
+                        
+                        if (!$distanceCheck['valid']) {
+                            return response()->json([
+                                'error' => true,
+                                'message' => $distanceCheck['error'],
+                            ], 422); // Return 422 Unprocessable Entity
+                        }
+                    }
+                }
+
+                // 2. Calculate Fee & Check Threshold
+                $deliveryFee = (float) $requestedZone->fee_amount;
+                $rentalDays = (int) $quoteData['rental_days'];
+                
+                if ($car->free_delivery_days_threshold && $rentalDays >= $car->free_delivery_days_threshold) {
+                    $deliveryFee = 0.00;
+                }
+            }
+        }
+
+        return response()->json([
+            'error' => false,
+            'data' => [
+                'subtotal' => (float) $quoteData['subtotal'],
+                'delivery_fee' => $deliveryFee,
+                'total_amount' => (float) $quoteData['final_payable_amount'] + $deliveryFee,
+                'tax_amount' => (float) $quoteData['tax_amount'],
+                'deposit_amount' => (float) $quoteData['deposit_amount'],
+                'guest_protection_fee' => (float) $quoteData['guest_protection_fee'],
+                'rental_days' => (int) $quoteData['rental_days'],
+                'is_delivery_free' => ($deliveryFee === 0.00 && $deliveryLocationId) ? true : false,
+            ],
+            'message' => 'Estimate calculated successfully.'
+        ]);
+    }
+
+    /**
+     * Get coordinates from address and calculate distance to the car.
+     */
+    private function validateCustomDeliveryDistance($car, $guestAddress)
+    {
+        $carLat = $car->latitude;
+        $carLng = $car->longitude;
+
+        if (!$carLat || !$carLng) {
+            $city = $car->city ? $car->city->name : null;
+            $state = $car->state ? $car->state->name : null;
+            $country = $car->country ? $car->country->name : null;
+
+            $hostAddressString = implode(', ', array_filter([$car->address, $city, $state, $country]));
+            $hostFallbackString = implode(', ', array_filter([$city, $state, $country]));
+
+            if (empty($hostFallbackString)) {
+                return ['valid' => false, 'error' => __('Host location is missing. Cannot verify delivery distance.')];
+            }
+
+            try {
+                $hostResp = \Illuminate\Support\Facades\Http::withoutVerifying()
+                    ->withHeaders(['User-Agent' => 'BotbleCarRental/1.0'])
+                    ->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
+                    'format' => 'json',
+                    'q' => $hostAddressString,
+                    'limit' => 1
+                ]);
+
+                $hostData = $hostResp->json();
+
+                if (empty($hostData)) {
+                    $hostResp = \Illuminate\Support\Facades\Http::withoutVerifying()
+                        ->withHeaders(['User-Agent' => 'BotbleCarRental/1.0'])
+                        ->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
+                        'format' => 'json',
+                        'q' => $hostFallbackString,
+                        'limit' => 1
+                    ]);
+                    $hostData = $hostResp->json();
+                }
+
+                if (empty($hostData)) {
+                    return ['valid' => false, 'error' => __('We could not locate the host on the map to verify distance.')];
+                }
+
+                $carLat = $hostData[0]['lat'];
+                $carLng = $hostData[0]['lon'];
+            } catch (\Exception $e) {
+                return ['valid' => false, 'error' => 'Host Map API Error: ' . $e->getMessage()];
+            }
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()
+                ->withHeaders(['User-Agent' => 'BotbleCarRental/1.0'])
+                ->timeout(5)->get('https://nominatim.openstreetmap.org/search', [
+                'format' => 'json',
+                'q' => $guestAddress,
+                'limit' => 1
+            ]);
+
+            $data = $response->json();
+
+            if (empty($data)) {
+                return ['valid' => false, 'error' => __('We could not find your delivery address. Please check for typos.')];
+            }
+
+            $guestLat = $data[0]['lat'];
+            $guestLng = $data[0]['lon'];
+
+            $earthRadius = 3959; 
+            
+            $latFrom = deg2rad((float)$carLat);
+            $lonFrom = deg2rad((float)$carLng);
+            $latTo = deg2rad((float)$guestLat);
+            $lonTo = deg2rad((float)$guestLng);
+
+            $latDelta = $latTo - $latFrom;
+            $lonDelta = $lonTo - $lonFrom;
+
+            $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
+              cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
+              
+            $distance = $angle * $earthRadius;
+            
+            $maxDistance = $car->max_delivery_distance_miles ?? 10;
+
+            if ($distance > $maxDistance) {
+                return [
+                    'valid' => false, 
+                    'error' => __('This address is :dist miles away. Delivery is only available within :max miles of the host\'s location.', ['dist' => round($distance, 1), 'max' => $maxDistance])
+                ];
+            }
+
+            return ['valid' => true, 'distance' => $distance];
+
+        } catch (\Exception $e) {
+            return ['valid' => false, 'error' => 'Guest Map API Error: ' . $e->getMessage()]; 
+        }
+    }
 }
