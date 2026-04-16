@@ -19,6 +19,7 @@ use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Contracts\Auth\CanResetPassword as CanResetPasswordContract;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Botble\CarRentals\Models\VendorQualityScore;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\Access\Authorizable;
 use Illuminate\Notifications\Notifiable;
@@ -130,15 +131,48 @@ class Customer extends BaseModel implements AuthenticatableContract, Authorizabl
         });
     }
 
+    // protected function badge(): Attribute
+    // {
+    //     return Attribute::make(
+    //         get: function () {
+    //             if (! $this->is_verified) {
+    //                 return '';
+    //             }
+
+    //             return view('plugins/car-rentals::partials.verified-badge', ['size' => 'sm'])->render();
+    //         }
+    //     );
+    // }
     protected function badge(): Attribute
     {
         return Attribute::make(
             get: function () {
-                if (! $this->is_verified) {
-                    return '';
+                $html = '';
+
+                if ($this->is_verified) {
+                    $html .= view('plugins/car-rentals::partials.verified-badge', ['size' => 'sm'])->render();
                 }
 
-                return view('plugins/car-rentals::partials.verified-badge', ['size' => 'sm'])->render();
+                $qualityScore = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $this->getKey())
+                    ->whereIn('badge_tier', ['rising_star', 'top_host', 'all_star'])
+                    ->first();
+
+                if ($qualityScore) {
+                    $badgeConfig = match($qualityScore->badge_tier) {
+                        'all_star'    => ['label' => '⭐ All-Star Host',  'class' => 'bg-warning text-dark'],
+                        'top_host'    => ['label' => '🏆 Top Host',       'class' => 'bg-success text-white'],
+                        'rising_star' => ['label' => '🌟 Rising Star',    'class' => 'bg-info text-white'],
+                        default       => null,
+                    };
+
+                    if ($badgeConfig) {
+                        $html .= '<span class="badge ' . $badgeConfig['class'] . ' ms-1 px-2 py-1" style="font-size:0.75rem;">'
+                            . $badgeConfig['label']
+                            . '</span>';
+                    }
+                }
+
+                return $html;
             }
         );
     }
@@ -152,6 +186,11 @@ class Customer extends BaseModel implements AuthenticatableContract, Authorizabl
                 return apply_filters('car_rentals_customers_upload_folder', $folder, $this);
             }
         );
+    }
+
+    public function qualityScore(): HasMany
+    {
+        return $this->hasMany(VendorQualityScore::class, 'vendor_id');
     }
 
     public function revenues(): HasMany

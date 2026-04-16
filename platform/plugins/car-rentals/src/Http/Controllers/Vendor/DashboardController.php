@@ -32,6 +32,7 @@ class DashboardController extends BaseController
         $this->pageTitle(__('Dashboard'));
 
         $vendorId = auth('customer')->id();
+        $qualityScore = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $vendorId)->first();
 
         $totalCars = Car::query()->where('author_type', Customer::class)->where('author_id', $vendorId)->count();
         $totalBookings = Booking::query()->where('vendor_id', $vendorId)->count();
@@ -200,8 +201,17 @@ class DashboardController extends BaseController
         if (empty($topCarsChart['labels'])) {
              $topCarsChart = ['labels' => ['No Data'], 'revenues' => [1]];
         }
-
-        return CarRentalsHelper::view('vendor-dashboard.index', compact('totalCars', 'totalBookings', 'totalMessages', 'data', 'chartData', 'topCarsChart', 'pendingCount', 'pendingRecommendations'));
+        return CarRentalsHelper::view('vendor-dashboard.index', compact(
+            'totalCars',
+            'totalBookings',
+            'totalMessages',
+            'data',
+            'chartData',
+            'topCarsChart',
+            'pendingCount',
+            'pendingRecommendations',
+            'qualityScore'
+        ));
     }
 
     public function postUpload(Request $request)

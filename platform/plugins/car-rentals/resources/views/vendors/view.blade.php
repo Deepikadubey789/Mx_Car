@@ -153,6 +153,115 @@
                     @endif
                 </div>
             </div>
+            {{-- Quality Score Widget --}}
+            <div class="card mt-3">
+                @php
+                    $badgeColors = ['all_star' => 'success', 'top_host' => 'primary', 'rising_star' => 'warning'];
+                    $badgeLabels = ['all_star' => '⭐ All-Star Host', 'top_host' => '🏆 Top Host', 'rising_star' => '🌟 Rising Star'];
+                    $effectiveBadge = $qualityScore?->badge_override ? $qualityScore?->override_badge : $qualityScore?->badge_tier;
+                    $badgeColor = $badgeColors[$effectiveBadge] ?? 'secondary';
+                    $badgeLabel = $badgeLabels[$effectiveBadge] ?? 'No Badge';
+                @endphp
+
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <x-core::icon name="ti ti-award" />
+                        Host Quality Score
+                    </h3>
+                    @if($effectiveBadge)
+                        <div class="card-options">
+                            <span class="badge bg-{{ $badgeColor }} text-{{ $badgeColor }}-fg">{{ $badgeLabel }}</span>
+                        </div>
+                    @endif
+                </div>
+
+                <div class="card-body">
+                    @if($qualityScore)
+                        {{-- Total Score --}}
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="fw-bold">Total Score</span>
+                                <span class="fw-bold">{{ $qualityScore->total_score }}/100</span>
+                            </div>
+                            <div class="progress" style="height: 10px;">
+                                <div class="progress-bar bg-{{ $badgeColor }}"
+                                     style="width: {{ $qualityScore->total_score }}%"></div>
+                            </div>
+                        </div>
+
+                        {{-- Individual Metrics --}}
+                        <div class="datagrid">
+                            <div class="datagrid-item">
+                                <div class="datagrid-title">⭐ Rating Score</div>
+                                <div class="datagrid-content">
+                                    {{ $qualityScore->rating_score }}/100
+                                    <small class="text-muted">(avg {{ $qualityScore->avg_rating }}/5)</small>
+                                </div>
+                            </div>
+                            <div class="datagrid-item">
+                                <div class="datagrid-title">✅ Completion Rate</div>
+                                <div class="datagrid-content">{{ $qualityScore->completion_rate }}%</div>
+                            </div>
+                            <div class="datagrid-item">
+                                <div class="datagrid-title">❌ Cancellation Score</div>
+                                <div class="datagrid-content">{{ $qualityScore->cancellation_score }}/100</div>
+                            </div>
+                            <div class="datagrid-item">
+                                <div class="datagrid-title">⚡ Response Score</div>
+                                <div class="datagrid-content">
+                                    {{ $qualityScore->response_score }}/100
+                                    <small class="text-muted">({{ $qualityScore->avg_response_hours }}h avg)</small>
+                                </div>
+                            </div>
+                            <div class="datagrid-item">
+                                <div class="datagrid-title">📦 Total Bookings</div>
+                                <div class="datagrid-content">{{ $qualityScore->total_bookings }}</div>
+                            </div>
+                            <div class="datagrid-item">
+                                <div class="datagrid-title">🕒 Last Calculated</div>
+                                <div class="datagrid-content">
+                                    {{ $qualityScore->last_calculated_at?->diffForHumans() ?? '—' }}
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Admin Badge Override --}}
+                        <div class="mt-3">
+                            <form method="POST"
+                                  action="{{ route('car-rentals.vendors.override-badge', $vendor->id) }}">
+                                @csrf
+                                <div class="mb-2">
+                                    <label class="form-label fw-bold">Admin Badge Override</label>
+                                    <select name="override_badge" class="form-select form-select-sm">
+                                        <option value="">-- System Badge Use Karo --</option>
+                                        <option value="all_star"    {{ $qualityScore->override_badge == 'all_star'    ? 'selected' : '' }}>⭐ All-Star Host</option>
+                                        <option value="top_host"    {{ $qualityScore->override_badge == 'top_host'    ? 'selected' : '' }}>🏆 Top Host</option>
+                                        <option value="rising_star" {{ $qualityScore->override_badge == 'rising_star' ? 'selected' : '' }}>🌟 Rising Star</option>
+                                    </select>
+                                </div>
+                                <div class="mb-2 form-check">
+                                    <input type="checkbox" class="form-check-input" name="badge_override"
+                                           id="badge_override" value="1"
+                                           {{ $qualityScore->badge_override ? 'checked' : '' }}>
+                                    <label class="form-check-label" for="badge_override">
+                                        Override enable karo
+                                    </label>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                                    <x-core::icon name="ti ti-device-floppy" /> Badge Save Karo
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="text-center py-3 text-muted">
+                            <x-core::icon name="ti ti-chart-bar" />
+                            <p class="mt-2">Score abhi calculate nahi hua.<br>
+                                <small>Run karo: <code>php artisan vendor:recalculate-scores --vendor_id={{ $vendor->id }}</code></small>
+                            </p>
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
 
         <div class="col-md-9">

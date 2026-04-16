@@ -17,6 +17,7 @@ class TripMessage extends BaseModel
         'sender_type',
         'message',
         'type',
+        'vendor_first_reply_at',
     ];
 
     protected $casts = [

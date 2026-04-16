@@ -797,6 +797,41 @@
 @endif
 
 {{-- SIDEBAR PORTAL DROPDOWN SCRIPT --}}
+{{-- Host Badge Filter --}}
+<div class="filter-widget mb-4">
+    <div class="filter-widget-header">
+        <div class="filter-icon">
+            <x-core::icon name="ti ti-award" />
+        </div>
+        <h6 class="filter-title">{{ __('Host Quality') }}</h6>
+    </div>
+    <div class="filter-widget-content">
+        @php $selectedBadge = request()->input('host_badge', ''); @endphp
+        <div class="d-flex flex-column gap-2">
+            <label class="d-flex align-items-center gap-2 cursor-pointer">
+                <input type="radio" name="host_badge" form="{{ $formId }}" value=""
+                    {{ $selectedBadge === '' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span>{{ __('All Hosts') }}</span>
+            </label>
+            <label class="d-flex align-items-center gap-2 cursor-pointer">
+                <input type="radio" name="host_badge" form="{{ $formId }}" value="rising_star"
+                    {{ $selectedBadge === 'rising_star' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span>🌟 {{ __('Rising Star') }}</span>
+            </label>
+            <label class="d-flex align-items-center gap-2 cursor-pointer">
+                <input type="radio" name="host_badge" form="{{ $formId }}" value="top_host"
+                    {{ $selectedBadge === 'top_host' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span>🏆 {{ __('Top Host') }}</span>
+            </label>
+            <label class="d-flex align-items-center gap-2 cursor-pointer">
+                <input type="radio" name="host_badge" form="{{ $formId }}" value="all_star"
+                    {{ $selectedBadge === 'all_star' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span>⭐ {{ __('All-Star Host') }}</span>
+            </label>
+        </div>
+    </div>
+</div>
+
 <script>
     // To ensure this script only runs once even if the file is loaded multiple times via AJAX
     if (!window.sidebarLocationScriptLoaded) {

@@ -101,6 +101,12 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 'permission' => 'car-rentals.vendors.edit',
             ]);
 
+            Route::post('vendors/{vendor}/override-badge', [
+                'as' => 'vendors.override-badge',
+                'uses' => 'VendorController@overrideBadge',
+                'permission' => 'car-rentals.vendors.edit',
+            ]);
+
             Route::resource('taxes', 'TaxController')->parameters(['' => 'taxes']);
             Route::resource('bookings', 'BookingController')->parameters(['' => 'bookings']);
 

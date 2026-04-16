@@ -28,6 +28,110 @@
     </div>
 </div>
 
+{{-- Host Quality Score Card --}}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                @php
+                    $effectiveBadge = $qualityScore?->badge_override
+                        ? $qualityScore?->override_badge
+                        : $qualityScore?->badge_tier;
+                    $badgeConfig = match($effectiveBadge) {
+                        'all_star'    => ['label' => 'All-Star Host',  'class' => 'bg-warning text-dark',  'icon' => 'ti ti-award'],
+                        'top_host'    => ['label' => 'Top Host',       'class' => 'bg-primary text-white', 'icon' => 'ti ti-trophy'],
+                        'rising_star' => ['label' => 'Rising Star',    'class' => 'bg-success text-white', 'icon' => 'ti ti-star'],
+                        default       => null,
+                    };
+                @endphp
+
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h5 class="mb-0 fw-semibold">
+                        <x-core::icon name="ti ti-chart-bar" class="me-2 text-primary" />
+                        {{ __('Your Host Quality Score') }}
+                    </h5>
+                    @if($badgeConfig)
+                        <span class="badge {{ $badgeConfig['class'] }} px-3 py-2 fs-6">
+                            <x-core::icon name="{{ $badgeConfig['icon'] }}" class="me-1" />
+                            {{ $badgeConfig['label'] }}
+                        </span>
+                    @endif
+                </div>
+
+                @if($qualityScore)
+                    {{-- Total Score Progress --}}
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">{{ __('Overall Score') }}</span>
+                            <span class="fw-bold">{{ $qualityScore->total_score }} / 100</span>
+                        </div>
+                        <div class="progress" style="height: 10px; border-radius: 8px;">
+                            <div class="progress-bar
+                                @if($qualityScore->total_score >= 90) bg-warning
+                                @elseif($qualityScore->total_score >= 75) bg-primary
+                                @elseif($qualityScore->total_score >= 60) bg-success
+                                @else bg-secondary @endif"
+                                style="width: {{ $qualityScore->total_score }}%; border-radius: 8px;">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <small class="text-muted">0</small>
+                            <small class="text-muted">Rising Star 60</small>
+                            <small class="text-muted">Top Host 75</small>
+                            <small class="text-muted">All-Star 90</small>
+                        </div>
+                    </div>
+
+                    {{-- 4 Metric Cards --}}
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 text-center" style="background: #fff8e1;">
+                                <div class="fs-4 fw-bold text-warning">{{ $qualityScore->rating_score }}</div>
+                                <div class="small text-muted mt-1">{{ __('Rating Score') }}</div>
+                                <div class="small text-muted">{{ $qualityScore->avg_rating }}/5 ⭐</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 text-center" style="background: #e8f5e9;">
+                                <div class="fs-4 fw-bold text-success">{{ $qualityScore->completion_rate }}%</div>
+                                <div class="small text-muted mt-1">{{ __('Completion Rate') }}</div>
+                                <div class="small text-muted">{{ $qualityScore->completed_bookings }}/{{ $qualityScore->total_bookings }} trips</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 text-center" style="background: #e3f2fd;">
+                                <div class="fs-4 fw-bold text-primary">{{ $qualityScore->cancellation_score }}</div>
+                                <div class="small text-muted mt-1">{{ __('Cancellation Score') }}</div>
+                                <div class="small text-muted">{{ $qualityScore->cancelled_bookings }} cancelled</div>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 rounded-3 text-center" style="background: #e0f7fa;">
+                                <div class="fs-4 fw-bold text-info">{{ $qualityScore->response_score }}</div>
+                                <div class="small text-muted mt-1">{{ __('Response Score') }}</div>
+                                <div class="small text-muted">{{ $qualityScore->avg_response_hours }}h avg</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 pt-3 border-top">
+                        <small class="text-muted">
+                            <x-core::icon name="ti ti-clock" class="me-1" />
+                            {{ __('Last updated') }}: {{ $qualityScore->last_calculated_at?->diffForHumans() ?? __('Not yet calculated') }}
+                        </small>
+                    </div>
+
+                @else
+                    <div class="text-center py-4 text-muted">
+                        <x-core::icon name="ti ti-chart-bar" style="width: 3rem; height: 3rem; opacity: 0.3;" />
+                        <p class="mt-2 mb-0">{{ __('Your quality score will appear here once you have completed bookings.') }}</p>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="ps-section__left">
     @if (!$totalCars)
         <div class="card bg-light border-0 shadow-sm mb-4">

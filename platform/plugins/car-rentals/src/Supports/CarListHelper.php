@@ -99,6 +99,7 @@ class CarListHelper
             'mileage_to' => (int) Arr::get($inputs, 'mileage_to', 0),
             'rental_types' => (array) Arr::get($inputs, 'rental_types', []),
             'car_make' => Arr::get($inputs, 'car_make'),
+            'host_badge' => Arr::get($inputs, 'host_badge', ''),
             'page' => (int) Arr::get($inputs, 'page', 1),
             'per_page' => (int) Arr::get($inputs, 'per_page', CarRentalsHelperFacade::getCarsPerPage()),
             'sort_by' => Arr::get($inputs, 'sort_by', ''),

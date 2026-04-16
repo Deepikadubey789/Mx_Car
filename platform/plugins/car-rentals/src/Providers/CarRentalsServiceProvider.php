@@ -73,6 +73,7 @@ use Botble\CarRentals\Commands\GenerateDemandPricingRecommendationsCommand;
 use Botble\CarRentals\Commands\SeedDemandSignalsCommand;
 use Botble\CarRentals\Commands\CleanupExpiredRecommendationsCommand;
 use Botble\CarRentals\Commands\AutoApplyPendingRecommendationsCommand;
+use Botble\CarRentals\Console\CalculateVendorQualityCommand;
 
 class CarRentalsServiceProvider extends ServiceProvider
 {
@@ -645,6 +646,7 @@ class CarRentalsServiceProvider extends ServiceProvider
                 SeedDemandSignalsCommand::class,
                 CleanupExpiredRecommendationsCommand::class,
                 AutoApplyPendingRecommendationsCommand::class,
+                CalculateVendorQualityCommand::class,
             ]);
         }
     }
