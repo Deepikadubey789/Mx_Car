@@ -332,6 +332,27 @@ class FilterCarsBuilder extends BaseQueryBuilder
             $this->whereAvailableAt($filters);
         }
 
+        // Host badge filter
+        $hostBadge = Arr::get($filters, 'host_badge');
+        if ($hostBadge && in_array($hostBadge, ['rising_star', 'top_host', 'all_star'])) {
+            $this->whereHas('vendor', function (Builder $query) use ($hostBadge) {
+                $query->whereHas('qualityScore', function ($q) use ($hostBadge) {
+                    $q->where(function ($inner) use ($hostBadge) {
+                        $inner->where(function ($a) use ($hostBadge) {
+                            $a->where('badge_override', true)
+                              ->where('override_badge', $hostBadge);
+                        })->orWhere(function ($b) use ($hostBadge) {
+                            $b->where('badge_override', false)
+                              ->where('badge_tier', $hostBadge);
+                        })->orWhere(function ($c) use ($hostBadge) {
+                            $c->whereNull('badge_override')
+                              ->where('badge_tier', $hostBadge);
+                        });
+                    });
+                });
+            });
+        }
+
         return $this;
     }
 
@@ -346,7 +367,20 @@ class FilterCarsBuilder extends BaseQueryBuilder
         }
 
         $this->oldest('cr_cars.order');
-
+        // Badge-based ranking — All-Star upar, phir Top Host, phir Rising Star
+        $this->leftJoin('cr_vendor_quality_scores as vqs', 'vqs.vendor_id', '=', 'cr_cars.author_id')
+            ->orderByRaw("
+                CASE
+                    WHEN vqs.badge_override = 1 AND vqs.override_badge = 'all_star' THEN 1
+                    WHEN vqs.badge_override = 1 AND vqs.override_badge = 'top_host' THEN 2
+                    WHEN vqs.badge_override = 1 AND vqs.override_badge = 'rising_star' THEN 3
+                    WHEN vqs.badge_tier = 'all_star'    THEN 1
+                    WHEN vqs.badge_tier = 'top_host'    THEN 2
+                    WHEN vqs.badge_tier = 'rising_star' THEN 3
+                    ELSE 4
+                END ASC
+            ");
+            
         switch ($orderBy) {
             case 'most_popular':
                 $this->oldest('cr_cars.created_at');

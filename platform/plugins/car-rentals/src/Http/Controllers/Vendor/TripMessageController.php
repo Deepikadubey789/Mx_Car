@@ -31,13 +31,45 @@ class TripMessageController extends BaseController
         }
 
         $request->validate(['message' => 'required|string']);
-
         $message = new TripMessage();
         $message->booking_id = $booking->id;
         $message->sender_id = auth('customer')->id();
         $message->sender_type = get_class(auth('customer')->user());
         $message->message = $request->input('message');
         $message->type = 'user_message';
+
+        // Response time tracking — pehli baar vendor reply kar raha hai?
+        $alreadyReplied = TripMessage::where('booking_id', $booking->id)
+            ->where('sender_id', $booking->vendor_id)
+            ->whereNotNull('vendor_first_reply_at')
+            ->exists();
+
+        if (! $alreadyReplied) {
+            // Customer ka pehla message ka time dhundho
+            $firstCustomerMsg = TripMessage::where('booking_id', $booking->id)
+                ->where('sender_id', '!=', $booking->vendor_id)
+                ->oldest('id')
+                ->first();
+
+            $message->vendor_first_reply_at = now();
+
+            // cr_customers mein avg_response_hours update karo
+            if ($firstCustomerMsg) {
+                $responseHours = $firstCustomerMsg->created_at->diffInMinutes(now()) / 60;
+
+                $vendor = auth('customer')->user();
+                $currentAvg = (float) $vendor->avg_response_hours;
+
+                // Rolling average — purane 9 responses ka weight, naya 1
+                $newAvg = $currentAvg > 0
+                    ? round(($currentAvg * 9 + $responseHours) / 10, 2)
+                    : round($responseHours, 2);
+
+                $vendor->avg_response_hours = $newAvg;
+                $vendor->save();
+            }
+        }
+
         $message->save();
 
         event(new NewTripMessage($message, ''));

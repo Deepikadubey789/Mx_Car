@@ -108,3 +108,6 @@ Artisan::command('inspire', function () {
  *
  * =========================================================================
  */
+Schedule::command('car-rentals:send-trip-reminders')->dailyAt('03:30');
+Schedule::command('car-rentals:send-return-alerts')->dailyAt('03:30');
+Schedule::command('car-rentals:calculate-vendor-quality')->dailyAt('02:00')->withoutOverlapping()->runInBackground();

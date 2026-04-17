@@ -93,6 +93,7 @@ class Booking extends BaseModel
         'refund_amount',
         'cancellation_reason',
         'cancelled_at',
+        'cancelled_by',
     ];
 
     protected $casts = [

@@ -86,17 +86,15 @@ class BookingForm extends FormFront
             $serviceOptions[$service->id] = $service->name . ' - ' . $service->price_text;
         }
 
-        // --- NEW: FETCH GUEST PROTECTION PLANS ---
+// --- NEW: FETCH GUEST PROTECTION PLANS ---
         $guestProtectionPlans = GuestProtectionPlan::query()
             ->where('status', BaseStatusEnum::PUBLISHED)
             ->get();
             
         $guestProtectionOptions = [];
-        // Add a "No Protection" option if you want to allow it
         $guestProtectionOptions[''] = __('No Protection ($0.00/day)'); 
         
         foreach ($guestProtectionPlans as $plan) {
-            // Build a descriptive label: e.g., "Premier - $15.00/day (Deductible: $0.00)"
             $label = $plan->name . ' - ' . format_price($plan->daily_fee) . '/' . __('day') . ' ' . __('(Deductible: :amount)', ['amount' => format_price($plan->deductible_amount)]);
             $guestProtectionOptions[$plan->id] = $label;
         }
@@ -107,6 +105,23 @@ class BookingForm extends FormFront
             for ($minute = 0; $minute < 60; $minute += 30) {
                 $time = sprintf('%02d:%02d', $hour, $minute);
                 $timeOptions[$time] = $time;
+            }
+        }
+
+       // --- NEW: FETCH DELIVERY LOCATIONS ---
+        $deliveryOptions = ['' => __('No Delivery (Pickup at Host Location)')];
+        $car->loadMissing('deliveryLocations');
+        
+        $customAddressLocationId = null; // NEW: Track the custom location ID
+        
+        if ($car->is_delivery_enabled && $car->deliveryLocations->count() > 0) {
+            foreach ($car->deliveryLocations as $location) {
+                $deliveryOptions[$location->id] = $location->name . ' (+' . format_price($location->fee_amount) . ')';
+                
+                // FIX: Look for the word "Custom" in the zone's name instead of a database column
+                if (stripos($location->name, 'custom') !== false || stripos($location->name, 'address') !== false) {
+                    $customAddressLocationId = $location->id;
+                }
             }
         }
 
@@ -167,7 +182,75 @@ class BookingForm extends FormFront
                     ->colspan(2)
             );
 
-        // --- NEW: ADD THE GUEST PROTECTION PLAN FIELD AS A RADIO BUTTON ---
+        // --- NEW: ADD THE DELIVERY LOCATION FIELD AS RADIO BUTTONS ---
+        if ($car->is_delivery_enabled && count($deliveryOptions) > 1) {
+            
+            $thresholdHelpText = '';
+            if ($car->free_delivery_days_threshold) {
+                 $thresholdHelpText = '<span class="text-success mt-2 d-inline-block"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path></svg> ' . __('Free delivery on trips of :days days or more!', ['days' => $car->free_delivery_days_threshold]) . '</span>';
+            }
+
+            $this->add(
+                'delivery_location_id',
+                RadioField::class, // CHANGED FROM SelectField
+                RadioFieldOption::make() // CHANGED FROM SelectFieldOption
+                    ->label(__('Delivery Location'))
+                    ->choices($deliveryOptions)
+                    ->selected('') // Default to "No delivery"
+                    ->helperText($thresholdHelpText)
+                    ->colspan(2)
+            );
+        }
+           // --- NEW: ADD THE CUSTOM ADDRESS TEXT BOX (Hidden by default) ---
+        if ($customAddressLocationId) {
+            $customAddressHtml = '
+            <div id="custom-address-wrapper" style="display: none;" class="mt-2 mb-4 p-3 bg-light rounded border">
+                <label class="form-label fw-bold">' . __('Enter Exact Delivery Address') . ' <span class="text-danger">*</span></label>
+                <input type="text" name="custom_delivery_address" id="custom_delivery_address_input" class="form-control" placeholder="' . __('e.g., 123 Main St, Rome, Italy') . '">
+                <small class="text-muted d-block mt-1">' . __('Car will be delivered if your address is within the host\'s maximum allowed radius.') . '</small>
+            </div>
+            <script>
+                document.addEventListener("DOMContentLoaded", function() {
+                    const wrapper = document.getElementById("custom-address-wrapper");
+                    const radios = document.querySelectorAll("input[name=\'delivery_location_id\']");
+                    const customId = "' . $customAddressLocationId . '";
+                    
+                    // FIX: Select the input field
+                    const addressInput = document.getElementById("custom_delivery_address_input");
+                    
+                    function toggleAddressBox() {
+                        const selected = document.querySelector("input[name=\'delivery_location_id\']:checked");
+                        if (selected && selected.value === customId) {
+                            wrapper.style.display = "block";
+                        } else {
+                            wrapper.style.display = "none";
+                        }
+                    }
+
+                    radios.forEach(r => r.addEventListener("change", toggleAddressBox));
+                    toggleAddressBox(); // Check on initial load
+                    
+                    // FIX: Force the form to recalculate when the user clicks out of the text box
+                    if (addressInput) {
+                        addressInput.addEventListener("change", function() {
+                            if (typeof window.jQuery !== "undefined") {
+                                window.jQuery(this).closest("form").trigger("change");
+                            }
+                        });
+                    }
+                });
+            </script>
+            ';
+
+            $this->add(
+                'custom_delivery_address_html',
+                HtmlField::class,
+                HtmlFieldOption::make()->content($customAddressHtml)->colspan(2)
+            );
+        }
+        // ----------------------------------------------------------------
+
+        // --- ADD THE GUEST PROTECTION PLAN FIELD AS A RADIO BUTTON ---
         if (!empty($guestProtectionOptions)) {
             $this->add(
                 'guest_protection_plan_id',
@@ -203,7 +286,9 @@ class BookingForm extends FormFront
                         
                         // --- FIX: Pass the new Guest Protection Fee instead of old insurance array ---
                         'guestProtectionFee' => (float) $quoteData['guest_protection_fee'],
-                        
+                        // --- NEW: Add the default delivery fee for initial page load ---
+                        'deliveryFee' => 0,
+                        // ---------------------------------------------------------------
                         'feeName' => (string) ($quoteData['fee_name'] ?? ''),
                         'depositType' => (string) ($quoteData['deposit_type'] ?? 'percentage'),
                         'depositRate' => (float) ($quoteData['deposit_rate'] ?? 0),

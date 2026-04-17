@@ -83,29 +83,32 @@ class ReviewController extends BaseApiController
 
         $request->validate([
             'car_id' => ['required', 'exists:cr_cars,id'],
+            // --- NEW: Require the specific trip ID ---
+            'booking_id' => ['required', 'exists:cr_bookings,id'],
             'star' => ['required', 'integer', 'min:1', 'max:5'],
             'comment' => ['required', 'string', 'max:1000'],
         ]);
 
-        // Check if customer has booked this car
-        $hasBooking = $customer->bookings()
+        // --- FIX: Check if the customer actually owns THIS specific booking and it's valid ---
+        $booking = $customer->bookings()
+            ->where('id', $request->input('booking_id'))
             ->whereHas('car', function ($query) use ($request): void {
                 $query->where('car_id', $request->input('car_id'));
             })
             ->whereIn('status', ['completed', 'confirmed'])
-            ->exists();
+            ->first();
 
-        if (! $hasBooking) {
+        if (! $booking) {
             return $this
                 ->httpResponse()
                 ->setError()
-                ->setMessage('You can only review cars you have booked')
+                ->setMessage(__('You can only review cars for trips that are completed or confirmed.'))
                 ->toApiResponse();
         }
 
-        // Check if customer has already reviewed this car
+        // --- FIX: Check if customer has already reviewed THIS SPECIFIC TRIP ---
         $existingReview = CarReview::query()
-            ->where('car_id', $request->input('car_id'))
+            ->where('booking_id', $request->input('booking_id')) // Allow multiple reviews for the same car, but only ONE per trip!
             ->where('customer_id', $customer->id)
             ->first();
 
@@ -113,18 +116,21 @@ class ReviewController extends BaseApiController
             return $this
                 ->httpResponse()
                 ->setError()
-                ->setMessage('You have already reviewed this car')
+                ->setMessage(__('You have already reviewed this specific trip.'))
                 ->toApiResponse();
         }
 
         try {
             $review = CarReview::create([
                 'car_id' => $request->input('car_id'),
+                // --- NEW: Save the booking ID to the database ---
+                'booking_id' => $request->input('booking_id'),
                 'customer_id' => $customer->id,
                 'customer_name' => $customer->name,
                 'customer_email' => $customer->email,
                 'star' => $request->input('star'),
                 'comment' => $request->input('comment'),
+                'status' => BaseStatusEnum::PUBLISHED,
             ]);
 
             $review->load(['customer', 'car']);
@@ -132,7 +138,7 @@ class ReviewController extends BaseApiController
             return $this
                 ->httpResponse()
                 ->setData(new ReviewResource($review))
-                ->setMessage('Review created successfully')
+                ->setMessage(__('Review created successfully'))
                 ->toApiResponse();
 
         } catch (\Exception $e) {

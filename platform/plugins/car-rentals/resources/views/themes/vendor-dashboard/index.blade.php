@@ -630,6 +630,151 @@
         </div>
     </div>
 
+    {{-- Host Quality Score Card --}}
+    <div class="row mb-4">
+        <div class="col-12">
+            <x-core::card class="shadow-sm">
+                <x-core::card.header class="d-flex justify-content-between align-items-center">
+                    <x-core::card.title>
+                        <x-core::icon name="ti ti-award" class="me-2 text-warning" />
+                        {{ __('Your Host Quality Score') }}
+                    </x-core::card.title>
+                    @php
+                        $effectiveBadge = ($qualityScore?->badge_override) ? $qualityScore?->override_badge : $qualityScore?->badge_tier;
+                        $badgeConfig = match($effectiveBadge) {
+                            'all_star'    => ['label' => 'All-Star Host',  'class' => 'bg-warning text-dark'],
+                            'top_host'    => ['label' => 'Top Host',       'class' => 'bg-primary text-white'],
+                            'rising_star' => ['label' => 'Rising Star',    'class' => 'bg-success text-white'],
+                            default       => null,
+                        };
+                    @endphp
+                    @if($badgeConfig)
+                        <span class="badge {{ $badgeConfig['class'] }} px-3 py-2 fs-6">{{ $badgeConfig['label'] }}</span>
+                    @endif
+                </x-core::card.header>
+                <x-core::card.body>
+                    @if($qualityScore)
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted small">{{ __('Overall Score') }}</span>
+                                <span class="fw-bold">{{ $qualityScore->total_score }} / 100</span>
+                            </div>
+                            <div class="progress" style="height:10px; border-radius:8px;">
+                                <div class="progress-bar
+                                    @if($qualityScore->total_score >= 90) bg-warning
+                                    @elseif($qualityScore->total_score >= 75) bg-primary
+                                    @elseif($qualityScore->total_score >= 60) bg-success
+                                    @else bg-secondary @endif"
+                                    style="width:{{ $qualityScore->total_score }}%; border-radius:8px;">
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">0</small>
+                                <small class="text-muted">Rising Star 60</small>
+                                <small class="text-muted">Top Host 75</small>
+                                <small class="text-muted">All-Star 90</small>
+                            </div>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 rounded-3 text-center" style="background:#fff8e1;">
+                                    <div class="fs-4 fw-bold text-warning">{{ $qualityScore->rating_score }}</div>
+                                    <div class="small text-muted">{{ __('Rating') }}</div>
+                                    <div class="small text-muted">{{ $qualityScore->avg_rating }}/5 ⭐</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 rounded-3 text-center" style="background:#e8f5e9;">
+                                    <div class="fs-4 fw-bold text-success">{{ $qualityScore->completion_rate }}%</div>
+                                    <div class="small text-muted">{{ __('Completion') }}</div>
+                                    <div class="small text-muted">{{ $qualityScore->completed_bookings }}/{{ $qualityScore->total_bookings }} trips</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 rounded-3 text-center" style="background:#e3f2fd;">
+                                    <div class="fs-4 fw-bold text-primary">{{ $qualityScore->cancellation_score }}</div>
+                                    <div class="small text-muted">{{ __('Cancellation Score') }}</div>
+                                    <div class="small text-muted">{{ $qualityScore->cancelled_bookings }} cancelled</div>
+                                </div>
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <div class="p-3 rounded-3 text-center" style="background:#e0f7fa;">
+                                    <div class="fs-4 fw-bold text-info">{{ $qualityScore->response_score }}</div>
+                                    <div class="small text-muted">{{ __('Response Score') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <p class="text-muted text-center py-3 mb-0">{{ __('Your quality score will appear here once you have completed bookings.') }}</p>
+                    @endif
+
+                    {{-- Improvement Tips --}}
+                    @if($qualityScore)
+                    <div class="mt-4">
+                        <div class="fw-semibold mb-2 text-muted small text-uppercase">{{ __('How to improve your score') }}</div>
+                        <div class="d-flex flex-column gap-2">
+                            @if($qualityScore->avg_rating < 4.5)
+                            <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#fff8e1;">
+                                <span class="text-warning fs-5">⭐</span>
+                                <div>
+                                    <div class="fw-semibold small">{{ __('Improve your rating') }}</div>
+                                    <div class="text-muted small">{{ __('Your avg rating is') }} {{ $qualityScore->avg_rating }}/5. {{ __('Provide clean cars and excellent service to earn 5-star reviews.') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            @if($qualityScore->completion_rate < 80)
+                            <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#e8f5e9;">
+                                <span class="text-success fs-5">✅</span>
+                                <div>
+                                    <div class="fw-semibold small">{{ __('Complete more bookings') }}</div>
+                                    <div class="text-muted small">{{ __('Your completion rate is') }} {{ $qualityScore->completion_rate }}%. {{ __('Avoid cancelling confirmed bookings — aim for 80%+.') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            @if($qualityScore->cancellation_score < 15)
+                            <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#fce4ec;">
+                                <span class="text-danger fs-5">🚫</span>
+                                <div>
+                                    <div class="fw-semibold small">{{ __('Reduce cancellations') }}</div>
+                                    <div class="text-muted small">{{ __('You have') }} {{ $qualityScore->cancelled_bookings }} {{ __('cancelled bookings. Fewer cancellations = higher score.') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            @if($qualityScore->avg_response_hours > 3)
+                            <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#e0f7fa;">
+                                <span class="text-info fs-5">⚡</span>
+                                <div>
+                                    <div class="fw-semibold small">{{ __('Reply faster to messages') }}</div>
+                                    <div class="text-muted small">{{ __('Your avg response time is') }} {{ $qualityScore->avg_response_hours }}h. {{ __('Replying within 1 hour gives maximum response score.') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            @if($qualityScore->acceptance_rate < 85)
+                            <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#f3e5f5;">
+                                <span class="text-purple fs-5">👍</span>
+                                <div>
+                                    <div class="fw-semibold small">{{ __('Accept more bookings') }}</div>
+                                    <div class="text-muted small">{{ __('Your acceptance rate is') }} {{ $qualityScore->acceptance_rate }}%. {{ __('Try to accept at least 85% of incoming bookings.') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                            @if($qualityScore->avg_rating >= 4.5 && $qualityScore->completion_rate >= 80 && $qualityScore->cancellation_score >= 15 && $qualityScore->avg_response_hours <= 3 && $qualityScore->acceptance_rate >= 85)
+                            <div class="d-flex align-items-start gap-2 p-2 rounded" style="background:#e8f5e9;">
+                                <span class="text-success fs-5">🎉</span>
+                                <div>
+                                    <div class="fw-semibold small">{{ __('Great job! Keep it up!') }}</div>
+                                    <div class="text-muted small">{{ __('All metrics are looking excellent. Maintain this performance to keep your badge.') }}</div>
+                                </div>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                </x-core::card.body>
+            </x-core::card>
+        </div>
+    </div>
     <div class="row mb-4">
         <div class="col-lg-12">
             <x-core::card class="shadow-sm">

@@ -19,6 +19,7 @@ use Botble\Table\Columns\IdColumn;
 use Botble\Table\Columns\NameColumn;
 use Botble\Table\Columns\StatusColumn;
 use Illuminate\Database\Eloquent\Builder;
+use Botble\CarRentals\Models\VendorQualityScore;
 
 class VendorTable extends TableAbstract
 {
@@ -71,6 +72,54 @@ class VendorTable extends TableAbstract
                         $item = $column->getItem();
 
                         return $item->vendorBookings()->count();
+                    }),
+                FormattedColumn::make('quality_score')
+                    ->title('Quality Score')
+                    ->width(100)
+                    ->orderable(false)
+                    ->searchable(false)
+                    ->alignCenter()
+                    ->renderUsing(function (FormattedColumn $column) {
+                        $item = $column->getItem();
+                        $score = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $item->id)->first();
+                        if (!$score) return '<span class="text-muted">-</span>';
+                        $color = match($score->badge_tier) {
+                            'all_star'    => 'warning',
+                            'top_host'    => 'success',
+                            'rising_star' => 'info',
+                            default       => 'secondary',
+                        };
+                        $label = number_format($score->total_score, 0) . '/100';
+                        return '<span class="badge bg-' . $color . '">' . $label . '</span>';
+                    }),
+                FormattedColumn::make('badge_tier')
+                    ->title('Badge')
+                    ->width(130)
+                    ->orderable(false)
+                    ->searchable(false)
+                    ->alignCenter()
+                    ->renderUsing(function (FormattedColumn $column) {
+                        $item = $column->getItem();
+                        $score = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $item->id)->first();
+                        if (!$score || $score->badge_tier === 'none') return '<span class="text-muted">None</span>';
+                        return match($score->badge_tier) {
+                            'all_star'    => '<span class="badge bg-warning text-dark">⭐ All-Star</span>',
+                            'top_host'    => '<span class="badge bg-success">🏆 Top Host</span>',
+                            'rising_star' => '<span class="badge bg-info">🌟 Rising Star</span>',
+                            default       => '<span class="text-muted">None</span>',
+                        };
+                    }),
+                FormattedColumn::make('accept_complete')
+                    ->title('Accept / Complete')
+                    ->width(140)
+                    ->orderable(false)
+                    ->searchable(false)
+                    ->alignCenter()
+                    ->renderUsing(function (FormattedColumn $column) {
+                        $item = $column->getItem();
+                        $score = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $item->id)->first();
+                        if (!$score) return '<span class="text-muted">-</span>';
+                        return $score->acceptance_rate . '% / ' . $score->completion_rate . '%';
                     }),
                 StatusColumn::make(),
                 CreatedAtColumn::make(),

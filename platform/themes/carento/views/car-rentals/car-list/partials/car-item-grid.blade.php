@@ -32,6 +32,8 @@
                 {{ RvMedia::image($car->image , $car->name, 'medium-rectangle') }}
             </a>
 
+
+
             <div class="car-card-grid__media-shade"></div>
 
             @if($avgReview = $car->avg_review)
@@ -51,6 +53,22 @@
 
         <div class="card-info p-4 pt-30">
             <div class="car-card-grid__meta-strip">
+                
+            @php
+                    $qs = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $car->author_id)->first();
+                    $effectiveBadge = ($qs?->badge_override) ? $qs?->override_badge : $qs?->badge_tier;
+                    $badgeCfg = match($effectiveBadge ?? 'none') {
+                        'all_star'    => ['label' => '⭐ All-Star Host', 'bg' => '#f59e0b'],
+                        'top_host'    => ['label' => '🏆 Top Host',      'bg' => '#3b82f6'],
+                        'rising_star' => ['label' => '✦ Rising Star',   'bg' => '#10b981'],
+                        default       => null,
+                    };
+                @endphp
+                @if($badgeCfg)
+                    <span style="background:{{ $badgeCfg['bg'] }};color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:0.3px;">
+                        {{ $badgeCfg['label'] }}
+                    </span>
+                @endif
                 <span class="car-card-grid__chip">{{ __('Top pick') }}</span>
                 @if($car->number_of_seats)
                     <span class="car-card-grid__chip car-card-grid__chip--soft">

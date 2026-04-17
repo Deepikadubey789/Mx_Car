@@ -64,6 +64,27 @@
                 <div class="col-lg-4 col-5 text-end">{{ format_price($guestProtectionFee ?? 0, $currencyId ?? null) }}</div>
             </div>
 
+            {{-- NEW: Delivery Fee Line Item (Placed right below Insurance) --}}
+            @if(isset($deliveryFee) && $deliveryFee > 0)
+                <div class="row mt-1">
+                    <div class="col-lg-8 col-7 text-muted">{{ __('Delivery Fee') }}</div>
+                    <div class="col-lg-4 col-5 text-end">{{ format_price($deliveryFee, $currencyId ?? null) }}</div>
+                </div>
+            @elseif(isset($deliveryFee) && $deliveryFee === 0.00 && request()->input('delivery_location_id'))
+                <div class="row mt-1">
+                    <div class="col-lg-8 col-7 text-muted">
+                        {{ __('Delivery Fee') }} 
+                        <span class="badge bg-success text-white ms-1" style="font-size: 0.65rem; padding: 2px 4px;">{{ __('Free') }}</span>
+                    </div>
+                    <div class="col-lg-4 col-5 text-end text-success fw-bold">{{ format_price(0, $currencyId ?? null) }}</div>
+                </div>
+            @endif
+            @if(!empty($distanceError))
+                <div class="alert alert-danger" style="font-size: 13px; padding: 10px; border-radius: 8px;">
+                    <i class="ti ti-map-pin-off me-1"></i> {{ $distanceError }}
+                </div>
+            @endif
+
             @if (($tax ?? 0) > 0)
                 <div class="row mt-1">
                     <div class="col-lg-8 col-7 text-muted">{{ trans('plugins/car-rentals::car-rentals.price_breakdown.tax') }}</div>

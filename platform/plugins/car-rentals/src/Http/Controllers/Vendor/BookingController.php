@@ -84,7 +84,7 @@ class BookingController extends BaseController
                 ->setMessage(trans('plugins/car-rentals::booking.cannot_cancel_booking'));
         }
 
-        $booking->update(['status' => BookingStatusEnum::CANCELLED]);
+        $booking->update(['status' => BookingStatusEnum::CANCELLED, 'cancelled_by' => 'host', 'cancelled_at' => now()]);
 
         return $this
             ->httpResponse()

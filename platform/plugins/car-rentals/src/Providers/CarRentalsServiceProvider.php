@@ -77,7 +77,7 @@ use Botble\CarRentals\Commands\SeedDemandSignalsCommand;
 use Botble\CarRentals\Commands\CleanupExpiredRecommendationsCommand;
 use Botble\CarRentals\Commands\AutoApplyPendingRecommendationsCommand;
 use Botble\CarRentals\Commands\SendWhatsAppRemindersCommand;
-use Botble\CarRentals\Commands\SeedWhatsAppTemplatesCommand;
+use Botble\CarRentals\Console\CalculateVendorQualityCommand;
 
 class CarRentalsServiceProvider extends ServiceProvider
 {
@@ -491,6 +491,15 @@ class CarRentalsServiceProvider extends ServiceProvider
                 'name' => __('Activity Logs'),
                 'url' => fn () => route('car-rentals.vendor.telematics-logs'),
                 'icon' => 'ti ti-history',
+            ])
+
+            // --- NEW: Add the Delivery Zones link ---
+            ->registerItem([
+                'id' => 'car-rentals.vendor.delivery-locations',
+                'priority' => 18,
+                'name' => __('Delivery Zones'),
+                'url' => fn () => route('car-rentals.vendor.delivery-locations.index'),
+                'icon' => 'ti ti-map-pin',
             ]);
             // -----------------------------------------------------
 
@@ -705,8 +714,6 @@ class CarRentalsServiceProvider extends ServiceProvider
                 SeedDemandSignalsCommand::class,
                 CleanupExpiredRecommendationsCommand::class,
                 AutoApplyPendingRecommendationsCommand::class,
-                SendWhatsAppRemindersCommand::class,
-                SeedWhatsAppTemplatesCommand::class,
             ]);
         }
     }

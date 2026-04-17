@@ -77,6 +77,9 @@ class Car extends BaseModel
         'external_booking_url',
         'currency_id',
         'default_pickup_instructions',
+        'is_delivery_enabled',
+        'free_delivery_days_threshold',
+        'max_delivery_distance_miles',
     ];
 
     protected $casts = [
@@ -669,5 +672,10 @@ class Car extends BaseModel
         static::deleted(function (Car $car): void {
             $car->carDates()->delete();
         });
+    }
+
+    public function deliveryLocations()
+    {
+        return $this->belongsToMany(DeliveryLocation::class, 'cr_car_delivery_locations', 'car_id', 'location_id');
     }
 }

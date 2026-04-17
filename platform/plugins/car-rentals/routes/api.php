@@ -18,6 +18,8 @@ Route::group([
     Route::get('cars/id/{id}', 'CarController@show')->wherePrimaryKey();
     Route::get('cars/id/{id}/availability', 'CarController@checkAvailability')->wherePrimaryKey();
     Route::get('cars/id/{id}/similar', 'CarController@getSimilarCars')->wherePrimaryKey();
+    // --- NEW: Fetch Delivery Options for Mobile App ---
+    Route::get('cars/{id}/delivery-locations', 'DeliveryController@getCarDeliveryOptions')->wherePrimaryKey();
 
     // Car Makes (simplified)
     Route::get('car-makes', 'CarMakeController@index');
@@ -66,6 +68,8 @@ Route::group([
 
     // Booking routes (accessible to both guest and authenticated users)
     Route::prefix('bookings')->group(function (): void {
+        // --- NEW: Estimate Booking Price for Mobile App ---
+        Route::post('/estimate', 'BookingController@estimateBooking');
         Route::get('/', 'BookingController@index');
         Route::post('/', 'BookingController@store');
         Route::get('/{id}', 'BookingController@show');
@@ -199,6 +203,15 @@ Route::group([
                 Route::post('/pause', 'Vendor\AutoPricingApiController@pause')->wherePrimaryKey('car');
                 Route::post('/resume', 'Vendor\AutoPricingApiController@resume')->wherePrimaryKey('car');
                 Route::get('/history', 'Vendor\AutoPricingApiController@history')->wherePrimaryKey('car');
+            });
+
+            // Vendor reviews
+            Route::prefix('reviews')->group(function (): void {
+                Route::get('/', 'Vendor\ReviewController@index');
+                Route::post('{id}/reply', 'Vendor\ReviewController@reply')->wherePrimaryKey();
+                
+                // --- NEW: Vendor rates a customer after a trip ---
+                Route::post('rate-customer', 'Vendor\ReviewController@rateCustomer');
             });
         });
 

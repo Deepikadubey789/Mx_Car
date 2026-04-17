@@ -33,7 +33,7 @@ class CarController extends BaseController
             ->renderForm();
     }
 
-    public function store(CarRequest $request)
+   public function store(CarRequest $request)
     {
         $carForm = CarForm::create()->setRequest($request);
 
@@ -48,6 +48,10 @@ class CarController extends BaseController
             $car->fill(array_merge($this->processRequestData($request), [
                 'author_id' => auth('customer')->id(),
                 'author_type' => Customer::class,
+                // NEW: Handle boolean and inputs for delivery
+                'is_delivery_enabled' => $request->has('is_delivery_enabled'),
+                'free_delivery_days_threshold' => $request->input('free_delivery_days_threshold'),
+                'max_delivery_distance_miles' => $request->input('max_delivery_distance_miles'),
             ]));
 
             if (! CarRentalsHelper::isEnabledPostApproval()) {
@@ -69,6 +73,11 @@ class CarController extends BaseController
             $car->colors()->sync($colors);
 
             $car->amenities()->sync($request->input('amenities', []));
+
+            // NEW: Sync Delivery Locations Pivot Table
+            if ($request->has('delivery_locations')) {
+                $car->deliveryLocations()->sync($request->input('delivery_locations'));
+            }
 
             $form->fireModelEvents($car);
 
@@ -120,8 +129,13 @@ class CarController extends BaseController
              */
             $car = $form->getModel();
 
-            $car->fill($this->processRequestData($request));
+            $carData = $this->processRequestData($request);
+            // NEW: Handle boolean and inputs for delivery
+            $carData['is_delivery_enabled'] = $request->has('is_delivery_enabled');
+            $carData['free_delivery_days_threshold'] = $request->input('free_delivery_days_threshold');
+            $carData['max_delivery_distance_miles'] = $request->input('max_delivery_distance_miles');
 
+            $car->fill($carData);
             $car->save();
 
             // Sync relationships
@@ -137,6 +151,13 @@ class CarController extends BaseController
             $car->colors()->sync($colors);
 
             $car->amenities()->sync($request->input('amenities', []));
+
+            // NEW: Sync Delivery Locations Pivot Table
+            if ($request->has('delivery_locations')) {
+                $car->deliveryLocations()->sync($request->input('delivery_locations'));
+            } else {
+                $car->deliveryLocations()->detach();
+            }
 
             // Handle pricing policy auto-apply settings
             $pricingPolicyData = [

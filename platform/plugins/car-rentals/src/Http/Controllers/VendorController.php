@@ -12,6 +12,7 @@ use Botble\CarRentals\Tables\VendorTable;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Botble\CarRentals\Services\VendorQualityScoreService;
 
 class VendorController extends BaseController
 {
@@ -58,6 +59,16 @@ class VendorController extends BaseController
             ->withUpdatedSuccessMessage();
     }
 
+    // public function view(Customer $vendor)
+    // {
+    //     abort_unless($vendor->is_vendor, 404);
+
+    //     $this->pageTitle(trans('plugins/car-rentals::car-rentals.vendor.view', ['name' => $vendor->name]));
+
+    //     Assets::addScriptsDirectly('vendor/core/plugins/car-rentals/js/vendor-view.js');
+
+    //     return view('plugins/car-rentals::vendors.view', compact('vendor'));
+    // }
     public function view(Customer $vendor)
     {
         abort_unless($vendor->is_vendor, 404);
@@ -66,7 +77,27 @@ class VendorController extends BaseController
 
         Assets::addScriptsDirectly('vendor/core/plugins/car-rentals/js/vendor-view.js');
 
-        return view('plugins/car-rentals::vendors.view', compact('vendor'));
+        $qualityScore = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $vendor->id)->first();
+
+        return view('plugins/car-rentals::vendors.view', compact('vendor', 'qualityScore'));
+    }
+
+    public function overrideBadge(Customer $vendor, Request $request)
+    {
+        abort_unless($vendor->is_vendor, 404);
+
+        $score = \Botble\CarRentals\Models\VendorQualityScore::where('vendor_id', $vendor->id)->first();
+
+        if (!$score) {
+            return $this->httpResponse()->setError()->setMessage('Score record nahi mila.');
+        }
+
+        $score->update([
+            'badge_override'  => $request->boolean('badge_override'),
+            'override_badge'  => $request->input('override_badge') ?: null,
+        ]);
+
+        return $this->httpResponse()->setMessage('Badge updated successfully.');
     }
 
     public function destroy(Customer $vendor)
