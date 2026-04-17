@@ -84,4 +84,25 @@ class BookingClaim extends BaseModel
     {
         return $this->belongsTo(User::class, 'assignee_id');
     }
+
+    public function whatsAppConversations()
+    {
+        return $this->hasMany(\App\Models\ChatConversation::class, 'context_id')
+            ->where('context_type', 'claim')
+            ->where('source', 'whatsapp');
+    }
+
+    public function whatsAppMessages()
+    {
+        return $this->hasManyThrough(
+            \App\Models\ChatMessage::class,
+            \App\Models\ChatConversation::class,
+            'context_id',
+            'conversation_id',
+            'id',
+            'id'
+        )
+        ->where('chat_conversations.context_type', 'claim')
+        ->where('chat_messages.source', 'whatsapp');
+    }
 }

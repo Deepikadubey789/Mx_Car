@@ -14,6 +14,9 @@ use Botble\CarRentals\Http\Controllers\Settings\KycSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\PriceLockSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\ReviewSettingController;
 use Botble\CarRentals\Http\Controllers\Settings\TaxSettingController;
+use Botble\CarRentals\Http\Controllers\Admin\WhatsAppConfigController;
+use Botble\CarRentals\Http\Controllers\Admin\WhatsAppManualSendController;
+use Botble\CarRentals\Http\Controllers\Admin\WhatsAppTemplateController;
 use Illuminate\Support\Facades\Route;
 
 Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function (): void {
@@ -325,6 +328,19 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                     ->parameters(['' => 'message'])
                     ->except(['create', 'store']);
             });
+
+            Route::group(['prefix' => 'whatsapp', 'as' => 'whatsapp.'], function (): void {
+                Route::get('dashboard', [WhatsAppManualSendController::class, 'dashboard'])->name('dashboard')->permission('car-rentals.index');
+                Route::get('send', [WhatsAppManualSendController::class, 'create'])->name('send')->permission('car-rentals.index');
+                Route::post('send', [WhatsAppManualSendController::class, 'send'])->name('send.post')->permission('car-rentals.index');
+                Route::get('templates', [WhatsAppTemplateController::class, 'index'])->name('templates.index')->permission('car-rentals.index');
+                Route::post('templates/{template}/approve', [WhatsAppTemplateController::class, 'approve'])->name('templates.approve')->permission('car-rentals.index');
+                Route::get('templates/{template}/edit', [WhatsAppTemplateController::class, 'edit'])->name('templates.edit')->permission('car-rentals.index');
+                Route::match(['PUT', 'POST'], 'templates/{template}', [WhatsAppTemplateController::class, 'update'])->name('templates.update')->permission('car-rentals.index');
+                Route::get('customer-bookings', [WhatsAppManualSendController::class, 'getCustomerBookings'])->name('customer-bookings')->permission('car-rentals.index');
+                Route::get('customer-claims', [WhatsAppManualSendController::class, 'getCustomerClaims'])->name('customer-claims')->permission('car-rentals.index');
+                Route::get('history/{customer}', [WhatsAppManualSendController::class, 'history'])->name('history')->permission('car-rentals.index');
+            });
         });
 
         Route::group(
@@ -360,6 +376,8 @@ Route::group(['namespace' => 'Botble\CarRentals\Http\Controllers'], function ():
                 Route::get('invoice-template/preview', [InvoiceTemplateSettingController::class, 'preview'])->name('invoice-template.preview');
                 Route::match(['GET', 'POST'], 'taxes', [TaxSettingController::class, 'edit'])->name('taxes');
                 Route::put('taxes', [TaxSettingController::class, 'update'])->name('taxes.update');
+                Route::get('whatsapp', [WhatsAppConfigController::class, 'edit'])->name('whatsapp');
+                Route::match(['PUT', 'POST'], 'whatsapp', [WhatsAppConfigController::class, 'update'])->name('whatsapp.update');
             }
         );
 

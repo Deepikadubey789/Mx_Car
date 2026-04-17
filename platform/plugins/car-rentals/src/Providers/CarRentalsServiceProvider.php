@@ -30,6 +30,7 @@ use Botble\CarRentals\Http\Requests\Fronts\Auth\RegisterRequest;
 use Botble\CarRentals\Http\Requests\Fronts\Auth\ResetPasswordRequest;
 use Botble\CarRentals\Http\Requests\Fronts\MessageRequest;
 use Botble\CarRentals\Models\Booking;
+use Botble\CarRentals\Models\BookingClaim;
 use Botble\CarRentals\Models\Car;
 use Botble\CarRentals\Models\CarAmenity;
 use Botble\CarRentals\Models\CarCategory;
@@ -46,6 +47,8 @@ use Botble\CarRentals\Models\Tax;
 // --- NEW: Import Protection Plan Models ---
 use Botble\CarRentals\Models\HostProtectionPlan;
 use Botble\CarRentals\Models\GuestProtectionPlan;
+use Botble\CarRentals\Observers\BookingObserver;
+use Botble\CarRentals\Observers\BookingClaimObserver;
 use Botble\CarRentals\PanelSections\SettingCarRentalsPanelSection;
 use Botble\CarRentals\Repositories\Eloquent\CarCategoryRepository;
 use Botble\CarRentals\Repositories\Eloquent\CarRepository;
@@ -73,6 +76,8 @@ use Botble\CarRentals\Commands\GenerateDemandPricingRecommendationsCommand;
 use Botble\CarRentals\Commands\SeedDemandSignalsCommand;
 use Botble\CarRentals\Commands\CleanupExpiredRecommendationsCommand;
 use Botble\CarRentals\Commands\AutoApplyPendingRecommendationsCommand;
+use Botble\CarRentals\Commands\SendWhatsAppRemindersCommand;
+use Botble\CarRentals\Commands\SeedWhatsAppTemplatesCommand;
 
 class CarRentalsServiceProvider extends ServiceProvider
 {
@@ -99,6 +104,22 @@ class CarRentalsServiceProvider extends ServiceProvider
             }
 
             return app(MockThirdPartyKycProvider::class);
+        });
+
+        // WhatsApp Integration Services
+        $this->app->singleton(\Botble\CarRentals\Services\WhatsApp\WhatsAppService::class, function () {
+            return new \Botble\CarRentals\Services\WhatsApp\WhatsAppService();
+        });
+
+        $this->app->singleton(\Botble\CarRentals\Services\WhatsApp\WhatsAppMessageTemplateService::class, function ($app) {
+            return new \Botble\CarRentals\Services\WhatsApp\WhatsAppMessageTemplateService();
+        });
+
+        $this->app->singleton(\Botble\CarRentals\Services\WhatsApp\WhatsAppSentMessageService::class, function ($app) {
+            return new \Botble\CarRentals\Services\WhatsApp\WhatsAppSentMessageService(
+                $app->make(\Botble\CarRentals\Services\WhatsApp\WhatsAppService::class),
+                $app->make(\Botble\CarRentals\Services\WhatsApp\WhatsAppMessageTemplateService::class)
+            );
         });
 
         $loader = AliasLoader::getInstance();
@@ -135,7 +156,7 @@ class CarRentalsServiceProvider extends ServiceProvider
             ->loadAndPublishTranslations()
             ->publishAssets()
             ->loadHelpers()
-            ->loadRoutes(['web', 'customer', 'fronts', 'vendor', 'base', 'kyc-webhook'])
+            ->loadRoutes(['web', 'customer', 'fronts', 'vendor', 'base', 'kyc-webhook', 'whatsapp-webhook'])
             ->loadMigrations();
 
         if (class_exists('ApiHelper') && ApiHelper::enabled()) {
@@ -182,6 +203,10 @@ class CarRentalsServiceProvider extends ServiceProvider
                 return false;
             }, ['guards' => ['web', 'customer', 'admin']]);
         });
+
+        // Register WhatsApp event observers
+        Booking::observe(BookingObserver::class);
+        BookingClaim::observe(BookingClaimObserver::class);
 
         DashboardMenu::default()->beforeRetrieving(function (): void {
             $menu = DashboardMenu::make()
@@ -534,6 +559,50 @@ class CarRentalsServiceProvider extends ServiceProvider
                 ]);
         });
 
+        // WhatsApp Top-Level Menu
+        DashboardMenu::default()->beforeRetrieving(function (): void {
+            DashboardMenu::make()
+                ->registerItem([
+                    'id' => 'whatsapp',
+                    'priority' => 5,
+                    'parent_id' => null,
+                    'name' => 'WhatsApp',
+                    'icon' => 'ti ti-brand-whatsapp',
+                ])
+                ->registerItem([
+                    'id' => 'whatsapp-settings',
+                    'priority' => 1,
+                    'parent_id' => 'whatsapp',
+                    'name' => 'Settings',
+                    'icon' => 'ti ti-settings',
+                    'route' => 'car-rentals.settings.whatsapp',
+                ])
+                ->registerItem([
+                    'id' => 'whatsapp-dashboard',
+                    'priority' => 2,
+                    'parent_id' => 'whatsapp',
+                    'name' => 'Dashboard',
+                    'icon' => 'ti ti-chart-bar',
+                    'route' => 'car-rentals.whatsapp.dashboard',
+                ])
+                ->registerItem([
+                    'id' => 'whatsapp-send',
+                    'priority' => 3,
+                    'parent_id' => 'whatsapp',
+                    'name' => 'Send Message',
+                    'icon' => 'ti ti-send',
+                    'route' => 'car-rentals.whatsapp.send',
+                ])
+                ->registerItem([
+                    'id' => 'whatsapp-templates',
+                    'priority' => 4,
+                    'parent_id' => 'whatsapp',
+                    'name' => 'Templates',
+                    'icon' => 'ti ti-file-text',
+                    'route' => 'car-rentals.whatsapp.templates.index',
+                ]);
+        });
+
         PanelSectionManager::default()->beforeRendering(function (): void {
             PanelSectionManager::register(SettingCarRentalsPanelSection::class);
         });
@@ -636,6 +705,8 @@ class CarRentalsServiceProvider extends ServiceProvider
                 SeedDemandSignalsCommand::class,
                 CleanupExpiredRecommendationsCommand::class,
                 AutoApplyPendingRecommendationsCommand::class,
+                SendWhatsAppRemindersCommand::class,
+                SeedWhatsAppTemplatesCommand::class,
             ]);
         }
     }

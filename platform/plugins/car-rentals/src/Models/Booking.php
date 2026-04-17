@@ -135,6 +135,27 @@ class Booking extends BaseModel
         return $this->hasMany(TripMessage::class, 'booking_id')->oldest('id');
     }
 
+    public function whatsAppConversations()
+    {
+        return $this->hasMany(\App\Models\ChatConversation::class, 'context_id')
+            ->where('context_type', 'booking')
+            ->where('source', 'whatsapp');
+    }
+
+    public function whatsAppMessages()
+    {
+        return $this->hasManyThrough(
+            \App\Models\ChatMessage::class,
+            \App\Models\ChatConversation::class,
+            'context_id',
+            'conversation_id',
+            'id',
+            'id'
+        )
+        ->where('chat_conversations.context_type', 'booking')
+        ->where('chat_messages.source', 'whatsapp');
+    }
+
     public function supportActions(): HasMany
     {
         return $this->hasMany(BookingSupportAction::class, 'booking_id')->oldest('id');
