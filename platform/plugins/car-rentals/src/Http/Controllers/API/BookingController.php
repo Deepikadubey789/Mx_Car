@@ -212,34 +212,7 @@ class BookingController extends BaseApiController
      */
     public function show($id, Request $request)
     {
-        $customer = Auth::guard('sanctum')->user();
-
-        $query = Booking::query()
-            ->with(['car.car', 'services', 'currency', 'payment', 'invoice']);
-
-        if (is_numeric($id)) {
-            // Access by ID - require authentication or guest verification
-            $query->where('id', $id);
-
-            if ($customer) {
-                $query->where('customer_id', $customer->id);
-            } else {
-                // Guest must provide email for verification
-                $request->validate([
-                    'email' => ['required', 'email'],
-                ]);
-                $query->where('customer_email', $request->input('email'));
-            }
-        } else {
-            // Access by booking code - require email
-            $request->validate([
-                'email' => ['required', 'email'],
-            ]);
-            $query->where('code', $id)
-                ->where('customer_email', $request->input('email'));
-        }
-
-        $booking = $query->first();
+        $booking = $this->findBooking($id, $request);
 
         if (! $booking) {
             return $this
@@ -263,32 +236,7 @@ class BookingController extends BaseApiController
      */
     public function update($id, Request $request)
     {
-        $customer = Auth::guard('sanctum')->user();
-
-        $query = Booking::query();
-
-        if (is_numeric($id)) {
-            $query->where('id', $id);
-
-            if ($customer) {
-                $query->where('customer_id', $customer->id);
-            } else {
-                // Guest must provide email for verification
-                $request->validate([
-                    'email' => ['required', 'email'],
-                ]);
-                $query->where('customer_email', $request->input('email'));
-            }
-        } else {
-            // Access by booking code
-            $request->validate([
-                'email' => ['required', 'email'],
-            ]);
-            $query->where('code', $id)
-                ->where('customer_email', $request->input('email'));
-        }
-
-        $booking = $query->first();
+        $booking = $this->findBooking($id, $request);
 
         if (! $booking) {
             return $this
@@ -418,32 +366,7 @@ class BookingController extends BaseApiController
      */
     public function destroy($id, Request $request)
     {
-        $customer = Auth::guard('sanctum')->user();
-
-        $query = Booking::query();
-
-        if (is_numeric($id)) {
-            $query->where('id', $id);
-
-            if ($customer) {
-                $query->where('customer_id', $customer->id);
-            } else {
-                // Guest must provide email for verification
-                $request->validate([
-                    'email' => ['required', 'email'],
-                ]);
-                $query->where('customer_email', $request->input('email'));
-            }
-        } else {
-            // Access by booking code
-            $request->validate([
-                'email' => ['required', 'email'],
-            ]);
-            $query->where('code', $id)
-                ->where('customer_email', $request->input('email'));
-        }
-
-        $booking = $query->first();
+        $booking = $this->findBooking($id, $request);
 
         if (! $booking) {
             return $this
@@ -486,33 +409,7 @@ class BookingController extends BaseApiController
      */
     public function getInvoice($id, Request $request)
     {
-        $customer = Auth::guard('sanctum')->user();
-
-        $query = Booking::query()
-            ->with(['invoice']);
-
-        if (is_numeric($id)) {
-            $query->where('id', $id);
-
-            if ($customer) {
-                $query->where('customer_id', $customer->id);
-            } else {
-                // Guest must provide email for verification
-                $request->validate([
-                    'email' => ['required', 'email'],
-                ]);
-                $query->where('customer_email', $request->input('email'));
-            }
-        } else {
-            // Access by booking code
-            $request->validate([
-                'email' => ['required', 'email'],
-            ]);
-            $query->where('code', $id)
-                ->where('customer_email', $request->input('email'));
-        }
-
-        $booking = $query->first();
+        $booking = $this->findBooking($id, $request);
 
         if (! $booking) {
             return $this
@@ -539,9 +436,42 @@ class BookingController extends BaseApiController
                 'amount' => $booking->amount,
                 'status' => $booking->payment->status ?? 'pending',
                 'created_at' => $booking->invoice->created_at,
-                'download_url' => route('car-rentals.invoices.download', $booking->invoice->id),
+                'download_url' => url('api/v1/car-rentals/bookings/' . $id . '/invoice/download'),
+                'view_url'     => url('api/v1/car-rentals/bookings/' . $id . '/invoice/view'),
             ])
             ->toApiResponse();
+    }
+
+    /**
+     * Download booking invoice
+     *
+     * @group Car Rentals
+     */
+    public function downloadInvoice($id, Request $request)
+    {
+        $booking = $this->findBooking($id, $request);
+
+        if (! $booking || ! $booking->invoice) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Invoice not found')->toApiResponse();
+        }
+
+        return \Botble\CarRentals\Facades\InvoiceHelper::downloadInvoice($booking->invoice);
+    }
+
+    /**
+     * View/Stream booking invoice safely in Mobile
+     *
+     * @group Car Rentals
+     */
+    public function streamInvoice($id, Request $request)
+    {
+        $booking = $this->findBooking($id, $request);
+
+        if (! $booking || ! $booking->invoice) {
+            return $this->httpResponse()->setError()->setCode(404)->setMessage('Invoice not found')->toApiResponse();
+        }
+
+        return \Botble\CarRentals\Facades\InvoiceHelper::streamInvoice($booking->invoice);
     }
 
     public function cancel($id, Request $request)
@@ -718,17 +648,21 @@ class BookingController extends BaseApiController
         $customer = Auth::guard('sanctum')->user();
         $query = Booking::query()->with(['car.car', 'services', 'currency', 'payment', 'invoice']);
 
-        if (is_numeric($id)) {
-            $query->where('id', $id);
-            if ($customer) {
-                $query->where('customer_id', $customer->id);
-            } else {
-                $request->validate(['email' => ['required', 'email']]);
-                $query->where('customer_email', $request->input('email'));
-            }
+        if ($customer) {
+            $query->where('customer_id', $customer->id)
+                  ->where(function ($q) use ($id) {
+                      $q->where('id', $id)
+                        ->orWhere('transaction_id', $id)
+                        ->orWhere('code', $id);
+                  });
         } else {
             $request->validate(['email' => ['required', 'email']]);
-            $query->where('code', $id)->where('customer_email', $request->input('email'));
+            $query->where('customer_email', $request->input('email'))
+                  ->where(function ($q) use ($id) {
+                      $q->where('id', $id)
+                        ->orWhere('transaction_id', $id)
+                        ->orWhere('code', $id);
+                  });
         }
 
         return $query->first();

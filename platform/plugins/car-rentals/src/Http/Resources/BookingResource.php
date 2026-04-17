@@ -12,23 +12,32 @@ class BookingResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $pickupDate = $this->car->pickup_date ?? null;
+        $returnDate = $this->car->return_date ?? null;
+        $rentalDays = ($pickupDate && $returnDate)
+            ? (int) \Carbon\Carbon::parse($pickupDate)->diffInDays(\Carbon\Carbon::parse($returnDate))
+            : null;
+
         return [
-            'id' => $this->id,
-            'booking_number' => $this->booking_number,
-            'status' => $this->status,
-            'amount' => $this->amount,
-            'sub_total' => $this->sub_total,
-            'tax_amount' => $this->tax_amount,
-            'coupon_amount' => $this->coupon_amount,
-            'coupon_code' => $this->coupon_code,
-            'deposit_risk_level' => $this->deposit_risk_level,
-            'eligibility_state' => $this->eligibility_state,
+            'id'                  => $this->id,
+            'transaction_id'      => $this->transaction_id,
+            'booking_number'      => $this->booking_number,
+            'status'              => $this->status,
+            'status_label'        => $this->status instanceof \UnitEnum ? $this->status->label() : (string) $this->status,
+            'amount'              => $this->amount,
+            'sub_total'           => $this->sub_total,
+            'tax_amount'          => $this->tax_amount,
+            'coupon_amount'       => $this->coupon_amount,
+            'coupon_code'         => $this->coupon_code,
+            'deposit_risk_level'  => $this->deposit_risk_level,
+            'eligibility_state'   => $this->eligibility_state,
             'eligibility_reasons' => $this->eligibility_reasons,
-            'pickup_date' => $this->car->pickup_date ?? null,
-            'return_date' => $this->car->return_date ?? null,
-            'pickup_time' => $this->car->pickup_time ?? null,
-            'return_time' => $this->car->return_time ?? null,
-            'note' => $this->note,
+            'pickup_date'         => $pickupDate,
+            'return_date'         => $returnDate,
+            'pickup_time'         => $this->car->pickup_time ?? null,
+            'return_time'         => $this->car->return_time ?? null,
+            'rental_days'         => $rentalDays,
+            'note'                => $this->note,
             'car' => $this->whenLoaded('car', function () {
                 return $this->car && $this->car->car ? [
                     'id' => $this->car->car->id,

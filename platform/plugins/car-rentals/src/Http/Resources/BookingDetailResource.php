@@ -14,6 +14,7 @@ class BookingDetailResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'transaction_id' => $this->transaction_id,
             'booking_number' => $this->booking_number,
             'customer_name' => $this->customer_name,
             'customer_email' => $this->customer_email,

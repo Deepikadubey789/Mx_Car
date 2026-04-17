@@ -77,6 +77,7 @@ use Botble\CarRentals\Commands\SeedDemandSignalsCommand;
 use Botble\CarRentals\Commands\CleanupExpiredRecommendationsCommand;
 use Botble\CarRentals\Commands\AutoApplyPendingRecommendationsCommand;
 use Botble\CarRentals\Commands\SendWhatsAppRemindersCommand;
+use Botble\CarRentals\Commands\SeedWhatsAppTemplatesCommand;
 use Botble\CarRentals\Console\CalculateVendorQualityCommand;
 
 class CarRentalsServiceProvider extends ServiceProvider

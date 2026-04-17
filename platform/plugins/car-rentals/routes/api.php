@@ -76,6 +76,8 @@ Route::group([
         Route::put('/{id}', 'BookingController@update');
         Route::delete('/{id}', 'BookingController@destroy');
         Route::get('/{id}/invoice', 'BookingController@getInvoice');
+        Route::get('/{id}/invoice/download', 'BookingController@downloadInvoice');
+        Route::get('/{id}/invoice/view', 'BookingController@streamInvoice');
 
         // Trip modification routes
         Route::post('/{id}/cancel', 'BookingController@cancel');
@@ -99,6 +101,9 @@ Route::group([
 
     // Authenticated endpoints (require auth:sanctum middleware)
     Route::group(['middleware' => ['auth:sanctum']], function (): void {
+
+        // Account overview (mirrors the /overview web page)
+        Route::get('overview', 'OverviewController@index');
 
         // Account profile
         Route::prefix('profile')->group(function (): void {
@@ -138,6 +143,13 @@ Route::group([
             Route::get('/', 'Claims\CustomerClaimController@index')->wherePrimaryKey('booking');
             Route::get('/{claim}', 'Claims\CustomerClaimController@show')->wherePrimaryKey('booking')->wherePrimaryKey('claim');
             Route::get('/timeline', 'Claims\CustomerClaimController@timeline')->wherePrimaryKey('booking');
+        });
+
+        // Trip Messaging (Mobile Safe)
+        Route::prefix('bookings/{booking}/messages')->group(function (): void {
+            Route::get('/', 'TripMessageController@index');
+            Route::post('/', 'TripMessageController@store');
+            Route::post('/escalate', 'TripMessageController@escalate');
         });
 
         // Vendor routes (require vendor verification)
