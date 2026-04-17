@@ -72,14 +72,25 @@ class CarController extends BaseApiController
             $query->where('year', '<=', $request->input('year_to'));
         }
 
-        if ($request->has('location')) {
-            $location = $request->input('location');
-            $query->where(function ($q) use ($location): void {
-                $q->where('location', 'LIKE', "%{$location}%")
-                    ->orWhere('city_id', $location)
-                    ->orWhere('state_id', $location);
+       // --- NEW: ADVANCED LOCATION SEARCH (Matches Web Logic) ---
+        if ($location = $request->input('location')) {
+            $searchTerm = trim(explode(',', $location)[0]);
+
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('country', function ($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'LIKE', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('state', function ($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'LIKE', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('city', function ($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'LIKE', '%' . $searchTerm . '%');
+                })
+                ->orWhere('cr_cars.address', 'LIKE', '%' . $searchTerm . '%')
+                ->orWhere('cr_cars.location', 'LIKE', '%' . $searchTerm . '%');
             });
         }
+        // ---------------------------------------------------------
 
         if ($request->has('amenities')) {
             $amenities = is_array($request->input('amenities'))
@@ -91,17 +102,19 @@ class CarController extends BaseApiController
             });
         }
 
-        // Search
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search): void {
-                $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('description', 'LIKE', "%{$search}%")
-                    ->orWhereHas('make', function ($q) use ($search): void {
-                        $q->where('name', 'LIKE', "%{$search}%");
-                    });
+        // --- NEW: ADVANCED KEYWORD SEARCH (Matches Web Logic) ---
+        if ($keyword = $request->input('search') ?: $request->input('keyword') ?: $request->input('q')) {
+            $words = array_filter(explode(' ', $keyword));
+            $query->where(function ($q) use ($words) {
+                foreach ($words as $word) {
+                    $q->where('cr_cars.name', 'LIKE', '%' . trim($word) . '%')
+                      ->orWhereHas('make', function ($subQ) use ($word) {
+                          $subQ->where('name', 'LIKE', '%' . trim($word) . '%');
+                      });
+                }
             });
         }
+        // --------------------------------------------------------
 
         // Sorting
         $sortBy = $request->input('sort_by', 'created_at');
@@ -153,16 +166,27 @@ class CarController extends BaseApiController
             $query->where('moderation_status', ModerationStatusEnum::APPROVED);
         }
 
-        // Filter by location
-        if ($request->has('location')) {
-            $location = $request->input('location');
-            $query->where(function ($q) use ($location): void {
-                $q->where('location', 'LIKE', "%{$location}%")
-                    ->orWhere('city_id', $location)
-                    ->orWhere('state_id', $location);
+        // --- NEW: ADVANCED LOCATION SEARCH (Matches Web Logic) ---
+        if ($location = $request->input('location')) {
+            $searchTerm = trim(explode(',', $location)[0]); // Handles "Paris, France" gracefully
+
+            $query->where(function ($q) use ($searchTerm) {
+                $q->whereHas('country', function ($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'LIKE', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('state', function ($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'LIKE', '%' . $searchTerm . '%');
+                })
+                ->orWhereHas('city', function ($subQ) use ($searchTerm) {
+                    $subQ->where('name', 'LIKE', '%' . $searchTerm . '%');
+                })
+                ->orWhere('cr_cars.address', 'LIKE', '%' . $searchTerm . '%')
+                ->orWhere('cr_cars.location', 'LIKE', '%' . $searchTerm . '%');
             });
         }
+        // ---------------------------------------------------------
 
+        // Filter by Date Availability
         $availableCars = [];
         $dateFormat = CarRentalsHelper::getDateFormat();
         $condition = [
@@ -176,6 +200,7 @@ class CarController extends BaseApiController
             }
         }
 
+        // Pagination
         $perPage = min($request->integer('per_page', 12), 50);
         $page = $request->integer('page', 1);
         $offset = ($page - 1) * $perPage;

@@ -178,7 +178,7 @@
         color: #94a3b8;
     }
 
-    /* --- BOTTOM DETAILS AREA (LOCATION & PRICE) --- */
+   /* --- BOTTOM DETAILS AREA (LOCATION & PRICE) --- */
     .car-card-modern .card-details {
         padding: 16px 16px 12px 16px;
         display: flex;
@@ -187,6 +187,7 @@
         background: transparent; 
     }
     
+    /* --- NEW: Scrolling Marquee Effect for Location --- */
     .location-col {
         font-size: 0.85rem;
         color: #475569;
@@ -195,12 +196,38 @@
         align-items: center;
         gap: 6px;
         margin-top: 2px;
+        overflow: hidden; /* Prevent text from spilling out */
+        white-space: nowrap;
     }
     .location-col svg {
         width: 14px;
         height: 14px;
         fill: #111827; 
-        flex-shrink: 0;
+        flex-shrink: 0; /* Keep the icon from squishing */
+    }
+
+    .location-scroll-wrapper {
+        overflow: hidden;
+        width: 100%;
+        /* Adds a nice fade-out effect on the right edge */
+        -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+        mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    }
+
+    .location-scroll-text {
+        display: inline-block;
+        padding-right: 20px; /* Buffer space before it loops */
+    }
+
+    /* The swipe animation */
+    @keyframes swipe-left {
+        0%, 15% { transform: translateX(0); } /* Pause briefly at the start */
+        85%, 100% { transform: translateX(calc(-100% + 120px)); } /* Swipe to the end and pause */
+    }
+
+    /* Trigger the swipe ONLY when hovering over the card */
+    .car-card-modern:hover .location-scroll-text {
+        animation: swipe-left 4s linear infinite alternate;
     }
     
     .price-col {
@@ -420,10 +447,23 @@
                                         </div>
                                     </div>
                                     
-                                    <div class="card-details">
-                                        <div class="location-col text-truncate" style="max-width: 130px;" title="{{ $car->location }}">
+                                  <div class="card-details">
+                                        @php
+                                            // Intelligently combine available location data
+                                            $displayLocation = implode(', ', array_filter([
+                                                $car->address,
+                                                $car->city->name ?? null,
+                                                $car->state->name ?? null
+                                            ]));
+                                        @endphp
+                                        
+                                        <div class="location-col" style="max-width: 130px;" title="{{ $displayLocation }}">
                                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                                            {{ $car->location ? BaseHelper::clean($car->location) : __('Location N/A') }}
+                                            <div class="location-scroll-wrapper">
+                                                <span class="location-scroll-text">
+                                                    {{ $displayLocation ?: __('Location N/A') }}
+                                                </span>
+                                            </div>
                                         </div>
                                         
                                         <div class="price-col">

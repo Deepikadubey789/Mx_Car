@@ -204,6 +204,15 @@ Route::group([
                 Route::post('/resume', 'Vendor\AutoPricingApiController@resume')->wherePrimaryKey('car');
                 Route::get('/history', 'Vendor\AutoPricingApiController@history')->wherePrimaryKey('car');
             });
+
+            // Vendor reviews
+            Route::prefix('reviews')->group(function (): void {
+                Route::get('/', 'Vendor\ReviewController@index');
+                Route::post('{id}/reply', 'Vendor\ReviewController@reply')->wherePrimaryKey();
+                
+                // --- NEW: Vendor rates a customer after a trip ---
+                Route::post('rate-customer', 'Vendor\ReviewController@rateCustomer');
+            });
         });
 
         // Admin/support claims (mobile internal)

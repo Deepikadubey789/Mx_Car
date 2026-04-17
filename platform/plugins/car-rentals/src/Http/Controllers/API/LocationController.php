@@ -145,6 +145,26 @@ class LocationController extends BaseApiController
             }
         }
 
+        // --- NEW: Search Specific Car Addresses/Airports (POIs) ---
+        $addresses = \Botble\CarRentals\Models\Car::query()
+            ->where('status', \Botble\CarRentals\Enums\CarStatusEnum::AVAILABLE)
+            ->whereNotNull('address')
+            ->where('address', 'LIKE', "%{$search}%")
+            ->select('address')
+            ->distinct()
+            ->limit(5)
+            ->pluck('address');
+
+        foreach ($addresses as $address) {
+            $results[] = [
+                'type' => 'poi',
+                'id' => null, // POIs use the exact string name for searching, not an ID
+                'name' => $address,
+                'address' => $address,
+            ];
+        }
+        // ----------------------------------------------------------
+
         return $this
             ->httpResponse()
             ->setData($results)

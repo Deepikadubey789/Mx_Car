@@ -5,13 +5,17 @@
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_08_100000_add_risk_deposit_fields_to_cr_bookings_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_08_170000_expand_deposit_hold_status_length.php
   php artisan migrate --path=platform/plugins/payment/database/migrations/2026_04_08_101000_add_authorization_fields_to_payments_table.php
+  
   php artisan migrate --path=database/migrations/2026_04_06_052648_create_cr_customer_reviews_table.php
   php artisan migrate --path=database/migrations/2026_04_07_053910_create_cr_insurances_table.php
   php artisan migrate --path=database/migrations/2026_04_07_062534_create_cr_booking_insurances_table.php
   php artisan migrate --path=/database/migrations/2026_04_13_104215_upgrade_insurance_to_protection_engine.php
+  php artisan migrate --path=database\migrations\2026_04_13_122343_force_add_mileage_snapshot_now.php
+  php artisan migrate --path=database\migrations\2026_04_13_123616_remove_strict_fks_from_bookings.php
   php artisan migrate --path=/database\migrations\2026_04_14_120611_add_views_count_to_cr_cars_table.php
   php artisan migrate --path=/database\migrations\2026_04_15_092425_create_telematics_tables.php
   php artisan migrate --path=/database\migrations\2026_04_16_092947_add_delivery_rules_to_car_rentals_tables.php
+
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134719_create_cr_trip_messages_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134722_add_is_escalated_to_cr_bookings_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_08_100000_add_pickup_photos_to_bookings.php
@@ -26,4 +30,9 @@
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_15_000000_add_vendor_columns_to_demand_pricing_recommendations.php
   php artisan migrate --path=database/migrations/2026_04_15_000001_add_auto_pricing_to_car_pricing_policies.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_13_165323_add_trip_modification_fields_to_cr_bookings_table.php
-  php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_15_144237_create_cr_vendor_quality_scores_table.php
+  php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000001_add_vendor_first_reply_at_to_cr_trip_messages.php
+  php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000002_add_cancelled_by_to_cr_bookings.php
+  php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_120000_create_cr_booking_support_actions_table.php
+  php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_130000_create_cr_booking_claims_table.php
+  php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_180000_extend_cr_booking_claims_for_workflow_and_settlement.php
+  php artisan migrate --path=database\migrations\2026_04_15_144237_create_cr_vendor_quality_scores_table.php

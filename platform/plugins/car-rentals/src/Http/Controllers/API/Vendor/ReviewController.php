@@ -93,4 +93,67 @@ class ReviewController extends BaseApiController
                 ->toApiResponse();
         }
     }
+
+    public function rateCustomer(Request $request)
+    {
+        $vendor = Auth::guard('sanctum')->user();
+
+        $request->validate([
+            'booking_id' => 'required|exists:cr_bookings,id',
+            'customer_id' => 'required|exists:cr_customers,id',
+            'star' => 'required|integer|min:1|max:5',
+            'content' => 'required|string|min:10|max:1000',
+        ]);
+
+        // Verify the booking actually belongs to this vendor
+        $booking = \Botble\CarRentals\Models\Booking::query()
+            ->where('id', $request->input('booking_id'))
+            ->where('vendor_id', $vendor->id)
+            ->where('customer_id', $request->input('customer_id'))
+            ->first();
+
+        if (!$booking) {
+            return $this->httpResponse()
+                ->setError()
+                ->setCode(403)
+                ->setMessage(__('You do not have permission to review this trip.'))
+                ->toApiResponse();
+        }
+
+        // Prevent duplicate reviews
+        $existingReview = \Botble\CarRentals\Models\CustomerReview::query()
+            ->where('booking_id', $booking->id)
+            ->where('vendor_id', $vendor->id)
+            ->exists();
+
+        if ($existingReview) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage(__('You have already reviewed this guest for this trip.'))
+                ->toApiResponse();
+        }
+
+        try {
+            // Create the two-sided review
+            $review = \Botble\CarRentals\Models\CustomerReview::query()->create([
+                'vendor_id' => $vendor->id,
+                'customer_id' => $request->input('customer_id'),
+                'booking_id' => $booking->id,
+                'star' => $request->input('star'),
+                'content' => $request->input('content'),
+                'status' => \Botble\Base\Enums\BaseStatusEnum::PUBLISHED,
+            ]);
+
+            return $this->httpResponse()
+                ->setData($review)
+                ->setMessage(__('Guest review submitted successfully.'))
+                ->toApiResponse();
+                
+        } catch (\Exception $e) {
+            return $this->httpResponse()
+                ->setError()
+                ->setMessage($e->getMessage())
+                ->toApiResponse();
+        }
+    }
 }
