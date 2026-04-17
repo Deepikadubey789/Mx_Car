@@ -714,6 +714,9 @@ class CarRentalsServiceProvider extends ServiceProvider
                 SeedDemandSignalsCommand::class,
                 CleanupExpiredRecommendationsCommand::class,
                 AutoApplyPendingRecommendationsCommand::class,
+                SendWhatsAppRemindersCommand::class,
+                SeedWhatsAppTemplatesCommand::class,
+                CalculateVendorQualityCommand::class,
             ]);
         }
     }
