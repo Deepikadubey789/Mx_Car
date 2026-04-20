@@ -178,11 +178,13 @@
 @endphp
 
 <style>
-    .custom-hero-wrapper {
-        padding-top: 2rem;
-        padding-bottom: 7rem;
-    }
-
+.custom-hero-wrapper {
+    padding-top: 2rem;
+    padding-bottom: 9rem;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    max-width: 90% !important;
+}
     /* ── Glitch CSS Variables ── */
     .custom-hero-v2 {
         --gap-horizontal: 8px;
@@ -286,7 +288,8 @@
         overflow: hidden;
         box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         padding-top: 40px;
-        padding-bottom: 100px;
+        padding-bottom: 160px;
+
     }
 
     /* ── 5 glitch image layers ── */
@@ -354,7 +357,7 @@
     .custom-hero-v2 h1.hero-main-title {
         position: relative;
         display: inline-block;
-        font-size: clamp(2.2rem, 4vw, 3.2rem) !important;  /* ← yahan change kiya */
+        font-size: clamp(1.4rem, 2.5vw, 2rem) !important; 
         font-weight: 700 !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
@@ -369,7 +372,7 @@
     .custom-hero-v2 .hero-main-title p,
     .custom-hero-v2 .hero-main-title span,
     .custom-hero-v2 .hero-main-title strong {
-        font-size: clamp(2.2rem, 4vw, 3.2rem) !important;  /* ← yahan bhi */
+        font-size: clamp(1.4rem, 2.5vw, 2rem) !important; 
         font-weight: 700 !important;
         color: #ffffff !important;
         -webkit-text-fill-color: #ffffff !important;
@@ -745,7 +748,7 @@
             </ul> -->
 
             {{-- Neon Buttons --}}
-            <div class="hero-neon-buttons-wrap">
+            <!-- <div class="hero-neon-buttons-wrap">
                 <a href="#" class="neon-btn neon-btn-purple">
                     <span class="neon-dot"></span>
                     {{ __('High quality at a low cost') }}
@@ -759,7 +762,7 @@
                     {{ __('24/7 roadside support') }}
                 </a>
             </div>
-            
+             -->
            
         </div>
     </section>
