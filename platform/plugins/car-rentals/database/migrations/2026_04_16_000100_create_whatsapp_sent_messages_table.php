@@ -27,8 +27,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->foreign('customer_id')->references('id')->on('cr_customers')->cascadeOnDelete();
-            $table->foreign('booking_id')->nullable()->references('id')->on('cr_bookings')->nullOnDelete();
-            $table->foreign('claim_id')->nullable()->references('id')->on('cr_booking_claims')->nullOnDelete();
+            $table->foreign('booking_id')->references('id')->on('cr_bookings')->nullOnDelete();
 
             $table->index(['customer_id', 'created_at']);
             $table->index(['booking_id', 'event_type']);
