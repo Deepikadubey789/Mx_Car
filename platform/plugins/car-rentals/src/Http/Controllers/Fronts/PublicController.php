@@ -78,22 +78,34 @@ class PublicController extends BaseController
         }
 
         // 2. Unified Advanced Location Search
-        if ($location = $request->input('location')) {
-            Car::addGlobalScope('location_search', function ($builder) use ($location) {
-                $searchTerm = trim(explode(',', $location)[0]);
+        // Grab the input whether the form calls it 'location' or 'city_id'
+        $locationInput = $request->input('location') ?: $request->input('city_id');
 
-                $builder->where(function ($query) use ($searchTerm) {
-                    $query->whereHas('country', function ($q) use ($searchTerm) {
-                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
-                    })
-                    ->orWhereHas('state', function ($q) use ($searchTerm) {
-                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
-                    })
-                    ->orWhereHas('city', function ($q) use ($searchTerm) {
-                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
-                    })
-                    ->orWhere('cr_cars.address', 'LIKE', '%' . $searchTerm . '%');
-                });
+        if ($locationInput) {
+            Car::addGlobalScope('location_search', function ($builder) use ($locationInput) {
+                
+                // If the dropdown sent a numeric City ID (e.g., 25 for Rome)
+                if (is_numeric($locationInput)) {
+                    $builder->where('cr_cars.city_id', $locationInput);
+                } 
+                // If the dropdown sent a custom text string (e.g., "Lazio Airport")
+                else {
+                    $searchTerm = trim(explode(',', $locationInput)[0]);
+
+                    $builder->where(function ($query) use ($searchTerm) {
+                        $query->whereHas('country', function ($q) use ($searchTerm) {
+                            $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                        })
+                        ->orWhereHas('state', function ($q) use ($searchTerm) {
+                            $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                        })
+                        ->orWhereHas('city', function ($q) use ($searchTerm) {
+                            $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                        })
+                        ->orWhere('cr_cars.address', 'LIKE', '%' . $searchTerm . '%')
+                        ->orWhere('cr_cars.location', 'LIKE', '%' . $searchTerm . '%');
+                    });
+                }
             });
 
             // CRITICAL FIX: Destroy URL parameters so Botble's core doesn't run a conflicting blank search!
@@ -1053,25 +1065,37 @@ class PublicController extends BaseController
         }
 
         // 2. Unified Advanced Location Search
-        if ($location = $request->input('location')) {
-            Car::addGlobalScope('location_search', function ($builder) use ($location) {
-                $searchTerm = trim(explode(',', $location)[0]);
+        // Grab the input whether the form calls it 'location' or 'city_id'
+        $locationInput = $request->input('location') ?: $request->input('city_id');
 
-                $builder->where(function ($query) use ($searchTerm) {
-                    $query->whereHas('country', function ($q) use ($searchTerm) {
-                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
-                    })
-                    ->orWhereHas('state', function ($q) use ($searchTerm) {
-                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
-                    })
-                    ->orWhereHas('city', function ($q) use ($searchTerm) {
-                        $q->where('name', 'LIKE', '%' . $searchTerm . '%');
-                    })
-                    ->orWhere('cr_cars.address', 'LIKE', '%' . $searchTerm . '%');
-                });
+        if ($locationInput) {
+            Car::addGlobalScope('location_search', function ($builder) use ($locationInput) {
+                
+                // If the dropdown sent a numeric City ID (e.g., 25 for Rome)
+                if (is_numeric($locationInput)) {
+                    $builder->where('cr_cars.city_id', $locationInput);
+                } 
+                // If the dropdown sent a custom text string (e.g., "Lazio Airport")
+                else {
+                    $searchTerm = trim(explode(',', $locationInput)[0]);
+
+                    $builder->where(function ($query) use ($searchTerm) {
+                        $query->whereHas('country', function ($q) use ($searchTerm) {
+                            $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                        })
+                        ->orWhereHas('state', function ($q) use ($searchTerm) {
+                            $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                        })
+                        ->orWhereHas('city', function ($q) use ($searchTerm) {
+                            $q->where('name', 'LIKE', '%' . $searchTerm . '%');
+                        })
+                        ->orWhere('cr_cars.address', 'LIKE', '%' . $searchTerm . '%')
+                        ->orWhere('cr_cars.location', 'LIKE', '%' . $searchTerm . '%');
+                    });
+                }
             });
 
-            // CRITICAL FIX: Destroy URL parameters
+            // CRITICAL FIX: Destroy URL parameters so Botble's core doesn't run a conflicting blank search!
             $request->query->remove('city_id');
             $request->query->remove('location');
             $request->request->remove('city_id');
@@ -1220,12 +1244,13 @@ class PublicController extends BaseController
         foreach ($addresses as $address) {
             // Add the specific address to the dropdown list
             $results[] = [
-                'id' => '', // No city ID needed for exact address matching
+                // FIX: Use the actual string as the ID so the form submits it!
+                'id' => $address, 
                 'name' => $address, 
                 'city_name' => $address,
                 'state_name' => '',
                 'country_name' => '',
-                'type' => 'poi' // Tag as a Point of Interest (Hotel/Airport)
+                'type' => 'poi' 
             ];
         }
 
