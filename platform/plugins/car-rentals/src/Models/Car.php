@@ -80,6 +80,7 @@ class Car extends BaseModel
         'is_delivery_enabled',
         'free_delivery_days_threshold',
         'max_delivery_distance_miles',
+        'host_protection_plan_id',
     ];
 
     protected $casts = [

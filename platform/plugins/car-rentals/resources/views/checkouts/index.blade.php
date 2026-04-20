@@ -78,6 +78,10 @@
 
                 const endTime = new Date(expiresAt).getTime();
 
+                if (!Number.isNaN(endTime) && endTime > Date.now()) {
+                    window.__priceLockExpiredReloadDone = false;
+                }
+
                 function tick() {
                     const now = Date.now();
                     const remainingSeconds = Math.max(0, Math.floor((endTime - now) / 1000));
@@ -86,6 +90,14 @@
                         countdown.classList.remove('bg-warning', 'text-dark');
                         countdown.classList.add('bg-danger', 'text-white');
                         countdown.textContent = '{{ __('Expired') }}';
+                        if (window.priceLockCountdownTimer) {
+                            clearInterval(window.priceLockCountdownTimer);
+                            window.priceLockCountdownTimer = null;
+                        }
+                        if (!window.__priceLockExpiredReloadDone) {
+                            window.__priceLockExpiredReloadDone = true;
+                            window.location.reload();
+                        }
                         return;
                     }
 

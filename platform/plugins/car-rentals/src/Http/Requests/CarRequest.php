@@ -95,6 +95,7 @@ class CarRequest extends Request
             'horsepower' => ['nullable', 'numeric', 'min:0', 'max:10000'],
             'number_of_seats' => ['nullable', 'int', 'min:0', 'max:10000'],
             'number_of_doors' => ['nullable', 'int', 'min:0', 'max:10000'],
+            'host_protection_plan_id' => ['nullable', 'integer'],
             'car_purpose' => ['nullable', 'string', Rule::in(['rent', 'sale'])],
             'rental_rate' => [
                 'numeric',

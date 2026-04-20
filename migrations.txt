@@ -15,6 +15,9 @@
   php artisan migrate --path=/database\migrations\2026_04_14_120611_add_views_count_to_cr_cars_table.php
   php artisan migrate --path=/database\migrations\2026_04_15_092425_create_telematics_tables.php
   php artisan migrate --path=/database\migrations\2026_04_16_092947_add_delivery_rules_to_car_rentals_tables.php
+  php artisan migrate --path=/database\migrations\2026_04_20_114739_drop_host_plan_foreign_key_from_cr_cars_table.php
+
+
 
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134719_create_cr_trip_messages_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134722_add_is_escalated_to_cr_bookings_table.php
@@ -36,3 +39,17 @@
   php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_130000_create_cr_booking_claims_table.php
   php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_180000_extend_cr_booking_claims_for_workflow_and_settlement.php
   php artisan migrate --path=database\migrations\2026_04_15_144237_create_cr_vendor_quality_scores_table.php
+
+
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000000_add_whatsapp_source_to_chat_messages.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000001_add_vendor_first_reply_at_to_cr_trip_messages.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000001_create_whatsapp_configs_table.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000002_add_cancelled_by_to_cr_bookings.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000002_create_whatsapp_webhook_logs_table.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000003_add_whatsapp_context_to_chat_conversations.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000100_create_whatsapp_sent_messages_table.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_000101_create_whatsapp_message_templates_table.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_120000_create_cr_booking_support_actions_table.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_130000_create_cr_booking_claims_table.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_16_180000_extend_cr_booking_claims_for_workflow_and_settlement.php
+php artisan migrate --path=platform\plugins\car-rentals\database\migrations\2026_04_17_000102_add_provider_fields_to_whatsapp_sent_messages_table.php
