@@ -15,6 +15,9 @@
   php artisan migrate --path=/database\migrations\2026_04_14_120611_add_views_count_to_cr_cars_table.php
   php artisan migrate --path=/database\migrations\2026_04_15_092425_create_telematics_tables.php
   php artisan migrate --path=/database\migrations\2026_04_16_092947_add_delivery_rules_to_car_rentals_tables.php
+  php artisan migrate --path=/database\migrations\2026_04_20_114739_drop_host_plan_foreign_key_from_cr_cars_table.php
+
+
 
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134719_create_cr_trip_messages_table.php
   php artisan migrate --path=platform/plugins/car-rentals/database/migrations/2026_04_07_134722_add_is_escalated_to_cr_bookings_table.php
