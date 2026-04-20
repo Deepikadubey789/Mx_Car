@@ -29,8 +29,7 @@ return new class extends Migration
             $table->index(['status', 'created_at']);
             $table->index(['linked_booking_id', 'created_at']);
             $table->index(['linked_claim_id', 'created_at']);
-            $table->foreign('linked_booking_id')->nullable()->references('id')->on('cr_bookings')->nullOnDelete();
-            $table->foreign('linked_claim_id')->nullable()->references('id')->on('cr_booking_claims')->nullOnDelete();
+            $table->foreign('linked_booking_id')->references('id')->on('cr_bookings')->nullOnDelete();
         });
     }
 
