@@ -15,6 +15,7 @@ use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Services\VendorDemandPricingService;
 use Botble\CarRentals\Tables\Vendor\CarTable;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 
 class CarController extends BaseController
 {
@@ -60,6 +61,8 @@ class CarController extends BaseController
 
             $car->save();
 
+            $this->syncPricingPolicy($car, $request);
+
             // Sync relationships
             $tags = $request->input('tags');
             $tags = $tags ? explode(',', $tags) : [];
@@ -104,12 +107,13 @@ class CarController extends BaseController
         $this->pageTitle(trans('core/base::forms.edit_item', ['name' => $car->name]));
 
         $vendorId = auth('customer')->id();
-        $recommendations = $vendorPricingService->getRecommendationsByCar($vendorId, $car->id, 'pending');
+        $grouped = $vendorPricingService->getRecommendationsByCar($vendorId, $car->id, 'pending');
+        $recommendationsForCar = $grouped->get($car->id, collect())->values();
 
         // Share view data for the form template
         view()->share([
-            'carRecommendations' => $recommendations,
-            'carRecommendationCount' => $recommendations->count(),
+            'carRecommendations' => $recommendationsForCar,
+            'carRecommendationCount' => $recommendationsForCar->count(),
         ]);
 
         return CarForm::createFromModel($car)->renderForm();
@@ -159,17 +163,7 @@ class CarController extends BaseController
                 $car->deliveryLocations()->detach();
             }
 
-            // Handle pricing policy auto-apply settings
-            $pricingPolicyData = [
-                'demand_auto_apply_enabled' => (bool) $request->input('demand_auto_apply_enabled', 0),
-                'demand_auto_apply_min_confidence' => (float) $request->input('demand_auto_apply_min_confidence', 0.70),
-            ];
-
-            if ($request->has('demand_auto_apply_max_daily_change_percent') && $request->input('demand_auto_apply_max_daily_change_percent') !== '') {
-                $pricingPolicyData['demand_auto_apply_max_daily_change_percent'] = (float) $request->input('demand_auto_apply_max_daily_change_percent');
-            }
-
-            $car->pricingPolicy()->updateOrCreate([], $pricingPolicyData);
+            $this->syncPricingPolicy($car, $request);
 
             $form->fireModelEvents($car);
         });
@@ -204,6 +198,97 @@ class CarController extends BaseController
         }
 
         return $request->input();
+    }
+
+    protected function syncPricingPolicy(Car $car, Request $request): void
+    {
+        $policyKeys = [
+            'weekly_discount_type',
+            'weekly_discount_value',
+            'monthly_discount_type',
+            'monthly_discount_value',
+            'included_distance_per_day',
+            'included_distance_per_trip',
+            'extra_distance_unit_price',
+            'distance_unit',
+            'distance_overage_billing_mode',
+            'allow_best_discount_only',
+            'max_discount_cap_percent',
+            'demand_recommendations_enabled',
+            'demand_min_price',
+            'demand_max_price',
+            'demand_max_daily_change_percent',
+            'demand_auto_apply_enabled',
+            'demand_auto_apply_min_confidence',
+            'demand_auto_apply_max_daily_change_percent',
+        ];
+
+        $hasPolicyInput = false;
+
+        foreach ($policyKeys as $key) {
+            if ($request->has($key)) {
+                $hasPolicyInput = true;
+                break;
+            }
+        }
+
+        $tripDiscounts = $request->input('trip_discounts');
+        if (! $hasPolicyInput && ! is_array($tripDiscounts)) {
+            return;
+        }
+
+        $policy = $car->pricingPolicy()->firstOrNew([]);
+        $policy->fill([
+            'weekly_discount_type' => $request->input('weekly_discount_type', $policy->weekly_discount_type ?? 'none'),
+            'weekly_discount_value' => $request->input('weekly_discount_value', $policy->weekly_discount_value ?? 0),
+            'monthly_discount_type' => $request->input('monthly_discount_type', $policy->monthly_discount_type ?? 'none'),
+            'monthly_discount_value' => $request->input('monthly_discount_value', $policy->monthly_discount_value ?? 0),
+            'included_distance_per_day' => $request->input('included_distance_per_day', $policy->included_distance_per_day),
+            'included_distance_per_trip' => $request->input('included_distance_per_trip', $policy->included_distance_per_trip),
+            'extra_distance_unit_price' => $request->input('extra_distance_unit_price', $policy->extra_distance_unit_price ?? 0),
+            'distance_unit' => $request->input('distance_unit', $policy->distance_unit ?? 'km'),
+            'distance_overage_billing_mode' => $request->input('distance_overage_billing_mode', $policy->distance_overage_billing_mode ?? 'end_of_trip'),
+            'allow_best_discount_only' => $request->boolean('allow_best_discount_only', $policy->allow_best_discount_only ?? true),
+            'max_discount_cap_percent' => $request->input('max_discount_cap_percent', $policy->max_discount_cap_percent),
+            'demand_recommendations_enabled' => $request->boolean('demand_recommendations_enabled', $policy->demand_recommendations_enabled ?? false),
+            'demand_min_price' => $request->input('demand_min_price', $policy->demand_min_price),
+            'demand_max_price' => $request->input('demand_max_price', $policy->demand_max_price),
+            'demand_max_daily_change_percent' => $request->input('demand_max_daily_change_percent', $policy->demand_max_daily_change_percent),
+            'demand_auto_apply_enabled' => $request->boolean('demand_auto_apply_enabled', $policy->demand_auto_apply_enabled ?? false),
+            'demand_auto_apply_min_confidence' => $request->input('demand_auto_apply_min_confidence', $policy->demand_auto_apply_min_confidence ?? 0.70),
+            'demand_auto_apply_max_daily_change_percent' => $request->input('demand_auto_apply_max_daily_change_percent', $policy->demand_auto_apply_max_daily_change_percent),
+            'active' => true,
+        ]);
+        $policy->car_id = $car->getKey();
+        $policy->save();
+
+        if (is_array($tripDiscounts)) {
+            $policy->tripDiscounts()->delete();
+
+            foreach ($tripDiscounts as $tripDiscount) {
+                if (! is_array($tripDiscount)) {
+                    continue;
+                }
+
+                $minDays = (int) Arr::get($tripDiscount, 'min_days', 0);
+                $discountValue = Arr::get($tripDiscount, 'discount_value');
+
+                if ($minDays < 1 || $discountValue === null || $discountValue === '') {
+                    continue;
+                }
+
+                $policy->tripDiscounts()->create([
+                    'car_id' => $car->getKey(),
+                    'min_days' => $minDays,
+                    'max_days' => Arr::get($tripDiscount, 'max_days'),
+                    'discount_type' => Arr::get($tripDiscount, 'discount_type', 'percentage'),
+                    'discount_value' => $discountValue,
+                    'priority' => Arr::get($tripDiscount, 'priority', 0),
+                    'active' => (bool) Arr::get($tripDiscount, 'active', true),
+                    'description' => Arr::get($tripDiscount, 'description'),
+                ]);
+            }
+        }
     }
 
     public function destroy(Car $car): DeleteResourceAction

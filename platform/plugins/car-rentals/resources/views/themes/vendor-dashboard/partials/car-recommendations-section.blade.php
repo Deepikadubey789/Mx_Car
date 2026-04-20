@@ -3,7 +3,7 @@
         <div class="card-header bg-info bg-opacity-10 border-info">
             <div class="d-flex align-items-center justify-content-between">
                 <h6 class="card-title mb-0">
-                    <x-core::icon name="ti ti-trend-up" class="me-2 text-info" />
+                    <x-core::icon name="ti ti-trending-up" class="me-2 text-info" />
                     {{ __('Pending Demand Pricing Recommendations') }}
                 </h6>
                 <span class="badge bg-info">{{ $carRecommendationCount }}</span>
@@ -15,7 +15,7 @@
                     <table class="table table-sm table-hover">
                         <thead>
                             <tr class="text-muted text-uppercase">
-                                <th style="width: 20%;">{{ __('Date Range') }}</th>
+                                <th style="width: 20%;">{{ __('Date') }}</th>
                                 <th style="width: 15%;">{{ __('Current Price') }}</th>
                                 <th style="width: 15%;">{{ __('Suggested Price') }}</th>
                                 <th style="width: 15%;">{{ __('Confidence') }}</th>
@@ -28,29 +28,28 @@
                                 <tr>
                                     <td>
                                         <small class="text-muted">
-                                            {{ \Carbon\Carbon::parse($rec['from_date'])->format('M d') }} -
-                                            {{ \Carbon\Carbon::parse($rec['to_date'])->format('M d, Y') }}
+                                            {{ $rec->recommendation_date?->format('M d, Y') ?? '—' }}
                                         </small>
                                     </td>
                                     <td>
-                                        <strong>{{ format_price($rec['current_price'] ?? $rec['local_baseline_price'] ?? 0) }}</strong>
+                                        <strong>{{ format_price($rec->local_baseline_price ?? 0) }}</strong>
                                     </td>
                                     <td>
                                         <span class="badge bg-success text-white">
-                                            {{ format_price($rec['recommended_price']) }}
+                                            {{ format_price($rec->recommended_value) }}
                                         </span>
                                     </td>
                                     <td>
                                         @php
-                                            $confidence = $rec['confidence_score'] ?? 0;
+                                            $confidence = (float) ($rec->confidence_score ?? 0);
                                             $confColor = $confidence >= 0.80 ? 'success' : ($confidence >= 0.60 ? 'info' : 'warning');
                                         @endphp
                                         <span class="badge bg-{{ $confColor }}">{{ round($confidence * 100) }}%</span>
                                     </td>
                                     <td>
                                         <small>
-                                            @if (isset($rec['estimated_revenue_impact']) && $rec['estimated_revenue_impact'] > 0)
-                                                <span class="text-success">+{{ format_price($rec['estimated_revenue_impact']) }}</span>
+                                            @if (($rec->estimated_revenue_impact ?? 0) > 0)
+                                                <span class="text-success">+{{ format_price($rec->estimated_revenue_impact) }}</span>
                                             @else
                                                 <span class="text-muted">-</span>
                                             @endif

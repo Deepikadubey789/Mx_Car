@@ -141,7 +141,7 @@ try {
         $(this).find('i').remove();
     });
 
-    $(document).on('submit', '.booking-form form', function (event) {
+    $(document).on('submit', 'form.booking-form', function (event) {
         const $priceLockWrapper = $('#price-lock-wrapper');
         const $priceLockMessage = $('#price-lock-message');
 
@@ -149,7 +149,7 @@ try {
             return;
         }
 
-        const expiresAt = $priceLockWrapper.data('expires-at');
+        const expiresAt = $priceLockWrapper.attr('data-expires-at');
 
         if (!expiresAt) {
             return;
@@ -163,7 +163,7 @@ try {
 
         event.preventDefault();
 
-        const expiredMessage = $priceLockWrapper.data('expired-message')
+        const expiredMessage = $priceLockWrapper.attr('data-expired-message')
             || window.trans?.['Price lock expired or quote changed. We refreshed your total. Please review and try again.']
             || 'Price lock expired or quote changed. We refreshed your total. Please review and try again.';
 

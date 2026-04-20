@@ -696,6 +696,17 @@ class PublicController extends BaseController
             'coupon_amount' => $discountAmount,
         ]);
 
+        $priceLockQuote = $this->buildPriceLockQuoteArray($quoteData, $car, $deliveryFee);
+        $storedLock = Arr::get(BookingHelper::getCheckoutData(), 'price_lock');
+
+        if ($priceLockService->isExpired($storedLock) || ! $priceLockService->matchesSnapshot($storedLock, $priceLockQuote)) {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage($priceLockExpiredMessage)
+                ->withInput();
+        }
+
         $booking = new Booking($request->validated());
 
         // --- NEW: Snapshot the Guest and Host Protection Plans directly onto the booking! ---
@@ -1384,6 +1395,46 @@ class PublicController extends BaseController
     }
 
     /**
+     * Quote fields used for session price lock snapshot (must stay aligned with {@see PriceLockService::matchesSnapshot}).
+     */
+    protected function buildPriceLockQuoteArray(array $quoteData, Car $car, float $deliveryFee): array
+    {
+        $services = $quoteData['services'];
+        $depositRisk = $quoteData['deposit_risk'];
+
+        $finalPayableAmount = (float) $quoteData['final_payable_amount'] + $deliveryFee;
+
+        return [
+            'rental_amount' => (float) $quoteData['rental_amount'],
+            'service_amount' => (float) $quoteData['service_amount'],
+            'subtotal' => (float) $quoteData['subtotal'],
+            'tax_amount' => (float) $quoteData['tax_amount'],
+            'coupon_code' => $quoteData['coupon_code'] ?? null,
+            'coupon_amount' => (float) $quoteData['coupon_amount'],
+            'fee_name' => (string) $quoteData['fee_name'],
+            'fee_value' => (float) $quoteData['fee_value'],
+            'fee_amount' => (float) $quoteData['fee_amount'],
+            'deposit_amount' => (float) $quoteData['deposit_amount'],
+            'deposit_base_amount' => (float) $quoteData['deposit_base_amount'],
+            'deposit_type' => (string) $quoteData['deposit_type'],
+            'deposit_rate' => (float) $quoteData['deposit_rate'],
+            'deposit_fixed_amount' => (float) ($quoteData['deposit_fixed_amount'] ?? 0),
+            'deposit_risk_multiplier' => (float) $depositRisk['multiplier'],
+            'deposit_risk_level' => $depositRisk['risk_level'],
+            'deposit_risk_reasons' => $depositRisk['reasons'],
+            'total_amount' => $finalPayableAmount,
+            'currency_id' => $car->currency_id,
+            'tax_title' => (string) $quoteData['tax_title'],
+            'services' => $services->map(fn (Service $service) => [
+                'id' => $service->id,
+                'name' => $service->name,
+                'price' => $service->price,
+                'price_type' => $service->price_type?->getValue(),
+            ])->values()->all(),
+        ];
+    }
+
+    /**
      * Subtotal, tax, fees, deposits, quote snapshot, and session price lock for checkout sidebar.
      *
      * @return array{
@@ -1481,34 +1532,7 @@ class PublicController extends BaseController
         $priceLockService = app(PriceLockService::class);
         $priceLockExpiredMessage = $priceLockService->getExpiredMessage();
 
-        $quote = [
-            'rental_amount' => $rentalCarAmount,
-            'service_amount' => $serviceAmount,
-            'subtotal' => $amount,
-            'tax_amount' => $taxAmount,
-            'coupon_code' => $couponCode,
-            'coupon_amount' => $discountAmount,
-            'fee_name' => $feeName,
-            'fee_value' => $feeValue,
-            'fee_amount' => $feeAmount,
-            'deposit_amount' => $depositAmount,
-            'deposit_base_amount' => $baseDepositAmount,
-            'deposit_type' => $depositType,
-            'deposit_rate' => $depositRate,
-            'deposit_fixed_amount' => $depositFixedAmount,
-            'deposit_risk_multiplier' => (float) $depositRisk['multiplier'],
-            'deposit_risk_level' => $depositRisk['risk_level'],
-            'deposit_risk_reasons' => $depositRisk['reasons'],
-            'total_amount' => $finalPayableAmount, // Now includes delivery
-            'currency_id' => $car->currency_id,
-            'tax_title' => $taxTitle,
-            'services' => $services->map(fn (Service $service) => [
-                'id' => $service->id,
-                'name' => $service->name,
-                'price' => $service->price,
-                'price_type' => $service->price_type?->getValue(),
-            ])->values()->all(),
-        ];
+        $quote = $this->buildPriceLockQuoteArray($quoteData, $car, $deliveryFee);
 
         // ... (The rest of the price lock code remains identical) ...
         $freshSession = BookingHelper::getCheckoutData();

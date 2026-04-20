@@ -1,4 +1,11 @@
 <tr>
+    @php
+        $baselinePrice = (float) ($recommendation->local_baseline_price ?? 150);
+        $recommendedPrice = (float) $recommendation->recommended_value;
+        $priceDeltaPercent = $baselinePrice > 0
+            ? number_format((abs($recommendedPrice - $baselinePrice) / $baselinePrice) * 100, 1)
+            : '0.0';
+    @endphp
     <td>
         <strong>{{ \Carbon\Carbon::parse($recommendation->recommendation_date)->format('M d, Y') }}</strong>
     </td>
@@ -7,10 +14,10 @@
         <strong class="text-success">${{ number_format($recommendation->recommended_value, 2) }}</strong>
         <br>
         <small class="text-muted">
-            @if ($recommendation->recommended_value > ($recommendation->local_baseline_price ?? 150))
-                ↑ {{ number_format(((($recommendation->recommended_value - ($recommendation->local_baseline_price ?? 150)) / ($recommendation->local_baseline_price ?? 150)) * 100), 1) }}%
+            @if ($recommendedPrice > $baselinePrice)
+                ↑ {{ $priceDeltaPercent }}%
             @else
-                ↓ {{ number_format(((($recommendation->local_baseline_price ?? 150) - $recommendation->recommended_value) / ($recommendation->local_baseline_price ?? 150)) * 100), 1) }}%
+                ↓ {{ $priceDeltaPercent }}%
             @endif
         </small>
     </td>

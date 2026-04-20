@@ -33,6 +33,7 @@ class CheckoutForm extends FormFront
             ->setUrl(route('public.checkout.post'))
             ->setValidatorClass(CheckoutRequest::class)
             ->contentOnly()
+            ->formClass('booking-form')
             ->columns()
             ->when($customer, function (CheckoutForm $form) use ($customer): void {
                 $form->add(
