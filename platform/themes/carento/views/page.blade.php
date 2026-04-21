@@ -40,6 +40,20 @@
     </style>
 @endif
 
+@if ($isContactPage)
+    <style>
+        /* 1. Strip the unwanted peach background from Contact page sections */
+        .page-modern--contact,
+        .page-modern--contact section,
+        .page-modern--contact .background-body,
+        .page-modern--contact .section-box {
+            background-color: transparent !important;
+            background: none !important;
+        }
+
+    </style>
+@endif
+
 @if ($isLegalPage)
     <style>
         /* MXCar Ultra-Clean Legal / Terms of Use Document Styling */
