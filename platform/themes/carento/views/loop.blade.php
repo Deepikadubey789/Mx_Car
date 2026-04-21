@@ -4,7 +4,7 @@
     $displayDescription = $displayDescription ?? false;
 @endphp
 
-<div class="blog-modern--journal">
+<div>
     <div class="blog-loop-modern">
         @if (($displayTitle && ($title = theme_option('blog_post_list_page_title'))) || ($displayDescription && ($description = theme_option('blog_post_list_page_description'))))
             <div class="blog-loop-modern__intro">
@@ -25,7 +25,16 @@
         </div>
 
         @if ($posts instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $posts->total() > 0)
-            <div class="blog-loop-modern__pagination">
+            <div class="car-list-pagination" style="
+                margin-top: 20px;
+                border: 1px solid #e5e7eb;
+                border-radius: 12px;
+                padding: 20px;
+                background: #ffffff;
+                display: flex;
+                justify-content: center;
+                gap: 30rem;
+            ">
                 {{ $posts->withQueryString()->links(Theme::getThemeNamespace('partials.pagination')) }}
             </div>
         @endif

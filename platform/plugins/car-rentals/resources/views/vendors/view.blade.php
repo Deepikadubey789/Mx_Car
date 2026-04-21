@@ -233,7 +233,7 @@
                                 <div class="mb-2">
                                     <label class="form-label fw-bold">Admin Badge Override</label>
                                     <select name="override_badge" class="form-select form-select-sm">
-                                        <option value="">-- System Badge Use Karo --</option>
+                                        <option value="">-- Use System Badge  --</option>
                                         <option value="all_star"    {{ $qualityScore->override_badge == 'all_star'    ? 'selected' : '' }}>⭐ All-Star Host</option>
                                         <option value="top_host"    {{ $qualityScore->override_badge == 'top_host'    ? 'selected' : '' }}>🏆 Top Host</option>
                                         <option value="rising_star" {{ $qualityScore->override_badge == 'rising_star' ? 'selected' : '' }}>🌟 Rising Star</option>
@@ -244,19 +244,19 @@
                                            id="badge_override" value="1"
                                            {{ $qualityScore->badge_override ? 'checked' : '' }}>
                                     <label class="form-check-label" for="badge_override">
-                                        Override enable karo
+                                        Override enable 
                                     </label>
                                 </div>
                                 <button type="submit" class="btn btn-sm btn-outline-primary w-100">
-                                    <x-core::icon name="ti ti-device-floppy" /> Badge Save Karo
+                                    <x-core::icon name="ti ti-device-floppy" /> Badge Submit
                                 </button>
                             </form>
                         </div>
                     @else
                         <div class="text-center py-3 text-muted">
                             <x-core::icon name="ti ti-chart-bar" />
-                            <p class="mt-2">Score abhi calculate nahi hua.<br>
-                                <small>Run karo: <code>php artisan vendor:recalculate-scores --vendor_id={{ $vendor->id }}</code></small>
+                            <p class="mt-2">Not calculated Score.<br>
+                                <small>Run this command:<code>php artisan vendor:recalculate-scores --vendor_id={{ $vendor->id }}</code></small>
                             </p>
                         </div>
                     @endif

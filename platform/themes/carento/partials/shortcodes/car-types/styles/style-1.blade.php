@@ -120,6 +120,7 @@
         display: block !important;
         transition: transform 4s ease; 
         box-shadow 0.3s ease !important;
+        border-radius: 16px !important; /* card jaisa radius */
         box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
     }
     .car-type-card:hover .card-image {
@@ -263,7 +264,7 @@
     html[data-theme="dark"] .car-types-dots-wrap .swiper-pagination-bullet-active { background: #f1f5f9 !important; }
 </style>
 
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-car-types car-type-style-1 section-box background-body py-5">
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-car-types car-type-style-1 section-box background-body py-3">
     <div class="container">
 
         {{-- TITLE WITH NEEDLE — center aligned like Zoomcar --}}
