@@ -26,7 +26,6 @@
 .mxcar-faq-clean-section {
     position: relative;
     padding: 80px 0;
-    background-color: #FDFBF8 !important; /* Match contact page light cream/grey background */
 }
 .mxcar-faq-clean-container {
     max-width: 1000px;
@@ -42,8 +41,11 @@
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02) !important;
 }
 .mxcar-faq-box:hover {
-    border-color: #B03A2E !important; 
+    border-color: #E9ECEF !important; 
     box-shadow: 0 8px 30px rgba(176, 58, 46, 0.05) !important;
+}
+.mxcar-faq-header {
+    padding: 28px 32px !important;
 }
 a.mxcar-faq-header {
     background-color: #ffffff !important;
@@ -58,7 +60,7 @@ a.mxcar-faq-header {
 }
 a.mxcar-faq-header:not(.collapsed) {
     background-color: #FAFAFA !important;
-    border-left: 5px solid #B03A2E !important; 
+    border-left: 5px solid transparent !important;
 }
 .mxcar-faq-title {
     margin: 0 !important;
@@ -111,7 +113,7 @@ a.mxcar-faq-header:not(.collapsed) .mxcar-faq-icon-wrap svg {
     padding: 16px 40px !important;
     font-weight: 600 !important;
     transition: all 0.3s ease !important;
-    border-radius: 12px !important;
+    border-radius: 50px !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 10px !important;
@@ -131,7 +133,7 @@ a.mxcar-faq-header:not(.collapsed) .mxcar-faq-icon-wrap svg {
     padding: 15px 38px !important;
     font-weight: 600 !important;
     transition: all 0.3s ease !important;
-    border-radius: 12px !important;
+    border-radius: 50px !important;
     display: inline-flex !important;
     align-items: center !important;
     gap: 10px !important;
@@ -167,7 +169,7 @@ a.mxcar-faq-header:not(.collapsed) .mxcar-faq-icon-wrap svg {
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
 [data-bs-theme="dark"] .mxcar-faq-box:hover {
-    border-color: #B03A2E !important; 
+    border-color: #2e2e2e !important; 
 }
 [data-bs-theme="dark"] a.mxcar-faq-header {
     background-color: #1a1a1a !important;
@@ -228,30 +230,27 @@ a.mxcar-faq-header:not(.collapsed) .mxcar-faq-icon-wrap svg {
             @endif
         </div>
         
-        <div class="row">
-            <div class="col-12">
-                <div class="accordion" id="faqAccordion-{{ md5($shortcode->title) }}">
-                    @foreach($faqs as $faq)
-                        @php
-                            $id = 'faq-item-' . md5($faq->question) . '-' . $faq->getKey();
-                        @endphp
-
-                        <div class="mxcar-faq-box">
-                            <a class="mxcar-faq-header collapsed" data-bs-toggle="collapse" href="#{{ $id }}" role="button" aria-expanded="false" aria-controls="{{ $id }}">
-                                <p class="mxcar-faq-title pe-4">{!! BaseHelper::clean($faq->question) !!}</p>
-                                <div class="mxcar-faq-icon-wrap">
-                                    <x-core::icon name="ti ti-chevron-down" class="stroke-dark" />
-                                </div>
-                            </a>
-                            <div id="{{ $id }}" @class(['collapse', 'show' => $loop->first]) data-bs-parent="#faqAccordion-{{ md5($shortcode->title) }}">
-                                <div class="mxcar-faq-body">
-                                    <p>{!! BaseHelper::clean($faq->answer) !!}</p>
-                                </div>
+        <div class="row g-4">
+            @foreach($faqs as $faq)
+                @php
+                    $id = 'faq-item-' . md5($faq->question) . '-' . $faq->getKey();
+                @endphp
+                <div class="col-12 col-lg-6">
+                    <div class="mxcar-faq-box">
+                        <a class="mxcar-faq-header collapsed" data-bs-toggle="collapse" href="#{{ $id }}" role="button" aria-expanded="false" aria-controls="{{ $id }}">
+                            <p class="mxcar-faq-title pe-4">{!! BaseHelper::clean($faq->question) !!}</p>
+                            <div class="mxcar-faq-icon-wrap">
+                                <x-core::icon name="ti ti-chevron-down" class="stroke-dark" />
+                            </div>
+                        </a>
+                        <div id="{{ $id }}" class="collapse">
+                            <div class="mxcar-faq-body">
+                                <p>{!! BaseHelper::clean($faq->answer) !!}</p>
                             </div>
                         </div>
-                    @endforeach
+                    </div>
                 </div>
-            </div>
+            @endforeach
         </div>
 
         <div class="row">
