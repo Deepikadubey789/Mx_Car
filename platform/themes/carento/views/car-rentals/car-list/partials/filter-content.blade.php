@@ -2,41 +2,170 @@
     $formId = $formId ?? 'cars-filter-form';
 @endphp
 
+<style>
+    /* =========================================
+       1. KILL THE OUTER SIDEBAR BOX
+       ========================================= */
+    .car-filters-modern,
+    .car-filters-shell,
+    .sidebar-filter-mobile__content,
+    .filter-section--desktop {
+        background: transparent !important;
+        background-color: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+
+    /* =========================================
+       2. FORCE SEPARATE CARDS
+       ========================================= */
+    .filter-widget {
+        background-color: #ffffff !important;
+        border: 1px solid #e5e7eb !important;
+        border-radius: 16px !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1.5rem !important;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
+    }
+    
+    /* Remove any lingering bottom borders between widgets */
+    .filter-widget::after, 
+    .filter-widget::before {
+        display: none !important;
+    }
+
+    /* Dark Mode Support for Cards */
+    [data-bs-theme="dark"] .filter-widget {
+        background-color: #1b2736 !important;
+        border-color: #2d3d52 !important;
+        box-shadow: none !important;
+    }
+
+    .filter-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #4b5563;
+        margin: 0;
+    }
+    [data-bs-theme="dark"] .filter-title {
+        color: #e6eef8;
+    }
+
+    /* Rounded Input Groups */
+    .modern-search-group {
+        border: 1px solid #e5e7eb;
+        border-radius: 50rem !important; /* Full pill shape */
+        overflow: hidden;
+        background: #fff;
+        transition: all 0.2s ease;
+    }
+    [data-bs-theme="dark"] .modern-search-group {
+        background: #111827;
+        border-color: #374151;
+    }
+    .modern-search-group:focus-within {
+        border-color: var(--primary-color, #0d6efd);
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+    }
+    .modern-search-group input {
+        border: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        font-size: 0.95rem;
+    }
+    [data-bs-theme="dark"] .modern-search-group input {
+        color: #fff;
+    }
+    
+    /* Smaller, Primary Color Rounded Button */
+    .modern-search-btn {
+        border-radius: 50rem !important;
+        margin: 4px !important;
+        padding: 0.35rem 0.85rem !important;
+        background-color: var(--primary-color, #0d6efd) !important;
+        border-color: var(--primary-color, #0d6efd) !important;
+        color: #fff !important;
+        transition: transform 0.1s ease;
+    }
+    .modern-search-btn:active {
+        transform: scale(0.95);
+    }
+    
+    /* Soft Checkbox Options */
+    .custom-filter-label {
+        background: #f8f9fa;
+        border: 1px solid transparent !important;
+        transition: all 0.2s;
+        border-radius: 12px !important;
+        margin-bottom: 0.5rem;
+    }
+    [data-bs-theme="dark"] .custom-filter-label {
+        background: #111827;
+    }
+    .custom-filter-label:hover {
+        background: #fff;
+        border-color: var(--primary-color, #0d6efd) !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    [data-bs-theme="dark"] .custom-filter-label:hover {
+        background: #1f2937;
+    }
+    .custom-filter-check input:checked + label {
+        background: #fff;
+        border-color: var(--primary-color, #0d6efd) !important;
+        box-shadow: 0 0 0 1px var(--primary-color, #0d6efd) !important;
+    }
+    [data-bs-theme="dark"] .custom-filter-check input:checked + label {
+        background: #1f2937;
+    }
+    .custom-filter-check input:checked + label .filter-option-count {
+        background: var(--primary-color, #0d6efd) !important;
+        color: #fff !important;
+        border-color: var(--primary-color, #0d6efd) !important;
+    }
+    
+    /* Enforce Primary Color on Sliders */
+    .ui-slider-range, .noUi-connect {
+        background: var(--primary-color, #0d6efd) !important;
+    }
+    .ui-slider-handle, .noUi-handle {
+        border: 2px solid var(--primary-color, #0d6efd) !important;
+        background: #fff !important;
+        border-radius: 50% !important;
+    }
+</style>
+
+{{-- Location Filter --}}
 @if(CarRentalsHelper::isEnabledFilterCarsBy('locations') && is_plugin_active('location'))
     @php
         $selectedLocation = BaseHelper::stringify(request()->input('location', ''));
         $selectedCityId = BaseHelper::stringify(request()->input('city_id', ''));
     @endphp
-    <div class="filter-widget mb-4" style="overflow: visible !important;">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-map-pin" />
-            </div>
-            <h6 class="filter-title">{{ __('Location') }}</h6>
+    <div class="filter-widget" style="overflow: visible !important;">
+        <div class="filter-widget-header mb-3">
+            <h6 class="filter-title d-flex align-items-center gap-2">
+                <x-core::icon name="ti ti-map-pin" class="text-danger" /> {{ __('Location') }}
+            </h6>
         </div>
         <div class="filter-widget-content">
-            {{-- ADDED: Input Group to place Search button beside the input --}}
-            <div class="input-group position-relative">
+            <div class="input-group modern-search-group position-relative d-flex align-items-center">
+                
                 <input
                     type="text"
-                    class="form-control custom-sidebar-loc-input"
-                    placeholder="{{ __('Search for location...') }}"
+                    class="form-control custom-sidebar-loc-input px-2"
+                    placeholder="{{ __('Search location...') }}"
                     value="{{ $selectedLocation }}"
                     name="location"
                     form="{{ $formId }}"
                     data-url="{{ route('public.ajax.locations') }}"
                     autocomplete="off"
-                    style="padding-left: 35px !important;"
                 />
-                <span class="position-absolute top-50 start-0 translate-middle-y ms-2" style="z-index: 10; pointer-events: none;">
-                    <img src="{{ Theme::asset()->url('images/icons/location.svg') }}" alt="Location" width="20" height="20" />
-                </span>
-                
-                {{-- NEW: Search Button --}}
-                <button class="btn btn-primary" type="submit" form="{{ $formId }}" style="border-radius: 0 6px 6px 0; z-index: 1;">
+                <button class="btn modern-search-btn" type="submit" form="{{ $formId }}">
                     <x-core::icon name="ti ti-search" />
                 </button>
-
                 <input type="hidden" name="city_id" class="sidebar-city-hidden-input" form="{{ $formId }}" value="{{ $selectedCityId }}">
             </div>
         </div>
@@ -44,24 +173,23 @@
 @endif
 
 {{-- Keyword / Car Name Search Filter --}}
-<div class="filter-widget mb-4">
-    <div class="filter-widget-header">
-        <div class="filter-icon">
-            <x-core::icon name="ti ti-search" />
-        </div>
-        <h6 class="filter-title">{{ __('What') }}</h6>
+<div class="filter-widget">
+    <div class="filter-widget-header mb-3">
+        <h6 class="filter-title d-flex align-items-center gap-2">
+            <x-core::icon name="ti ti-car" class="text-danger" /> {{ __('What') }}
+        </h6>
     </div>
     <div class="filter-widget-content">
-        <div class="input-group">
+        <div class="input-group modern-search-group d-flex align-items-center">
             <input 
                 type="text" 
                 name="keyword" 
-                class="form-control" 
+                class="form-control ps-4 py-2" 
                 placeholder="{{ __('Car name or brand') }}" 
                 value="{{ BaseHelper::clean(request()->input('keyword')) }}"
                 form="{{ $formId }}"
             >
-            <button class="btn btn-primary" type="submit" form="{{ $formId }}" style="border-radius: 0 6px 6px 0;">
+            <button class="btn modern-search-btn" type="submit" form="{{ $formId }}">
                 <x-core::icon name="ti ti-search" />
             </button>
         </div>
@@ -70,19 +198,14 @@
 
 {{-- Vehicle Condition Filter --}}
 @if(CarRentalsHelper::isEnabledFilterCarsBy('vehicle_condition'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-car" />
-            </div>
-            <h6 class="filter-title">{{ __('Vehicle Condition') }}</h6>
+    <div class="filter-widget">
+        <div class="filter-widget-header mb-3">
+            <h6 class="filter-title d-flex align-items-center gap-2">
+                <x-core::icon name="ti ti-sparkles" class="text-danger" /> {{ __('Vehicle Condition') }}
+            </h6>
         </div>
         <div class="filter-widget-content">
-            <select
-                name="adv_type"
-                form="{{ $formId }}"
-                class="form-select submit-form-filter"
-            >
+            <select name="adv_type" form="{{ $formId }}" class="form-select submit-form-filter border-0 bg-light rounded-pill px-3 fw-medium text-dark" style="box-shadow: inset 0 0 0 1px #e5e7eb; height: 40px !important; min-height: 40px !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 0.85rem !important; line-height: 34px;">
                 @php
                     $advType = request()->input('adv_type', 'all');
                     $advType = is_string($advType) ? $advType : 'all';
@@ -95,31 +218,22 @@
     </div>
 @endif
 
-{{-- Rental Type Filter (only show when rental mode is enabled) --}}
+{{-- Rental Type Filter --}}
 @if(!empty($rentalTypes) && CarRentalsHelper::isEnabledFilterCarsBy('rental_types') && CarRentalsHelper::isRentalBookingEnabled())
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-clock" />
-            </div>
-            <h6 class="filter-title">{{ __('Rental Period') }}</h6>
+    <div class="filter-widget">
+        <div class="filter-widget-header mb-3">
+            <h6 class="filter-title d-flex align-items-center gap-2">
+                <x-core::icon name="ti ti-clock" class="text-danger" /> {{ __('Rental Period') }}
+            </h6>
         </div>
         <div class="filter-widget-content">
             <div class="filter-options-list">
                 @foreach($rentalTypes as $type => $label)
                     <div class="filter-option">
                         <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $type }}"
-                                name="rental_types[]"
-                                id="check-rental-type-{{ $type }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($type, (array) request()->input('rental_types', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-rental-type-{{ $type }}">
-                                <span class="filter-option-text">{{ $label }}</span>
+                            <input type="checkbox" class="form-check-input submit-form-filter d-none" value="{{ $type }}" name="rental_types[]" id="check-rental-type-{{ $type }}" form="{{ $formId }}" @checked(in_array($type, (array) request()->input('rental_types', [])))>
+                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center p-2 px-3 cursor-pointer" for="check-rental-type-{{ $type }}">
+                                <span class="filter-option-text fw-medium text-secondary">{{ $label }}</span>
                             </label>
                         </div>
                     </div>
@@ -131,131 +245,27 @@
 
 {{-- Price Filter --}}
 @if($carMaxRentalRate && CarRentalsHelper::isEnabledFilterCarsBy('prices'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-currency-dollar" />
-            </div>
-            <h6 class="filter-title">{{ __('Price Range') }}</h6>
+    <div class="filter-widget">
+        <div class="filter-widget-header mb-3">
+            <h6 class="filter-title d-flex align-items-center gap-2">
+                <x-core::icon name="ti ti-currency-dollar" class="text-danger" /> {{ __('Price Range') }}
+            </h6>
         </div>
-        <div class="filter-widget-content">
+        <div class="filter-widget-content px-2">
             <div class="price-slider-wrapper">
-                <div id="slider-range"
+                <div id="slider-range" class="mb-4 mt-2"
                      data-current-range="{{ request()->query('rental_rate_to') > 0 ? BaseHelper::stringify(request()->query('rental_rate_to')) : 0 }}"
                      data-max-rental-rate-range="{{ $carMaxRentalRate }}"
                      data-currency="{{ get_application_currency()?->title }}"
                      data-currency-rate="{{ get_application_currency()?->exchange_rate }}"
-                >
+                ></div>
+                <div class="d-flex justify-content-between align-items-center bg-light rounded-pill px-3 py-2 border">
+                    <div class="fw-bold text-dark rental-rate-from">{{ format_price(0) }}</div>
+                    <div class="text-muted small px-2">{{ __('to') }}</div>
+                    <div class="fw-bold text-dark rental-rate-to">{{ format_price($carMaxRentalRate) }}</div>
                 </div>
-                <div class="price-range-display d-flex justify-content-between align-items-center mt-3">
-                    <div class="price-min">
-                        <small class="text-muted">{{ __('Min') }}</small>
-                        <div class="fw-semibold rental-rate-from">{{ format_price(0) }}</div>
-                    </div>
-                    <div class="price-separator">
-                        <x-core::icon name="ti ti-minus" class="text-muted" />
-                    </div>
-                    <div class="price-max">
-                        <small class="text-muted">{{ __('Max') }}</small>
-                        <div class="fw-semibold rental-rate-to">{{ format_price($carMaxRentalRate) }}</div>
-                    </div>
-                </div>
-                <input class="input-disabled form-control submit-form-filter value-money"
-                       name="rental_rate_from" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ request()->query('rental_rate_from') > 0 ? BaseHelper::stringify(request()->query('rental_rate_from')) : 0 }}">
-                <input class="input-disabled form-control submit-form-filter value-money"
-                       name="rental_rate_to" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ BaseHelper::stringify(request()->query('rental_rate_to', $carMaxRentalRate)) }}"
-                       data-default-value="{{ $carMaxRentalRate }}">
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Horsepower Filter --}}
-@if($carMaxHorsepower && CarRentalsHelper::isEnabledFilterCarsBy('horsepower'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-engine" />
-            </div>
-            <h6 class="filter-title">{{ __('Horsepower') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="horsepower-slider-wrapper">
-                <div id="horsepower-slider-range"
-                     data-current-range="{{ request()->query('horsepower_to') > 0 ? BaseHelper::stringify(request()->query('horsepower_to')) : 0 }}"
-                     data-max-horsepower-range="{{ $carMaxHorsepower }}"
-                >
-                </div>
-                <div class="horsepower-range-display d-flex justify-content-between align-items-center mt-3">
-                    <div class="hp-min">
-                        <small class="text-muted">{{ __('Min') }}</small>
-                        <div class="fw-semibold horsepower-from">0 HP</div>
-                    </div>
-                    <div class="hp-separator">
-                        <x-core::icon name="ti ti-minus" class="text-muted" />
-                    </div>
-                    <div class="hp-max">
-                        <small class="text-muted">{{ __('Max') }}</small>
-                        <div class="fw-semibold horsepower-to">{{ $carMaxHorsepower }} HP</div>
-                    </div>
-                </div>
-                <input class="input-disabled form-control submit-form-filter"
-                       name="horsepower_from" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ request()->query('horsepower_from') > 0 ? BaseHelper::stringify(request()->query('horsepower_from')) : 0 }}">
-                <input class="input-disabled form-control submit-form-filter"
-                       name="horsepower_to" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ BaseHelper::stringify(request()->query('horsepower_to', $carMaxHorsepower)) }}"
-                       data-default-value="{{ $carMaxHorsepower }}">
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Year Range Filter --}}
-@if(isset($carMinYear) && isset($carMaxYear) && $carMaxYear > $carMinYear && CarRentalsHelper::isEnabledFilterCarsBy('year'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-calendar" />
-            </div>
-            <h6 class="filter-title">{{ __('Year Range') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="year-slider-wrapper">
-                <div id="year-slider-range"
-                     data-current-range-from="{{ request()->query('year_from', $carMinYear) }}"
-                     data-current-range-to="{{ request()->query('year_to', $carMaxYear) }}"
-                     data-min-year="{{ $carMinYear }}"
-                     data-max-year="{{ $carMaxYear }}"
-                >
-                </div>
-                <div class="year-range-display d-flex justify-content-between align-items-center mt-3">
-                    <div class="year-min">
-                        <small class="text-muted">{{ __('From') }}</small>
-                        <div class="fw-semibold year-from">{{ request()->query('year_from', $carMinYear) }}</div>
-                    </div>
-                    <div class="year-separator">
-                        <x-core::icon name="ti ti-minus" class="text-muted" />
-                    </div>
-                    <div class="year-max">
-                        <small class="text-muted">{{ __('To') }}</small>
-                        <div class="fw-semibold year-to">{{ request()->query('year_to', $carMaxYear) }}</div>
-                    </div>
-                </div>
-                <input class="input-disabled form-control submit-form-filter"
-                       name="year_from" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ request()->query('year_from', $carMinYear) }}">
-                <input class="input-disabled form-control submit-form-filter"
-                       name="year_to" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ request()->query('year_to', $carMaxYear) }}">
+                <input class="input-disabled form-control submit-form-filter value-money" name="rental_rate_from" type="hidden" form="{{ $formId }}" value="{{ request()->query('rental_rate_from') > 0 ? BaseHelper::stringify(request()->query('rental_rate_from')) : 0 }}">
+                <input class="input-disabled form-control submit-form-filter value-money" name="rental_rate_to" type="hidden" form="{{ $formId }}" value="{{ BaseHelper::stringify(request()->query('rental_rate_to', $carMaxRentalRate)) }}" data-default-value="{{ $carMaxRentalRate }}">
             </div>
         </div>
     </div>
@@ -263,42 +273,25 @@
 
 {{-- Mileage Range Filter --}}
 @if(isset($carMaxMileage) && $carMaxMileage > 0 && CarRentalsHelper::isEnabledFilterCarsBy('mileage'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-route" />
-            </div>
-            <h6 class="filter-title">{{ __('Mileage Range') }}</h6>
+    <div class="filter-widget">
+        <div class="filter-widget-header mb-3">
+            <h6 class="filter-title d-flex align-items-center gap-2">
+                <x-core::icon name="ti ti-route" class="text-danger" /> {{ __('Mileage') }}
+            </h6>
         </div>
-        <div class="filter-widget-content">
+        <div class="filter-widget-content px-2">
             <div class="mileage-slider-wrapper">
-                <div id="mileage-slider-range"
+                <div id="mileage-slider-range" class="mb-4 mt-2"
                      data-current-range="{{ request()->query('mileage_to') > 0 ? BaseHelper::stringify(request()->query('mileage_to')) : 0 }}"
                      data-max-mileage-range="{{ $carMaxMileage }}"
-                >
+                ></div>
+                <div class="d-flex justify-content-between align-items-center bg-light rounded-pill px-3 py-2 border">
+                    <div class="fw-bold text-dark mileage-from">0 {{ __('mi') }}</div>
+                    <div class="text-muted small px-2">{{ __('to') }}</div>
+                    <div class="fw-bold text-dark mileage-to">{{ number_format($carMaxMileage) }} {{ __('mi') }}</div>
                 </div>
-                <div class="mileage-range-display d-flex justify-content-between align-items-center mt-3">
-                    <div class="mileage-min">
-                        <small class="text-muted">{{ __('Min') }}</small>
-                        <div class="fw-semibold mileage-from">0 {{ __('miles') }}</div>
-                    </div>
-                    <div class="mileage-separator">
-                        <x-core::icon name="ti ti-minus" class="text-muted" />
-                    </div>
-                    <div class="mileage-max">
-                        <small class="text-muted">{{ __('Max') }}</small>
-                        <div class="fw-semibold mileage-to">{{ number_format($carMaxMileage) }} {{ __('miles') }}</div>
-                    </div>
-                </div>
-                <input class="input-disabled form-control submit-form-filter"
-                       name="mileage_from" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ request()->query('mileage_from') > 0 ? BaseHelper::stringify(request()->query('mileage_from')) : 0 }}">
-                <input class="input-disabled form-control submit-form-filter"
-                       name="mileage_to" type="hidden"
-                       form="{{ $formId }}"
-                       value="{{ BaseHelper::stringify(request()->query('mileage_to', $carMaxMileage)) }}"
-                       data-default-value="{{ $carMaxMileage }}">
+                <input class="input-disabled form-control submit-form-filter" name="mileage_from" type="hidden" form="{{ $formId }}" value="{{ request()->query('mileage_from') > 0 ? BaseHelper::stringify(request()->query('mileage_from')) : 0 }}">
+                <input class="input-disabled form-control submit-form-filter" name="mileage_to" type="hidden" form="{{ $formId }}" value="{{ BaseHelper::stringify(request()->query('mileage_to', $carMaxMileage)) }}" data-default-value="{{ $carMaxMileage }}">
             </div>
         </div>
     </div>
@@ -306,30 +299,21 @@
 
 {{-- Car Make/Brand Filter --}}
 @if(isset($carMakes) && $carMakes->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('makes'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-brand-toyota" />
-            </div>
-            <h6 class="filter-title">{{ __('Brand') }}</h6>
+    <div class="filter-widget">
+        <div class="filter-widget-header mb-3">
+            <h6 class="filter-title d-flex align-items-center gap-2">
+                <x-core::icon name="ti ti-steering-wheel" class="text-danger" /> {{ __('Brand') }}
+            </h6>
         </div>
         <div class="filter-widget-content">
             <div class="filter-options-list">
                 @foreach($carMakes->take(5) as $carMake)
                     <div class="filter-option">
                         <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carMake->id }}"
-                                name="car_makes[]"
-                                id="check-car-make-{{ $carMake->id }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carMake->id, (array) request()->input('car_makes', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-make-{{ $carMake->id }}">
-                                <span class="filter-option-text">{{ $carMake->name }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carMake->cars_count ?: 0 }}</span>
+                            <input type="checkbox" class="form-check-input submit-form-filter d-none" value="{{ $carMake->id }}" name="car_makes[]" id="check-car-make-{{ $carMake->id }}" form="{{ $formId }}" @checked(in_array($carMake->id, (array) request()->input('car_makes', [])))>
+                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center p-2 px-3 cursor-pointer" for="check-car-make-{{ $carMake->id }}">
+                                <span class="filter-option-text fw-medium text-secondary">{{ $carMake->name }}</span>
+                                <span class="filter-option-count badge bg-white border text-muted rounded-pill">{{ $carMake->cars_count ?: 0 }}</span>
                             </label>
                         </div>
                     </div>
@@ -340,418 +324,18 @@
                         @foreach($carMakes->skip(5) as $carMake)
                             <div class="filter-option">
                                 <div class="custom-filter-check">
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input submit-form-filter d-none"
-                                        value="{{ $carMake->id }}"
-                                        name="car_makes[]"
-                                        id="check-car-make-{{ $carMake->id }}"
-                                        form="{{ $formId }}"
-                                        @checked(in_array($carMake->id, (array) request()->input('car_makes', [])))
-                                    >
-                                    <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-make-{{ $carMake->id }}">
-                                        <span class="filter-option-text">{{ $carMake->name }}</span>
-                                        <span class="filter-option-count badge bg-light text-dark">{{ $carMake->cars_count ?: 0 }}</span>
+                                    <input type="checkbox" class="form-check-input submit-form-filter d-none" value="{{ $carMake->id }}" name="car_makes[]" id="check-car-make-{{ $carMake->id }}" form="{{ $formId }}" @checked(in_array($carMake->id, (array) request()->input('car_makes', [])))>
+                                    <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center p-2 px-3 cursor-pointer" for="check-car-make-{{ $carMake->id }}">
+                                        <span class="filter-option-text fw-medium text-secondary">{{ $carMake->name }}</span>
+                                        <span class="filter-option-count badge bg-white border text-muted rounded-pill">{{ $carMake->cars_count ?: 0 }}</span>
                                     </label>
                                 </div>
                             </div>
                         @endforeach
                     </div>
-
-                    <button type="button" class="btn btn-link btn-sm p-0 mt-2 filter-toggle-btn" data-target=".filter-options-extra">
-                        <span class="show-more-text">
-                            <x-core::icon name="ti ti-chevron-down" class="me-1" />
-                            {{ __('Show more') }}
-                        </span>
-                        <span class="show-less-text d-none">
-                            <x-core::icon name="ti ti-chevron-up" class="me-1" />
-                            {{ __('Show less') }}
-                        </span>
-                    </button>
-                @endif
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Car Categories Filter --}}
-@if($carCategories->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('categories'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-category" />
-            </div>
-            <h6 class="filter-title">{{ __('Categories') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($carCategories->take(5) as $carCategory)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carCategory->id }}"
-                                name="car_categories[]"
-                                id="check-car-category-{{ $carCategory->id }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carCategory->id, (array) request()->input('car_categories', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-category-{{ $carCategory->id }}">
-                                <span class="filter-option-text">{{ $carCategory->name }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carCategory->cars_count ?: 0 }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-
-                @if($carCategories->count() > 5)
-                    <div class="filter-options-extra" style="display: none;">
-                        @foreach($carCategories->skip(5) as $carCategory)
-                            <div class="filter-option">
-                                <div class="custom-filter-check">
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input submit-form-filter d-none"
-                                        value="{{ $carCategory->id }}"
-                                        name="car_categories[]"
-                                        id="check-car-category-{{ $carCategory->id }}"
-                                        form="{{ $formId }}"
-                                        @checked(in_array($carCategory->id, (array) request()->input('car_categories', [])))
-                                    >
-                                    <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-category-{{ $carCategory->id }}">
-                                        <span class="filter-option-text">{{ $carCategory->name }}</span>
-                                        <span class="filter-option-count badge bg-light text-dark">{{ $carCategory->cars_count ?: 0 }}</span>
-                                    </label>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <button type="button" class="btn btn-link btn-sm p-0 mt-2 filter-toggle-btn" data-target=".filter-options-extra">
-                        <span class="show-more-text">
-                            <x-core::icon name="ti ti-chevron-down" class="me-1" />
-                            {{ __('Show more') }}
-                        </span>
-                        <span class="show-less-text d-none">
-                            <x-core::icon name="ti ti-chevron-up" class="me-1" />
-                            {{ __('Show less') }}
-                        </span>
-                    </button>
-                @endif
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Car Colors Filter --}}
-@if($carColors->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('colors'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-palette" />
-            </div>
-            <h6 class="filter-title">{{ __('Colors') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($carColors->take(5) as $carColor)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carColor->id }}"
-                                name="car_colors[]"
-                                id="check-car-color-{{ $carColor->id }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carColor->id, (array) request()->input('car_colors', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-color-{{ $carColor->id }}">
-                                <span class="filter-option-text">{{ $carColor->name }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carColor->cars_count ?: 0 }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-
-                @if($carColors->count() > 5)
-                    <div class="filter-options-extra" style="display: none;">
-                        @foreach($carColors->skip(5) as $carColor)
-                            <div class="filter-option">
-                                <div class="custom-filter-check">
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input submit-form-filter d-none"
-                                        value="{{ $carColor->id }}"
-                                        name="car_colors[]"
-                                        id="check-car-color-{{ $carColor->id }}"
-                                        form="{{ $formId }}"
-                                        @checked(in_array($carColor->id, (array) request()->input('car_colors', [])))
-                                    >
-                                    <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-color-{{ $carColor->id }}">
-                                        <span class="filter-option-text">{{ $carColor->name }}</span>
-                                        <span class="filter-option-count badge bg-light text-dark">{{ $carColor->cars_count ?: 0 }}</span>
-                                    </label>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <button type="button" class="btn btn-link btn-sm p-0 mt-2 filter-toggle-btn" data-target=".filter-options-extra">
-                        <span class="show-more-text">
-                            <x-core::icon name="ti ti-chevron-down" class="me-1" />
-                            {{ __('Show more') }}
-                        </span>
-                        <span class="show-less-text d-none">
-                            <x-core::icon name="ti ti-chevron-up" class="me-1" />
-                            {{ __('Show less') }}
-                        </span>
-                    </button>
-                @endif
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Number of Seats Filter --}}
-@if(!empty($seatOptions) && CarRentalsHelper::isEnabledFilterCarsBy('seats'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-armchair" />
-            </div>
-            <h6 class="filter-title">{{ __('Number of Seats') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($seatOptions as $seats => $count)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $seats }}"
-                                name="number_of_seats[]"
-                                id="check-seats-{{ $seats }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($seats, (array) request()->input('number_of_seats', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-seats-{{ $seats }}">
-                                <span class="filter-option-text">{{ $seats }} {{ __('Seats') }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $count }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Number of Doors Filter --}}
-@if(!empty($doorOptions) && CarRentalsHelper::isEnabledFilterCarsBy('doors'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-door" />
-            </div>
-            <h6 class="filter-title">{{ __('Number of Doors') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($doorOptions as $doors => $count)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $doors }}"
-                                name="number_of_doors[]"
-                                id="check-doors-{{ $doors }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($doors, (array) request()->input('number_of_doors', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-doors-{{ $doors }}">
-                                <span class="filter-option-text">{{ $doors }} {{ __('Doors') }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $count }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Car Types Filter --}}
-@if($carTypes->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('types'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-car-suv" />
-            </div>
-            <h6 class="filter-title">{{ __('Vehicle Types') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($carTypes->take(5) as $carType)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carType->id }}"
-                                name="car_types[]"
-                                id="check-car-type-{{ $carType->id }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carType->id, (array) request()->input('car_types', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-type-{{ $carType->id }}">
-                                <span class="filter-option-text">{{ $carType->name }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carType->cars_count ?: 0 }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-
-                @if($carTypes->count() > 5)
-                    <div class="filter-options-extra" style="display: none;">
-                        @foreach($carTypes->skip(5) as $carType)
-                            <div class="filter-option">
-                                <div class="custom-filter-check">
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input submit-form-filter d-none"
-                                        value="{{ $carType->id }}"
-                                        name="car_types[]"
-                                        id="check-car-type-{{ $carType->id }}"
-                                        form="{{ $formId }}"
-                                        @checked(in_array($carType->id, (array) request()->input('car_types', [])))
-                                    >
-                                    <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-type-{{ $carType->id }}">
-                                        <span class="filter-option-text">{{ $carType->name }}</span>
-                                        <span class="filter-option-count badge bg-light text-dark">{{ $carType->cars_count ?: 0 }}</span>
-                                    </label>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <button type="button" class="btn btn-link btn-sm p-0 mt-2 filter-toggle-btn" data-target=".filter-options-extra">
-                        <span class="show-more-text">
-                            <x-core::icon name="ti ti-chevron-down" class="me-1" />
-                            {{ __('Show more') }}
-                        </span>
-                        <span class="show-less-text d-none">
-                            <x-core::icon name="ti ti-chevron-up" class="me-1" />
-                            {{ __('Show less') }}
-                        </span>
-                    </button>
-                @endif
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Car Transmissions Filter --}}
-@if($carTransmissions->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('transmissions'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-manual-gearbox" />
-            </div>
-            <h6 class="filter-title">{{ __('Transmission') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($carTransmissions as $carTransmission)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carTransmission->id }}"
-                                name="car_transmissions[]"
-                                id="check-car-transmission-{{ $carTransmission->id }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carTransmission->id, (array) request()->input('car_transmissions', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-transmission-{{ $carTransmission->id }}">
-                                <span class="filter-option-text">{{ $carTransmission->name }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carTransmission->cars_count ?: 0 }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-@endif
-
-{{-- Car Amenities Filter --}}
-@if($carAmenities->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('amenities'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-star" />
-            </div>
-            <h6 class="filter-title">{{ __('Amenities') }}</h6>
-        </div>
-        <div class="filter-widget-content">
-            <div class="filter-options-list">
-                @foreach($carAmenities->take(5) as $carAmenity)
-                    <div class="filter-option">
-                        <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carAmenity->id }}"
-                                name="car_amenities[]"
-                                id="check-car-amenity-{{ $carAmenity->id }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carAmenity->id, (array) request()->input('car_amenities', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-amenity-{{ $carAmenity->id }}">
-                                <span class="filter-option-text">{{ $carAmenity->name }}</span>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carAmenity->cars_count ?: 0 }}</span>
-                            </label>
-                        </div>
-                    </div>
-                @endforeach
-
-                @if($carAmenities->count() > 5)
-                    <div class="filter-options-extra" style="display: none;">
-                        @foreach($carAmenities->skip(5) as $carAmenity)
-                            <div class="filter-option">
-                                <div class="custom-filter-check">
-                                    <input
-                                        type="checkbox"
-                                        class="form-check-input submit-form-filter d-none"
-                                        value="{{ $carAmenity->id }}"
-                                        name="car_amenities[]"
-                                        id="check-car-amenity-{{ $carAmenity->id }}"
-                                        form="{{ $formId }}"
-                                        @checked(in_array($carAmenity->id, (array) request()->input('car_amenities', [])))
-                                    >
-                                    <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-amenity-{{ $carAmenity->id }}">
-                                        <span class="filter-option-text">{{ $carAmenity->name }}</span>
-                                        <span class="filter-option-count badge bg-light text-dark">{{ $carAmenity->cars_count ?: 0 }}</span>
-                                    </label>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <button type="button" class="btn btn-link btn-sm p-0 mt-2 filter-toggle-btn" data-target=".filter-options-extra">
-                        <span class="show-more-text">
-                            <x-core::icon name="ti ti-chevron-down" class="me-1" />
-                            {{ __('Show more') }}
-                        </span>
-                        <span class="show-less-text d-none">
-                            <x-core::icon name="ti ti-chevron-up" class="me-1" />
-                            {{ __('Show less') }}
-                        </span>
+                    <button type="button" class="btn btn-light w-100 rounded-pill btn-sm mt-2 filter-toggle-btn text-muted fw-bold border" data-target=".filter-options-extra">
+                        <span class="show-more-text"><x-core::icon name="ti ti-chevron-down" class="me-1" /> {{ __('Show more') }}</span>
+                        <span class="show-less-text d-none"><x-core::icon name="ti ti-chevron-up" class="me-1" /> {{ __('Show less') }}</span>
                     </button>
                 @endif
             </div>
@@ -761,32 +345,23 @@
 
 {{-- Review Score Filter --}}
 @if($carReviewScores->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('review_scores'))
-    <div class="filter-widget mb-4">
-        <div class="filter-widget-header">
-            <div class="filter-icon">
-                <x-core::icon name="ti ti-star-filled" />
-            </div>
-            <h6 class="filter-title">{{ __('Rating') }}</h6>
+    <div class="filter-widget">
+        <div class="filter-widget-header mb-3">
+            <h6 class="filter-title d-flex align-items-center gap-2">
+                <x-core::icon name="ti ti-star-filled" class="text-danger" /> {{ __('Rating') }}
+            </h6>
         </div>
         <div class="filter-widget-content">
             <div class="filter-options-list">
                 @foreach($carReviewScores as $carReviewScore)
                     <div class="filter-option">
                         <div class="custom-filter-check">
-                            <input
-                                type="checkbox"
-                                class="form-check-input submit-form-filter d-none"
-                                value="{{ $carReviewScore->star }}"
-                                name="car_review_scores[]"
-                                id="check-car-review-score-{{ $carReviewScore->star }}"
-                                form="{{ $formId }}"
-                                @checked(in_array($carReviewScore->star, (array) request()->input('car_review_scores', [])))
-                            >
-                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center w-100 p-2 rounded border cursor-pointer" for="check-car-review-score-{{ $carReviewScore->star }}">
+                            <input type="checkbox" class="form-check-input submit-form-filter d-none" value="{{ $carReviewScore->star }}" name="car_review_scores[]" id="check-car-review-score-{{ $carReviewScore->star }}" form="{{ $formId }}" @checked(in_array($carReviewScore->star, (array) request()->input('car_review_scores', [])))>
+                            <label class="form-check-label custom-filter-label d-flex justify-content-between align-items-center p-2 px-3 cursor-pointer" for="check-car-review-score-{{ $carReviewScore->star }}">
                                 <div class="d-flex align-items-center">
                                     @include(Theme::getThemeNamespace('views.car-rentals.car-list.partials.review-scores'), ['score' => $carReviewScore->star])
                                 </div>
-                                <span class="filter-option-count badge bg-light text-dark">{{ $carReviewScore->cars_count ?: 0 }}</span>
+                                <span class="filter-option-count badge bg-white border text-muted rounded-pill">{{ $carReviewScore->cars_count ?: 0 }}</span>
                             </label>
                         </div>
                     </div>
@@ -796,37 +371,31 @@
     </div>
 @endif
 
-{{-- SIDEBAR PORTAL DROPDOWN SCRIPT --}}
 {{-- Host Badge Filter --}}
-<div class="filter-widget mb-4">
-    <div class="filter-widget-header">
-        <div class="filter-icon">
-            <x-core::icon name="ti ti-award" />
-        </div>
-        <h6 class="filter-title">{{ __('Host Quality') }}</h6>
+<div class="filter-widget">
+    <div class="filter-widget-header mb-3">
+        <h6 class="filter-title d-flex align-items-center gap-2">
+            <x-core::icon name="ti ti-award" class="text-danger" /> {{ __('Host Quality') }}
+        </h6>
     </div>
     <div class="filter-widget-content">
         @php $selectedBadge = request()->input('host_badge', ''); @endphp
         <div class="d-flex flex-column gap-2">
-            <label class="d-flex align-items-center gap-2 cursor-pointer">
-                <input type="radio" name="host_badge" form="{{ $formId }}" value=""
-                    {{ $selectedBadge === '' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
-                <span>{{ __('All Hosts') }}</span>
+            <label class="custom-filter-label d-flex align-items-center gap-3 p-2 px-3 cursor-pointer m-0">
+                <input type="radio" name="host_badge" class="form-check-input mt-0" form="{{ $formId }}" value="" {{ $selectedBadge === '' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span class="fw-medium text-secondary">{{ __('All Hosts') }}</span>
             </label>
-            <label class="d-flex align-items-center gap-2 cursor-pointer">
-                <input type="radio" name="host_badge" form="{{ $formId }}" value="rising_star"
-                    {{ $selectedBadge === 'rising_star' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
-                <span>🌟 {{ __('Rising Star') }}</span>
+            <label class="custom-filter-label d-flex align-items-center gap-3 p-2 px-3 cursor-pointer m-0">
+                <input type="radio" name="host_badge" class="form-check-input mt-0" form="{{ $formId }}" value="rising_star" {{ $selectedBadge === 'rising_star' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span class="fw-medium text-secondary">🌟 {{ __('Rising Star') }}</span>
             </label>
-            <label class="d-flex align-items-center gap-2 cursor-pointer">
-                <input type="radio" name="host_badge" form="{{ $formId }}" value="top_host"
-                    {{ $selectedBadge === 'top_host' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
-                <span>🏆 {{ __('Top Host') }}</span>
+            <label class="custom-filter-label d-flex align-items-center gap-3 p-2 px-3 cursor-pointer m-0">
+                <input type="radio" name="host_badge" class="form-check-input mt-0" form="{{ $formId }}" value="top_host" {{ $selectedBadge === 'top_host' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span class="fw-medium text-secondary">🏆 {{ __('Top Host') }}</span>
             </label>
-            <label class="d-flex align-items-center gap-2 cursor-pointer">
-                <input type="radio" name="host_badge" form="{{ $formId }}" value="all_star"
-                    {{ $selectedBadge === 'all_star' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
-                <span>⭐ {{ __('All-Star Host') }}</span>
+            <label class="custom-filter-label d-flex align-items-center gap-3 p-2 px-3 cursor-pointer m-0">
+                <input type="radio" name="host_badge" class="form-check-input mt-0" form="{{ $formId }}" value="all_star" {{ $selectedBadge === 'all_star' ? 'checked' : '' }} onchange="this.form.dispatchEvent(new Event('submit',{bubbles:true}))">
+                <span class="fw-medium text-secondary">⭐ {{ __('All-Star Host') }}</span>
             </label>
         </div>
     </div>
@@ -837,47 +406,40 @@
     if (!window.sidebarLocationScriptLoaded) {
         window.sidebarLocationScriptLoaded = true;
         
-        // Create the global dropdown container attached directly to the body
         let sidebarDropdown = document.getElementById('custom-sidebar-location-dropdown');
         if (!sidebarDropdown) {
             sidebarDropdown = document.createElement('div');
             sidebarDropdown.id = 'custom-sidebar-location-dropdown';
-            
-            // CSS to ensure it floats on top of everything, including offcanvas menus
             sidebarDropdown.style.cssText = `
                 position: absolute;
                 background: #ffffff;
                 border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+                border-radius: 16px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
                 z-index: 2147483647;
                 max-height: 300px;
                 overflow-y: auto;
                 display: none;
+                padding: 0.5rem;
             `;
-            
-            // Basic dark mode handling
             if(document.documentElement.getAttribute('data-bs-theme') === 'dark') {
                 sidebarDropdown.style.background = '#1b2736';
                 sidebarDropdown.style.borderColor = '#30455d';
             }
-            
             document.body.appendChild(sidebarDropdown);
         }
 
         let sidebarLocationTimeout = null;
         let activeSidebarInput = null;
 
-        // Function to perfectly align the dropdown directly under the input box
         function updateSidebarDropdownPosition() {
             if (!activeSidebarInput || sidebarDropdown.style.display === 'none') return;
-            const rect = activeSidebarInput.getBoundingClientRect();
-            sidebarDropdown.style.top = (rect.bottom + window.scrollY + 5) + 'px';
+            const rect = activeSidebarInput.closest('.modern-search-group').getBoundingClientRect();
+            sidebarDropdown.style.top = (rect.bottom + window.scrollY + 8) + 'px';
             sidebarDropdown.style.left = (rect.left + window.scrollX) + 'px';
-            sidebarDropdown.style.width = activeSidebarInput.offsetWidth + 'px';
+            sidebarDropdown.style.width = rect.width + 'px';
         }
 
-        // Keep dropdown aligned if user scrolls or resizes
         window.addEventListener('resize', updateSidebarDropdownPosition);
         window.addEventListener('scroll', updateSidebarDropdownPosition);
 
@@ -904,7 +466,6 @@
                     .then(response => response.json())
                     .then(res => {
                         sidebarDropdown.innerHTML = '';
-                        
                         let dataArray = [];
                         if (res.data && Array.isArray(res.data)) dataArray = res.data;
                         else if (res.data && res.data.data && Array.isArray(res.data.data)) dataArray = res.data.data;
@@ -914,22 +475,21 @@
                             dataArray.forEach(item => {
                                 const div = document.createElement('div');
                                 div.className = 'location-suggestion-item';
-                                
                                 div.style.cssText = `
-                                    padding: 12px 16px;
+                                    padding: 10px 16px;
                                     cursor: pointer;
-                                    border-bottom: 1px solid #f3f4f6;
+                                    border-radius: 12px;
                                     color: #374151;
                                     font-size: 0.9rem;
-                                    text-align: left;
+                                    transition: background 0.1s;
+                                    margin-bottom: 2px;
                                 `;
                                 
                                 if(document.documentElement.getAttribute('data-bs-theme') === 'dark') {
                                     div.style.color = '#e6eef8';
-                                    div.style.borderBottomColor = '#30455d';
                                 }
 
-                                div.onmouseover = () => { div.style.background = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#23354b' : '#fef2f2'; div.style.color = '#dc2626'; }
+                                div.onmouseover = () => { div.style.background = 'rgba(13, 110, 253, 0.08)'; div.style.color = 'var(--primary-color, #0d6efd)'; }
                                 div.onmouseout = () => { div.style.background = 'transparent'; div.style.color = document.documentElement.getAttribute('data-bs-theme') === 'dark' ? '#e6eef8' : '#374151'; }
                                 
                                 const displayName = item.city_name || item.name;
@@ -938,7 +498,7 @@
                                 if (item.country_name) extraInfo += (extraInfo ? ', ' : '') + item.country_name;
 
                                 if (extraInfo && extraInfo !== displayName) {
-                                    div.innerHTML = `<strong>${displayName}</strong> <small style="display:block; opacity:0.7; margin-top:2px;">${extraInfo}</small>`;
+                                    div.innerHTML = `<strong class="d-block">${displayName}</strong> <small class="text-muted">${extraInfo}</small>`;
                                 } else {
                                     div.innerHTML = `<strong>${displayName}</strong>`;
                                 }
@@ -950,14 +510,12 @@
                                     if (hiddenId) hiddenId.value = item.id;
                                     sidebarDropdown.style.display = 'none';
                                     
-                                    // Trigger the form submit automatically when a location is selected!
                                     const formId = activeSidebarInput.getAttribute('form');
                                     if(formId) {
                                         const form = document.getElementById(formId);
                                         if(form) form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
                                     }
                                 };
-
                                 sidebarDropdown.appendChild(div);
                             });
                             
@@ -972,9 +530,8 @@
             }
         });
 
-        // Hide when clicking anywhere else
         document.addEventListener('mousedown', function (e) {
-            if (activeSidebarInput && !activeSidebarInput.contains(e.target) && !sidebarDropdown.contains(e.target)) {
+            if (activeSidebarInput && !activeSidebarInput.closest('.modern-search-group').contains(e.target) && !sidebarDropdown.contains(e.target)) {
                 sidebarDropdown.style.display = 'none';
             }
         });

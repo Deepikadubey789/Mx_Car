@@ -33,35 +33,9 @@
 
 @if ($isAboutUsPage)
     <style>
-        .page-modern--about,
-        .page-modern--about *,
-        .page-modern--about section,
-        .page-modern--about .section-1,
-        .page-modern--about .background-body,
-        .page-modern--about .shortcode-faqs,
-        .page-modern--about .mxcar-faq-clean-section,
-        .page-modern--about .about-modern-content,
-        .page-modern--about .about-modern-content > section,
-        .page-modern--about .shortcode-about-us-information {
-            background: none !important;
-            background-color: transparent !important;
-            background-image: none !important;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
-        .page-modern--about *::before,
-        .page-modern--about *::after,
-        .page-modern--about ::before,
-        .page-modern--about ::after {
-            background: none !important;
-            background-image: none !important;
-            display: none !important;
-        }
-
-        /* Keep actual images tag but remove background patterns */
-        .page-modern--about img {
-            display: block !important;
+        /* Force a gap between the last block on the About page and the Footer */
+        .page-modern--about {
+            padding-bottom: 60px !important;
         }
     </style>
 @endif

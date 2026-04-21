@@ -2,6 +2,21 @@
     $formId = $formId ?? 'cars-filter-form';
 @endphp
 
+<style>
+    /* 1. Kill the white background and border of the parent wrapper */
+    .car-filters-shell {
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+    }
+    
+    /* 2. Hide the old duplicate title text from the sidebar */
+    .car-filters-shell__intro {
+        display: none !important;
+    }
+</style>
+
 {!! Form::open(['url' => route('public.ajax.cars'), 'method' => 'GET', 'id' => $formId, 'class' => 'sidebar-filter-mobile__content']) !!}
     <input type="hidden" name="page" value="{{ $cars->currentPage() ?: 1 }}" data-value="{{ $cars->currentPage() ?: 1 }}" />
     <input type="hidden" name="per_page" value="{{ BaseHelper::stringify(request()->query('per_page', $cars->perPage())) }}" />

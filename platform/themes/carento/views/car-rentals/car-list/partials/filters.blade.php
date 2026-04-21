@@ -48,13 +48,8 @@
 </div>
 
 <div class="content-left order-lg-first d-none d-lg-block car-filters-modern">
-    <div class="car-filters-shell">
-        <div class="car-filters-shell__intro">
-            <p class="car-filters-shell__eyebrow mb-0">{{ __('Smart filters') }}</p>
-            <h5 class="car-filters-shell__title mb-1">{{ __('Refine your car search') }}</h5>
-            <p class="car-filters-shell__text mb-0">{{ __('Adjust budget, performance, and amenities in one place.') }}</p>
-        </div>
-
+    <div class="car-filters-shell" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;">
+        
         <div class="filter-section filter-section--desktop">
             @include(Theme::getThemeNamespace('views.car-rentals.car-list.partials.filter-form'), [
                 'layout'       => $layout,
