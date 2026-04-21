@@ -1,49 +1,57 @@
-@use(Theme\Carento\Support\ThemeHelper)
+@php
+    $category = $post->categories->first();
+    $author = $post->author;
+    $viewsCount = $post->views ?? 0;
+@endphp
 
-<div class="card-flight card-news card-news--journal card-news--journal-list background-card d-flex flex-column h-auto">
-    <div class="card-image card-news__list-media">
-        <a href="{{ $post->url }}">
-            {{ RvMedia::image($post->image, $post->name, 'medium-square') }}
+<article class="card-news background-card border rounded-16 p-4 d-flex flex-column h-100 w-100 mb-4">
+    <a href="{{ $post->url }}" class="d-block rounded-12 overflow-hidden mb-4">
+        {{ RvMedia::image($post->image, $post->name, 'medium-rectangle', attributes: ['class' => 'w-100']) }}
+    </a>
+
+    @if ($category)
+        <div class="mb-3">
+            <span class="badge rounded-pill px-3 py-2 text-success-emphasis bg-success-subtle fw-medium">
+                {{ $category->name }}
+            </span>
+        </div>
+    @endif
+
+    <h3 class="mb-3 fw-bold lh-sm" style="font-size: 22px;">
+        <a href="{{ $post->url }}" class="neutral-1000 text-decoration-none" title="{{ $post->name }}">
+            {!! BaseHelper::clean($post->name) !!}
         </a>
+    </h3>
 
-        <span class="card-news__media-shade" aria-hidden="true"></span>
-    </div>
+    @if ($description = $post->description)
+        <p class="card-desc neutral-500 mb-4" style="font-size: 14px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;">
+            {!! BaseHelper::clean($description) !!}
+        </p>
+    @endif
 
-    <div class="card-info p-2 d-flex flex-column">
-        <div class="card-news__meta-row mb-1 d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center gap-2" style="font-size: 13px; color: var(--bs-neutral-600);">
-                {!! Theme::partial('blog.post-meta.index', compact('post')) !!}
-            </div>
-            {!! Theme::partial('blog.post-meta.category-badge', compact('post')) !!}
-        </div>
-
-        <div class="card-title mb-1">
-            <a class="text-lg-bold neutral-1000 lh-sm" style="font-size: 16px; transition: color 0.3s; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="{{ $post->name }}" href="{{ $post->url }}">
-                {{ $post->name }}
-            </a>
-        </div>
-
-        @if ($description = $post->description)
-            <div class="card-desc mb-1">
-                <p class="neutral-500" style="font-size: 13px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 0;">{!! BaseHelper::clean($description) !!}</p>
-            </div>
+    <div class="d-flex align-items-center gap-4 neutral-700 mt-auto flex-wrap" style="font-size: 14px;">
+        @if ($author)
+            <span class="card-author d-inline-flex align-items-center gap-2">
+                {{ RvMedia::image($author->avatar_url, $author->name, 'thumb', attributes: ['class' => 'author-avatar rounded-circle', 'width' => 24, 'height' => 24]) }}
+                {{ $author->name }}
+            </span>
         @endif
 
-        <div class="card-program mt-auto pt-2 border-top border-light">
-            <div class="endtime d-flex align-items-center justify-content-between">
-                @if (ThemeHelper::isShowPostMeta('list', 'author', true))
-                    <div class="author-small">
-                        {!! Theme::partial('blog.post-meta.author', compact('post')) !!}
-                    </div>
-                @endif
+        <span class="d-inline-flex align-items-center gap-2">
+            <i class="ti ti-calendar-event text-success"></i>
+            {{ Theme::formatDate($post->created_at) }}
+        </span>
 
-                <div class="card-button">
-                    <a class="text-primary fw-bold text-decoration-none" href="{{ $post->url }}" style="font-size: 14px;">
-                        {{ __('Read More') }} 
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="ms-1"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-                    </a>
-                </div>
-            </div>
-        </div>
+        @if ($post->time_to_read)
+            <span class="d-inline-flex align-items-center gap-2">
+                <i class="ti ti-clock text-success"></i>
+                <span class="post-time">{{ $post->time_to_read }} {{ __('minutes read') }}</span>
+            </span>
+        @endif
+
+        <span class="d-inline-flex align-items-center gap-2">
+            <i class="ti ti-eye text-success"></i>
+            <span class="post-views">{{ __(':count Views', ['count' => number_format($viewsCount)]) }}</span>
+        </span>
     </div>
-</div>
+</article>
