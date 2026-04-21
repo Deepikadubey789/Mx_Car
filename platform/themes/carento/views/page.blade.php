@@ -12,8 +12,13 @@
     $currentPageSlug = $pageSegments ? (string) end($pageSegments) : '';
     $isAboutUsPage = $currentPageSlug === 'about-us';
     $isContactPage = $currentPageSlug === 'contact';
+    $isPricingPage = $currentPageSlug === 'pricing';
     $isLegalPage = in_array($currentPageSlug, ['terms-of-use', 'privacy-policy', 'cookie-policy']);
     $contentClasses = 'ck-content page-content';
+
+    if ($isPricingPage) {
+        Theme::set('hideBreadcrumbTrail', true);
+    }
 
     if ($isAboutUsPage) {
         $contentClasses = 'ck-content page-content about-modern-content';
