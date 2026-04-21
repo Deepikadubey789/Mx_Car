@@ -13,7 +13,21 @@ class DriverEligibilityService
         $reasons = [];
         $state = 'eligible';
 
+        $restrictedCategoryIds = $this->decodeIntMap(CarRentalsHelper::getSetting('eligibility_restricted_category_ids', []));
+        $carCategoryIds = $car->relationLoaded('categories')
+            ? $car->categories->pluck('id')->all()
+            : $car->categories()->pluck('cr_car_categories.id')->all();
+
+        $inRestrictedCategory = $restrictedCategoryIds !== [] && array_intersect($carCategoryIds, $restrictedCategoryIds);
+
         if (! $customer) {
+            if ($inRestrictedCategory) {
+                return [
+                    'state' => 'blocked',
+                    'reasons' => ['category_requires_driver_verified_kyc'],
+                ];
+            }
+
             return [
                 'state' => 'manual_review',
                 'reasons' => ['guest_requires_manual_review'],
@@ -30,12 +44,7 @@ class DriverEligibilityService
             $reasons[] = 'kyc_pending_review';
         }
 
-        $restrictedCategoryIds = $this->decodeIntMap(CarRentalsHelper::getSetting('eligibility_restricted_category_ids', []));
-        $carCategoryIds = $car->relationLoaded('categories')
-            ? $car->categories->pluck('id')->all()
-            : $car->categories()->pluck('cr_car_categories.id')->all();
-
-        if ($restrictedCategoryIds && array_intersect($carCategoryIds, $restrictedCategoryIds) && $customer->kyc_level !== 'driver_verified') {
+        if ($inRestrictedCategory && $customer->kyc_level !== 'driver_verified') {
             $state = 'blocked';
             $reasons[] = 'category_requires_driver_verified_kyc';
         }

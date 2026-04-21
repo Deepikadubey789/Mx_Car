@@ -108,7 +108,7 @@ return [
             'kyc_manual_review_risk_threshold' => 'Manual review risk threshold',
             'kyc_manual_review_risk_threshold_helper' => 'Risk score threshold for routing mock-provider verification to manual review.',
             'eligibility_restricted_category_ids' => 'Restricted categories',
-            'eligibility_restricted_category_ids_helper' => 'Select categories that require fully verified drivers.',
+            'eligibility_restricted_category_ids_helper' => 'Cars in these categories stay visible in the catalog for all visitors, but only renters with fully verified driver KYC can complete a booking for them.',
             'kyc_provider' => 'KYC provider',
             'kyc_provider_helper' => 'Select which KYC provider is used for verification requests.',
             'kyc_provider_stripe' => 'Stripe Identity',

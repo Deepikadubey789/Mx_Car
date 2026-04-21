@@ -79,6 +79,9 @@ class BookingForm extends FormFront
             Auth::guard('customer')->user()
         );
 
+        $bookingBlockedByCategory = ($quoteData['eligibility_state'] ?? '') === 'blocked'
+            && in_array('category_requires_driver_verified_kyc', $quoteData['eligibility_reasons'] ?? [], true);
+
         // FETCH SERVICES
         $services = Service::query()->select(['id', 'name', 'price', 'currency_id'])->wherePublished()->get();
         $serviceOptions = [];
@@ -263,6 +266,21 @@ class BookingForm extends FormFront
         }
 
         // Finish the form
+        $categoryBookingNotice = '';
+        if ($bookingBlockedByCategory) {
+            if (Auth::guard('customer')->check()) {
+                $categoryBookingNotice = '<div class="alert alert-warning mb-3" role="alert">'
+                    . e(__('This vehicle category requires full driver verification before you can book.'))
+                    . ' <a href="' . e(route('customer.kyc')) . '" class="alert-link">' . e(__('Complete verification')) . '</a>'
+                    . '</div>';
+            } else {
+                $categoryBookingNotice = '<div class="alert alert-warning mb-3" role="alert">'
+                    . e(__('This vehicle category requires a verified driver account to book.'))
+                    . ' <a href="' . e(route('customer.login')) . '" class="alert-link">' . e(__('Log in')) . '</a>'
+                    . '</div>';
+            }
+        }
+
         $this
             ->add('border_wrapper_after', HtmlField::class, HtmlFieldOption::make()->content('<div class="border-wrapper-after"></div>')->colspan(2))
             ->add(
@@ -302,13 +320,24 @@ class BookingForm extends FormFront
                         'currencyId' => $car->currency_id,
                     ])
                     ->colspan(2)
-            )
+            );
+
+        if ($categoryBookingNotice !== '') {
+            $this->add(
+                'restricted_category_notice',
+                HtmlField::class,
+                HtmlFieldOption::make()->content($categoryBookingNotice)->colspan(2)
+            );
+        }
+
+        $this
             ->add(
                 'submit',
                 'submit',
                 ButtonFieldOption::make()
                     ->cssClass('btn btn-primary')
                     ->label(__('Book Now'))
+                    ->disabled($bookingBlockedByCategory)
             );
     }
 }

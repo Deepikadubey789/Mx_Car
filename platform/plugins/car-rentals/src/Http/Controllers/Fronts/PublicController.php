@@ -28,6 +28,7 @@ use Botble\CarRentals\Models\Customer;
 use Botble\CarRentals\Models\Service;
 use Botble\CarRentals\Models\GuestProtectionPlan;
 use Botble\CarRentals\Services\BookingService;
+use Botble\CarRentals\Services\DriverEligibilityService;
 use Botble\CarRentals\Services\PriceLockService;
 use Botble\CarRentals\Services\PricingQuoteService;
 use Botble\Location\Models\City;
@@ -262,6 +263,7 @@ class PublicController extends BaseController
         }
 
         $car = Car::query()
+            ->with('categories')
             ->findOrFail($request->input('car_id'));
 
         if ($car->is_for_sale) {
@@ -269,6 +271,16 @@ class PublicController extends BaseController
                 ->httpResponse()
                 ->setError()
                 ->setMessage(__('This car is listed for sale only and cannot be rented.'))
+                ->withInput();
+        }
+
+        $eligibility = app(DriverEligibilityService::class)->evaluate($car, $customer);
+        if ($eligibility['state'] === 'blocked') {
+            return $this
+                ->httpResponse()
+                ->setError()
+                ->setMessage(__('Driver is not eligible for this vehicle category.'))
+                ->setData(['eligibility_reasons' => $eligibility['reasons']])
                 ->withInput();
         }
 
