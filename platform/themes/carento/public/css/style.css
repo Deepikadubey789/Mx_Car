@@ -10371,6 +10371,32 @@ h6 {
     stroke: #101010
 }
 
+.blog-loop-modern__pagination .pagination {
+    gap: 28px !important;
+}
+
+.blog-loop-modern__pagination .pagination .page-item .page-link {
+    border-radius: 6px !important;
+    border: 1px solid #dee2e6 !important;
+    background: #fff !important;
+    color: #374151 !important;
+    width: 38px !important;
+    height: 38px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-weight: 500 !important;
+}
+
+.blog-loop-modern__pagination .pagination .page-item.active .page-link {
+    background: #c0392b !important;
+    border-color: #c0392b !important;
+    color: #fff !important;
+}
+
+.blog-loop-modern__pagination .pagination .page-item.disabled .page-link {
+    opacity: 0.5 !important;
+}
 .block-subscriber {
     align-items: center;
     background-color: var(--bs-background-2);

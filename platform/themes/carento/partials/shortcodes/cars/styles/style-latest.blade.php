@@ -20,7 +20,7 @@
         border-radius: 24px;
         padding: 50px 60px;
         max-width: 1200px; 
-        margin: 0 auto;
+        margin-top: 8rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     }
 
