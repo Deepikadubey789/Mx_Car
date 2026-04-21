@@ -1,5 +1,5 @@
 @php
-    $category = $post->categories->first();
+    $categories = $post->categories;
     $author = $post->author;
     $viewsCount = $post->views ?? 0;
 @endphp
@@ -9,11 +9,13 @@
         {{ RvMedia::image($post->image, $post->name, 'medium-rectangle', attributes: ['class' => 'w-100']) }}
     </a>
 
-    @if ($category)
-        <div class="mb-3">
-            <span class="badge rounded-pill px-3 py-2 text-success-emphasis bg-success-subtle fw-medium">
-                {{ $category->name }}
-            </span>
+    @if ($categories->isNotEmpty())
+        <div class="mb-3 d-flex flex-wrap gap-2">
+            @foreach ($categories as $category)
+                <span class="badge rounded-pill px-3 py-2 text-success-emphasis bg-success-subtle fw-medium">
+                    {{ $category->name }}
+                </span>
+            @endforeach
         </div>
     @endif
 
@@ -29,25 +31,29 @@
         </p>
     @endif
 
-    <div class="d-flex align-items-center gap-4 neutral-700 mt-auto flex-wrap" style="font-size: 14px;">
-        @if ($author)
-            <span class="card-author d-inline-flex align-items-center gap-2">
-                {{ RvMedia::image($author->avatar_url, $author->name, 'thumb', attributes: ['class' => 'author-avatar rounded-circle', 'width' => 24, 'height' => 24]) }}
-                {{ $author->name }}
-            </span>
-        @endif
+    @if ($author)
+        <div class="card-author d-inline-flex align-items-center gap-2 mb-2">
+            {{ RvMedia::image($author->avatar_url, $author->name, 'thumb', attributes: ['class' => 'author-avatar rounded-circle', 'width' => 24, 'height' => 24]) }}
+            {{ $author->name }}
+        </div>
+    @endif
+
+    <div class="d-flex align-items-center gap-3 neutral-700 mt-auto" style="font-size: 14px;">
 
         <span class="d-inline-flex align-items-center gap-2">
             <i class="ti ti-calendar-event text-success"></i>
             {{ Theme::formatDate($post->created_at) }}
         </span>
 
-        @if ($post->time_to_read)
-            <span class="d-inline-flex align-items-center gap-2">
-                <i class="ti ti-clock text-success"></i>
-                <span class="post-time">{{ $post->time_to_read }} {{ __('minutes read') }}</span>
+        @php
+            $readingTime = max(1, (int) ceil(str_word_count(strip_tags((string) $post->content)) / 200));
+        @endphp
+        <span class="d-inline-flex align-items-center gap-2">
+            <i class="ti ti-clock text-success"></i>
+            <span class="post-time">
+                {{ $readingTime == 1 ? __('1 minute read') : __(':count minutes read', ['count' => $readingTime]) }}
             </span>
-        @endif
+        </span>
 
         <span class="d-inline-flex align-items-center gap-2">
             <i class="ti ti-eye text-success"></i>
