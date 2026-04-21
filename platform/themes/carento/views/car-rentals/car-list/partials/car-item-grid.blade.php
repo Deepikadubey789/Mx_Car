@@ -36,13 +36,13 @@
 
             <div class="car-card-grid__media-shade"></div>
 
-            @if($avgReview = $car->avg_review)
-                <div class="car-card-grid__rating">
-                    <span class="rating text-xs-medium rounded-pill">
-                        <x-core::icon name="ti ti-star" size="16" class="icon icon-tabler icons-tabler-filled icon-tabler-star" />
-                        <span>{{ $avgReview }}</span>
+           @if($avgReview = $car->avg_review)
+                <div class="car-card-grid__rating" style="position: absolute; top: 12px; left: 12px; z-index: 2;">
+                    <span class="rating text-xs-medium rounded-pill bg-white text-dark shadow-sm px-2 py-1 d-inline-flex align-items-center gap-1 border">
+                        <x-core::icon name="ti ti-star-filled" size="14" class="text-warning" />
+                        <span class="fw-bold">{{ $avgReview }}</span>
                         @if($reviewsCount = $car->reviews_count ?? 0)
-                            <span class="text-xs-medium neutral-500">
+                            <span class="text-muted small">
                                 ({{ $reviewsCount }} {{ $reviewsCount > 1 ? __('reviews') : __('review') }})
                             </span>
                         @endif
