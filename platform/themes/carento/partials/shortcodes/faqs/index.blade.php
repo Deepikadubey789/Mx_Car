@@ -34,7 +34,7 @@
 .mxcar-faq-box {
     background-color: #ffffff !important;
     border: 1px solid #E9ECEF !important;
-    border-radius: 24px !important;
+    border-radius: 12px !important;
     overflow: hidden;
     transition: all 0.3s ease;
     margin-bottom: 24px !important;
