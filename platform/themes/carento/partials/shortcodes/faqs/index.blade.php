@@ -57,6 +57,7 @@ a.mxcar-faq-header {
     justify-content: space-between !important;
     border-left: 5px solid transparent !important;
     transition: all 0.3s ease;
+    min-height: 115px !important; /* FIX: Forces 1-line and 2-line questions to be the exact same height! */
 }
 a.mxcar-faq-header:not(.collapsed) {
     background-color: #FAFAFA !important;
@@ -81,6 +82,7 @@ a.mxcar-faq-header:not(.collapsed) .mxcar-faq-title {
     border-radius: 50% !important;
     background-color: #F4F5F7 !important;
     transition: all 0.3s ease !important;
+    flex-shrink: 0; /* Prevents the circle from squishing if the text gets too long */
 }
 .mxcar-faq-icon-wrap svg {
     stroke: #111111 !important;
@@ -161,10 +163,10 @@ a.mxcar-faq-header:not(.collapsed) .mxcar-faq-icon-wrap svg {
 
 /* Dark Mode Overrides */
 [data-bs-theme="dark"] .mxcar-faq-clean-section {
-    background-color: transparent !important; /* Theme background takes over */
+    background-color: transparent !important; 
 }
 [data-bs-theme="dark"] .mxcar-faq-box {
-    background-color: #1a1a1a !important; /* Deep dark grey */
+    background-color: #1a1a1a !important; 
     border-color: #2e2e2e !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
 }
@@ -176,7 +178,7 @@ a.mxcar-faq-header:not(.collapsed) .mxcar-faq-icon-wrap svg {
     color: #f1f1f1 !important;
 }
 [data-bs-theme="dark"] a.mxcar-faq-header:not(.collapsed) {
-    background-color: #242424 !important; /* Mild highlight on active menu */
+    background-color: #242424 !important; 
 }
 [data-bs-theme="dark"] .mxcar-faq-title {
     color: #f1f1f1 !important;

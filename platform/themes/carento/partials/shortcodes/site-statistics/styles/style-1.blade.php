@@ -117,7 +117,7 @@
                     <div class="stat-item">
                         <div class="stat-number-wrapper">
                             {{-- Kept the 'odometer' class so your theme's JS counting animation still works --}}
-                            <div class="stat-number odometer" data-count="{{ $data }}">0</div>
+                            <div class="stat-number odometer" data-count="{{ $data }}">{{ $data }}</div>
                             
                             @if ($unit = Arr::get($item, 'unit'))
                                 <div class="stat-unit">{!! BaseHelper::clean($unit) !!}</div>

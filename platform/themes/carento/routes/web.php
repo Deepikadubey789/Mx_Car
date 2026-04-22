@@ -13,6 +13,22 @@ Route::group(['controller' => CarentoController::class, 'middleware' => ['web', 
         // Add your custom route here
         // Ex: Route::get('hello', 'getHello');
 
+        // ========================================================
+        // FIX: NEW FAQ CATEGORY ROUTE
+        // ========================================================
+        Route::get('faq-category/{id}', function ($id) {
+            // 1. Find the category and its associated FAQs by ID
+            $category = \Botble\Faq\Models\FaqCategory::with('faqs')->findOrFail($id);
+            
+            // 2. Render the custom view file we created!
+            return Theme::scope('faq-category', [
+                'category' => $category, 
+                'categoryFaqs' => $category->faqs
+            ])->render();
+            
+        })->name('public.faq-category');
+        // ========================================================
+
         Route::post('calculate-loan-car', [CarentoController::class, 'calculateLoanCar'])->name('public.calculate-loan-car');
 
         Route::group(['prefix' => 'ajax', 'as' => 'public.ajax.', 'middleware' => [RequiresJsonRequestMiddleware::class]], function (): void {
