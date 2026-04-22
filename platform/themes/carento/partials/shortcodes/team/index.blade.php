@@ -14,40 +14,39 @@
                     </div>
                 </div>
             </div>
+            
             <div class="row mt-50">
                 @foreach($teams as $team)
                     <div class="col-lg-3 col-md-6 col-12 mb-40">
-                        <div class="card-news background-card hover-up shadow-2 mb-4 mb-lg-0 border-0" style="border-radius: 20px; overflow: hidden; background: #fff;">
-                            <div class="card-image" style="border-radius: 20px 20px 0 0; overflow: hidden;">
-                                <a href="{{ $team->url }}">
-                                    {{ RvMedia::image($team->photo, $team->name, 'medium-square', false, ['style' => 'width: 100%; height: auto; display: block;']) }}
+                        <div class="card-team background-card shadow-sm hover-up border-0 text-center p-4 h-100 d-flex flex-column" style="border-radius: 24px; background: #ffffff; transition: all 0.3s ease;">
+                            
+                            <div class="team-avatar mx-auto mb-4" style="width: 150px; height: 150px; border-radius: 50%; overflow: hidden; border: 5px solid #f8f9fa; box-shadow: 0 10px 25px rgba(0,0,0,0.06);">
+                                <a href="{{ $team->url }}" class="d-block h-100 w-100">
+                                    {{ RvMedia::image($team->photo, $team->name, 'medium-square', false, ['style' => 'width: 100%; height: 100%; object-fit: cover;']) }}
                                 </a>
                             </div>
-                            <div class="card-info p-4 text-start">
-                                <div class="card-title mb-3">
-                                    <a class="text-xl-bold neutral-1000 text-decoration-none" href="{{ $team->url }}">
-                                        <h5 class="fw-bold mb-1" style="color: #000; font-size: 20px; letter-spacing: -0.5px;">{{ $team->name }}</h5>
-                                    </a>
 
-                                    @if($teamTitle = $team->title)
-                                        <p class="text-sm-medium neutral-500 mb-0" style="font-size: 14px; color: #6b7280;">{!! BaseHelper::clean($teamTitle) !!}</p>
-                                    @endif
-                                </div>
-                                <div class="card-program mt-4">
-                                    <div class="endtime d-flex align-items-center justify-content-between">
-                                        <div class="card-author d-flex align-items-center gap-3">
-                                            @foreach($team->socials as $key => $social)
-                                                <a href="{{ $social }}" class="text-dark hover-up" style="font-size: 18px; color: #000;">
-                                                    <x-core::icon name="ti ti-brand-{{ $key }}" class="m-0" />
-                                                </a>
-                                            @endforeach
-                                        </div>
-                                        <a href="{{ $team->url }}" class="rounded-circle background-100 icon-shape icon icon-sm hover-up border-0" style="background: #f3f4f6; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center;">
-                                            <img class="m-0" src="{{ Theme::asset()->url('images/icons/arrow-up-right.svg') }}" alt="icon" style="width: 18px; height: 18px;" />
+                            <div class="team-info flex-grow-1">
+                                <a href="{{ $team->url }}" class="text-decoration-none">
+                                    <h5 class="fw-bold mb-1 neutral-1000" style="font-size: 20px; letter-spacing: -0.5px;">{{ $team->name }}</h5>
+                                </a>
+                                
+                                @if($teamTitle = $team->title)
+                                    <p class="neutral-500 mb-0" style="font-size: 14px; color: #6b7280;">{!! BaseHelper::clean($teamTitle) !!}</p>
+                                @endif
+                            </div>
+                            
+                            <div class="mt-4">
+                                <hr class="w-50 mx-auto mt-0 mb-4" style="opacity: 0.08;">
+                                <div class="team-socials d-flex align-items-center justify-content-center gap-2">
+                                    @foreach($team->socials as $key => $social)
+                                        <a href="{{ $social }}" class="rounded-circle d-flex align-items-center justify-content-center hover-up" style="width: 40px; height: 40px; background: #f3f4f6; color: #4b5563; transition: all 0.2s ease; text-decoration: none;">
+                                            <x-core::icon name="ti ti-brand-{{ $key }}" class="m-0" style="width: 18px; height: 18px;" />
                                         </a>
-                                    </div>
+                                    @endforeach
                                 </div>
                             </div>
+                            
                         </div>
                     </div>
                 @endforeach

@@ -22,6 +22,100 @@
 @endphp
 
 <div class="content-right cars-listing cars-listing-modern car-list-modern">
+   <style>
+        /* 1. Standardize Heights for wrappers AND internal buttons/selects */
+        .filter-dropdown-height,
+        .item-sort-modern,
+        .item-sort-modern .btn,
+        .item-sort-modern .form-control,
+        .item-sort-modern select {
+            height: 36px !important;
+            min-height: 36px !important; /* Stops internal elements from fighting back */
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            box-shadow: none !important; /* Prevents double-shadows if the child has one */
+        }
+
+        /* 2. Perfectly space the Per Page text and arrow */
+        #dropdownSort2 {
+            min-width: 85px; 
+            justify-content: space-between;
+            margin-right: 10px;
+        }
+        #dropdownSort2::after {
+            margin-left: 12px !important; 
+        }
+        /* 3. Make the Per Page dropdown perfectly match the Sort By dropdown */
+        #dropdownSort2 + .dropdown-menu {
+            padding: 8px; /* Adds breathing room around the edges */
+            border-radius: 12px !important;
+        }
+        #dropdownSort2 + .dropdown-menu .dropdown-item {
+            border-radius: 6px;
+            padding: 8px 16px;
+            transition: all 0.2s ease;
+            color: #4b5563; /* Standard text color */
+        }
+        /* The soft-red hover and active state */
+        #dropdownSort2 + .dropdown-menu .dropdown-item:hover,
+        #dropdownSort2 + .dropdown-menu .dropdown-item.active {
+            background-color: rgba(223, 72, 39, 0.08) !important; 
+            color: #111827 !important;
+            font-weight: 600;
+        }
+        /* 4. Fix Pagination Alignment & Styling */
+        .car-list-pagination {
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid #e2e8f0;
+            padding: 15px 20px; /* Tighter padding to hug the buttons */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 40px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+        }
+
+        /* Aggressively strip all default Bootstrap margins/paddings */
+        .car-list-pagination nav,
+        .car-list-pagination ul,
+        .car-list-pagination .pagination {
+            margin: 0 !important; 
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px; /* Perfect spacing between numbers */
+        }
+
+        /* Prevent individual items from shifting */
+        .car-list-pagination .page-item {
+            margin: 0 !important;
+        }
+
+        /* Standardize the shape and centering of the numbers */
+        .car-list-pagination .page-link {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            margin: 0 !important;
+            height: 42px !important;
+            min-width: 42px !important;
+            border-radius: 8px !important; /* Soft squares */
+            font-weight: 600;
+        }
+
+        /* Matches the active page number to your theme's red */
+        .car-list-pagination .page-item.active .page-link {
+            background-color: var(--primary-color, #df4827) !important;
+            border-color: var(--primary-color, #df4827) !important;
+            color: #ffffff !important;
+            box-shadow: 0 4px 10px rgba(223, 72, 39, 0.3);
+        }
+    </style>
+
     @if($enableFilter === 'no')
         {!! Form::open(['url' => route('public.ajax.cars'), 'method' => 'GET', 'id' => 'cars-filter-form', 'class' => 'sidebar-filter-mobile__content']) !!}
         <input type="hidden" name="page" value="{{ $cars->currentPage() ?: 1 }}" data-value="{{ $cars->currentPage() ?: 1 }}" />
@@ -86,14 +180,14 @@
                 
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-muted fw-bold small text-nowrap text-uppercase" style="letter-spacing: 1px;">{{ __('Per Page') }}</span>
-                    <div class="dropdown dropdown-sort bg-white shadow-sm rounded-3">
-                        <button class="btn dropdown-toggle border-0 fw-semibold px-3 py-2" id="dropdownSort2" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-display="static">
+                    <div class="dropdown dropdown-sort bg-white rounded-3">
+                        <button class="btn dropdown-toggle fw-semibold px-3 filter-dropdown-height" id="dropdownSort2" type="button" data-bs-toggle="dropdown" aria-expanded="false" data-bs-display="static">
                             <span>{{ $cars->perPage() }}</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" aria-labelledby="dropdownSort2">
+                        <ul class="dropdown-menu dropdown-menu-end border-0 rounded-3" aria-labelledby="dropdownSort2">
                             @foreach($perPages ?? CarListHelper::getPerPageParams() as $value)
                                 <li>
-                                    <a class="dropdown-item dropdown-sort-by per-page-item {{ $cars->perPage() == $value ? 'active bg-light text-dark fw-bold' : '' }}" href="#" data-per-page="{{ $value }}">{{ $value }}</a>
+                                    <a class="dropdown-item dropdown-sort-by per-page-item {{ $cars->perPage() == $value ? 'active' : '' }}" href="#" data-per-page="{{ $value }}">{{ $value }}</a>
                                 </li>
                             @endforeach
                         </ul>
