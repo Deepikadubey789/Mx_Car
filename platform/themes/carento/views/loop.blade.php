@@ -25,16 +25,7 @@
         </div>
 
         @if ($posts instanceof \Illuminate\Contracts\Pagination\LengthAwarePaginator && $posts->total() > 0)
-            <div class="car-list-pagination" style="
-                margin-top: 20px;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                padding: 20px;
-                background: #ffffff;
-                display: flex;
-                justify-content: center;
-                gap: 30rem;
-            ">
+            <div class="blog-loop-modern__pagination blog-loop-modern__pagination--panel">
                 {{ $posts->withQueryString()->links(Theme::getThemeNamespace('partials.pagination')) }}
             </div>
         @endif

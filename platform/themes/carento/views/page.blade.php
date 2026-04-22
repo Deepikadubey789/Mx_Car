@@ -14,6 +14,7 @@
     $isContactPage = $currentPageSlug === 'contact';
     $isPricingPage = $currentPageSlug === 'pricing';
     $isLegalPage = in_array($currentPageSlug, ['terms-of-use', 'privacy-policy', 'cookie-policy']);
+    $isServicesPage = $currentPageSlug === 'services';
     $contentClasses = 'ck-content page-content';
 
     if ($isPricingPage) {
@@ -31,6 +32,9 @@
 
 <div @class([
     'page-modern',
+    'page-modern--homepage' => BaseHelper::isHomepage($page->getKey()),
+    'page-modern--services' => $isServicesPage,
+    'page-modern--pricing' => $isPricingPage,
     'page-modern--about' => $isAboutUsPage,
     'page-modern--contact' => $isContactPage,
     'page-modern--legal' => $isLegalPage,

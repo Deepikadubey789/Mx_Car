@@ -1,6 +1,6 @@
 @if ($paginator->hasPages())
     <nav class="d-flex justify-content-center">
-        <ul class="pagination custom-pagination" style="gap: 20px;">
+        <ul class="pagination custom-pagination">
             @if ($paginator->onFirstPage())
                 <li class="page-item disabled">
                     <span class="page-link page-link-navigation">
@@ -30,7 +30,7 @@
                     @foreach ($element as $page => $url)
                         @if ($page == $paginator->currentPage())
                             <li class="page-item active">
-                                <span class="page-link" style="background:#c0392b !important; border-color:#c0392b !important; color:#fff !important;">{{ $page }}</span>
+                                <span class="page-link" aria-current="page">{{ $page }}</span>
                             </li>
                         @else
                             <li class="page-item">

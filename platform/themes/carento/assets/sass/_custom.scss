@@ -11,6 +11,320 @@ body {
     --bs-brand-2-darken: var(--primary-color-hover);
 }
 
+// Homepage & /services page: solid CTAs use white label text (link / utility overrides)
+.page-modern--homepage,
+.page-modern--services {
+    .btn:not(.btn-white):not(.btn-light):not(.btn-link):not(.btn-close):not([class*='btn-outline']):not(.bg-white):not(.btn-signin):not(.btn-dropdown) {
+        &,
+        &:hover,
+        &:focus,
+        &:active {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        // Inline SVG arrows use hardcoded stroke (#101010) or stroke=""; match button text
+        svg {
+            color: #ffffff !important;
+        }
+
+        svg path[stroke],
+        svg line[stroke],
+        svg polyline[stroke],
+        svg circle[stroke] {
+            stroke: currentColor !important;
+        }
+    }
+
+    .mxcar-btn-red {
+        &,
+        &:hover,
+        &:focus {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        svg {
+            color: #ffffff !important;
+        }
+
+        svg path[stroke],
+        svg line[stroke],
+        svg polyline[stroke],
+        svg circle[stroke] {
+            stroke: currentColor !important;
+        }
+    }
+
+    .neon-btn {
+        &,
+        &:hover,
+        &:focus {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+        }
+
+        svg {
+            color: #ffffff !important;
+        }
+
+        svg path[stroke],
+        svg line[stroke],
+        svg polyline[stroke],
+        svg circle[stroke] {
+            stroke: currentColor !important;
+        }
+    }
+}
+
+// /services page: promotion block title (global .ck-content / heading rules can beat the shortcode inline style)
+.page-modern--services {
+    .shortcode-promotion-block .promo-title,
+    .shortcode-promotion-block h2.promo-title {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    .shortcode-promotion-block .promo-title * {
+        color: inherit !important;
+        -webkit-text-fill-color: inherit !important;
+    }
+}
+
+// /pricing page: buttons on solid brand / red background only
+.page-modern--pricing .shortcode-pricing {
+    // Monthly / yearly toggle — active tab uses solid primary (red on MXCar)
+    .change-price-plan .btn.btn-primary.active {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+
+    // Plan card CTA — solid brand on :hover; theme used dark label + dark arrow
+    a.btn.btn-primary2.w-100 {
+        &:hover,
+        &:focus,
+        &:focus-visible,
+        &:active {
+            color: #ffffff !important;
+            -webkit-text-fill-color: #ffffff !important;
+
+            svg path,
+            svg .fill-dark {
+                fill: currentColor !important;
+            }
+        }
+    }
+}
+
+// Blog grid cards (/blog) — reference layout: image + overlapping category, date, title, footer
+.blog-loop-modern .blog-posts-modern--grid {
+    .blog-card-modern {
+        background: #ffffff;
+        border-radius: 24px;
+        border: 1px solid #e8ecf1;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 40px rgba(15, 23, 42, 0.1);
+        }
+    }
+
+    .blog-card-modern__media-wrap {
+        position: relative;
+    }
+
+    .blog-card-modern__image-link {
+        display: block;
+        text-decoration: none;
+    }
+
+    .blog-card-modern__media {
+        position: relative;
+        aspect-ratio: 3 / 2;
+        overflow: hidden;
+        background: #f1f5f9;
+    }
+
+    .blog-card-modern__img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        border-radius: 24px 24px 0 0;
+    }
+
+    .blog-card-modern__category {
+        position: absolute;
+        right: 16px;
+        bottom: -14px;
+        z-index: 2;
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 18px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        letter-spacing: 0.01em;
+        text-decoration: none;
+        color: #0f766e !important;
+        background: #d8f6f0;
+        border: 1px solid rgba(15, 118, 110, 0.12);
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+        transition: background 0.2s ease, color 0.2s ease;
+
+        &:hover {
+            color: #0d5c56 !important;
+            background: #c5f0e6;
+        }
+    }
+
+    .blog-card-modern__body {
+        padding: 28px 24px 24px;
+    }
+
+    .blog-card-modern__date {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 14px;
+        color: #64748b;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .blog-card-modern__date-icon {
+        font-size: 17px;
+        color: #94a3b8;
+    }
+
+    .blog-card-modern__title {
+        margin: 0 0 20px;
+        font-size: clamp(1.1rem, 1.35vw, 1.35rem);
+        font-weight: 800;
+        line-height: 1.28;
+        letter-spacing: -0.02em;
+    }
+
+    .blog-card-modern__title-link {
+        color: #0f172a !important;
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: var(--primary-color) !important;
+        }
+    }
+
+    .blog-card-modern__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-top: 18px;
+        border-top: 1px solid #eef2f7;
+    }
+
+    .blog-card-modern__author {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+    }
+
+    .blog-card-modern__avatar {
+        width: 36px;
+        height: 36px;
+        object-fit: cover;
+        flex-shrink: 0;
+        background: #e2e8f0;
+    }
+
+    .blog-card-modern__author-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .blog-card-modern__read-more {
+        flex-shrink: 0;
+        font-size: 14px;
+        font-weight: 700;
+        color: #0f172a !important;
+        text-decoration: none;
+        transition: color 0.2s ease;
+
+        &:hover {
+            color: var(--primary-color) !important;
+        }
+
+        &--solo {
+            margin-inline-start: auto;
+        }
+    }
+}
+
+[data-bs-theme='dark'] .blog-loop-modern .blog-posts-modern--grid {
+    .blog-card-modern {
+        background: #0f172a;
+        border-color: #1e293b;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .blog-card-modern__media {
+        background: #1e293b;
+    }
+
+    .blog-card-modern__img {
+        border-radius: 24px 24px 0 0;
+    }
+
+    .blog-card-modern__category {
+        background: #134e4a;
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #99f6e4 !important;
+
+        &:hover {
+            color: #ccfbf1 !important;
+            background: #115e59;
+        }
+    }
+
+    .blog-card-modern__date,
+    .blog-card-modern__date-icon {
+        color: #94a3b8;
+    }
+
+    .blog-card-modern__title-link {
+        color: #f1f5f9 !important;
+
+        &:hover {
+            color: var(--primary-color) !important;
+        }
+    }
+
+    .blog-card-modern__footer {
+        border-top-color: #1e293b;
+    }
+
+    .blog-card-modern__author-name {
+        color: #94a3b8;
+    }
+
+    .blog-card-modern__read-more {
+        color: #f1f5f9 !important;
+    }
+
+    .blog-card-modern__avatar {
+        background: #334155;
+    }
+}
+
 .blog-modern--journal {
     --blog-journal-shell: #ffffff;
     --blog-journal-panel: #f8f9fa;
@@ -2430,6 +2744,81 @@ a {
 .pagination li a:hover,
 .pagination li a.active {
     color: var(--primary-button-text-color, var(--bs-button-text)) !important;
+}
+
+// Blog list: current page is a span.page-link, so global `.pagination li a` sizing does not apply.
+.blog-loop-modern .blog-loop-modern__pagination {
+    display: flex;
+    justify-content: center;
+
+    &.blog-loop-modern__pagination--panel {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid var(--bs-neutral-200, #e5e7eb);
+        border-radius: 12px;
+        background: var(--bs-color-white, #fff);
+    }
+
+    nav {
+        display: flex;
+        justify-content: center;
+    }
+
+    .pagination {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    .page-item .page-link {
+        box-sizing: border-box;
+        min-width: 40px;
+        width: 40px;
+        height: 40px;
+        padding: 0;
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        font-size: 14px;
+        font-weight: 600;
+        line-height: 1;
+    }
+
+    .page-item:not(.active) .page-link {
+        background-color: var(--bs-button-bg-2, #f3f4f6);
+        border: 1px solid var(--bs-neutral-200, #e5e7eb);
+        color: var(--bs-body-color);
+    }
+
+    .page-item.active .page-link {
+        background-color: var(--primary-color);
+        border: 1px solid var(--primary-color);
+        color: #fff;
+    }
+
+    .page-item.disabled .page-link {
+        opacity: 0.5;
+    }
+}
+
+[data-bs-theme='dark'] .blog-loop-modern .blog-loop-modern__pagination--panel {
+    background: var(--bs-body-bg, #0f172a);
+    border-color: var(--bs-border-color, #334155);
+}
+
+[data-bs-theme='dark'] .blog-loop-modern .blog-loop-modern__pagination {
+    .page-item:not(.active) .page-link {
+        background-color: var(--bs-neutral-800, #1e293b);
+        border-color: var(--bs-neutral-700, #334155);
+        color: var(--bs-neutral-100, #f1f5f9);
+    }
 }
 
 .header {

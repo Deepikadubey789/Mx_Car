@@ -85,7 +85,6 @@ return [
             $theme->asset()->container('footer')->usePath()->add('swiper-js', 'plugins/swiper/swiper-bundle.min.js');
             $theme->asset()->container('footer')->usePath()->add('wow-js', 'plugins/wow/wow.js');
             $theme->asset()->container('footer')->usePath()->add('select2-js', 'plugins/select2/select2.min.js');
-            $theme->asset()->container('footer')->usePath()->add('scrollup-js', 'js/scrollup.js');
             $theme->asset()->container('footer')->usePath()->add('dark-js', 'js/dark.js');
             $theme->asset()->container('footer')->usePath()->add('perfect-scrollbar-js', 'plugins/perfect-scrollbar/perfect-scrollbar.min.js');
             $theme->asset()->container('footer')->usePath()->add('tobii-js', 'plugins/tobii/js/tobii.min.js');
