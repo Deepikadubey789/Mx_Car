@@ -31,7 +31,8 @@
             </a>
         </h3>
 
-        <footer class="blog-card-modern__footer mt-auto">
+        {{-- Use div, not <footer>: global theme `footer { background… !important }` targets all footer elements --}}
+        <div class="blog-card-modern__footer mt-auto">
             @if ($author)
                 <div class="blog-card-modern__author">
                     {{ RvMedia::image($author->avatar_url, $author->name, 'thumb', attributes: ['class' => 'blog-card-modern__avatar rounded-circle', 'width' => 36, 'height' => 36]) }}
@@ -42,6 +43,6 @@
             <a href="{{ $post->url }}" class="blog-card-modern__read-more @unless($author) blog-card-modern__read-more--solo @endunless">
                 {{ __('Keep Reading') }}
             </a>
-        </footer>
+        </div>
     </div>
 </article>
