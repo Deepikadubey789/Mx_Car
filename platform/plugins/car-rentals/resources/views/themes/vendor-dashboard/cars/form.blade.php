@@ -7,14 +7,19 @@
 @section('content')
     @parent
 
+    @php
+        $model = $form->getModel();
+        $isCarForm = $model instanceof \Botble\CarRentals\Models\Car;
+    @endphp
+
     {{-- Demand Pricing Recommendations Section --}}
-    @if ($form->getModel()?->id)
+    @if ($isCarForm && $model?->id)
         <div id="demand-pricing-card">
             <hr class="my-4" />
             <div class="row mb-4">
                 <div class="col-12">
                     @include('plugins/car-rentals::themes.vendor-dashboard.partials.car-recommendations-section', [
-                        'model' => $form->getModel(),
+                        'model' => $model,
                         'carRecommendations' => $carRecommendations ?? [],
                         'carRecommendationCount' => $carRecommendationCount ?? 0,
                     ])
@@ -25,7 +30,7 @@
 
     {{-- NEW: Delivery Settings Section --}}
     @php
-        $car = $form->getModel();
+        $car = $isCarForm ? $model : null;
     @endphp
     
     @if ($car && $car->id)

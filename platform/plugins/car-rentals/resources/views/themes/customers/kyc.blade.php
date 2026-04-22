@@ -75,10 +75,6 @@
         }
     </style>
 
-    <div class="breadcrumb">
-        Home &rsaquo; Account &rsaquo; <span>KYC Verification</span>
-    </div>
-
     <div class="content">
         @if(!empty($returnedFromStripeIdentity))
             <div class="alert alert-info mb-3" role="status">

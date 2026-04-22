@@ -24,15 +24,6 @@
 @endphp
 
 <div class="pricing-policy-wrapper">
-    <!-- Quick Links -->
-    <div class="row mb-3">
-        <div class="col-12">
-            <a href="{{ route('car-rentals.auto-pricing.metrics') }}" class="btn btn-sm btn-info" target="_blank">
-                <i class="ti ti-chart-line me-1"></i> View Auto-Pricing Metrics
-            </a>
-        </div>
-    </div>
-
     <div class="row g-3">
         <div class="col-12">
             <p class="text-muted mb-0">

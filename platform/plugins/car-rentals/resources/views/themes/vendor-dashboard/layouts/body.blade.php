@@ -2,6 +2,92 @@
     $customer = auth('customer')->user();
 @endphp
 
+<style>
+    .ps-sidebar .ps-sidebar__top {
+        padding-right: 24px;
+        margin-bottom: 36px;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-head {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 14px;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-head .ps-block__right {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-head .ps-block__right p {
+        font-size: 32px;
+        line-height: 1.2;
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-meta-card {
+        border: 1px solid #d7dce3;
+        border-radius: 12px;
+        background: #f8fafc;
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 18px;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-meta-card p {
+        margin: 0;
+        font-size: 16px;
+        line-height: 1.25;
+        color: #0f172a;
+        font-weight: 600;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-meta-card small {
+        display: block;
+        margin-top: 2px;
+        font-size: 13px;
+        color: #64748b;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-meta-card .icon {
+        width: 14px;
+        height: 14px;
+        color: #94a3b8;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-dropdown-menu {
+        min-width: 100%;
+        border-radius: 12px;
+        border: 1px solid #d7dce3;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        padding: 6px 0;
+        margin-top: 6px !important;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-dropdown-menu .dropdown-item {
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+    }
+
+    .ps-sidebar .ps-sidebar__top .vendor-profile-dropdown-menu .dropdown-item.text-danger {
+        color: #dc2626 !important;
+    }
+</style>
+
 <header class="header--mobile">
     <div class="header__left">
         <button class="ps-drawer-toggle">
@@ -44,7 +130,7 @@
     <div class="ps-main__sidebar">
         <div class="ps-sidebar">
             <div class="ps-sidebar__top">
-                <div class="ps-block--user-wellcome">
+                <div class="ps-block--user-wellcome vendor-profile-head">
                     <div class="ps-block__left">
                         <img
                             src="{{ $customer->avatar_url }}"
@@ -53,12 +139,24 @@
                         />
                     </div>
                     <div class="ps-block__right">
-                        <p>{{ __('Hello') }}, {{ $customer->name }} {!! $customer->badge !!}</p>
-                        <small>{{ __('Joined on :date', ['date' => $customer->created_at->translatedFormat('M d, Y')]) }}</small>
+                        <p>{{ $customer->name }}</p>
                     </div>
-                    <div class="ps-block__action">
-                        <a href="{{ route('customer.logout') }}">
+                </div>
+                <div class="dropdown">
+                    <button type="button" class="vendor-profile-meta-card dropdown-toggle" id="vendorProfileMenu" data-bs-toggle="dropdown" aria-expanded="false">
+                        <div>
+                            <p>{{ __('Hello') }}, {{ $customer->name }} {!! $customer->badge !!}</p>
+                            <small>{{ __('Joined on :date', ['date' => $customer->created_at->translatedFormat('M d, Y')]) }}</small>
+                        </div>
+                    </button>
+                    <div class="dropdown-menu vendor-profile-dropdown-menu" aria-labelledby="vendorProfileMenu">
+                        <a href="{{ route('car-rentals.vendor.settings.index') }}" class="dropdown-item">
+                            <x-core::icon name="ti ti-settings" />
+                            <span>{{ __('Settings') }}</span>
+                        </a>
+                        <a href="{{ route('customer.logout') }}" class="dropdown-item text-danger">
                             <x-core::icon name="ti ti-logout" />
+                            <span>{{ __('Logout') }}</span>
                         </a>
                     </div>
                 </div>

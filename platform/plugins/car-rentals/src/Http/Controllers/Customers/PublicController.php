@@ -21,6 +21,7 @@ use Botble\CarRentals\Models\CustomerKycVerification;
 use Botble\CarRentals\Facades\CarRentalsHelper;
 use Botble\CarRentals\Models\Invoice;
 use Botble\CarRentals\Services\Kyc\KycVerificationService;
+use Botble\CarRentals\Services\TripModificationService;
 use Botble\Media\Facades\RvMedia;
 use Botble\Media\Services\ThumbnailService;
 use Botble\SeoHelper\Facades\SeoHelper;
@@ -113,6 +114,7 @@ class PublicController extends BaseController
         $useStripeIdentityTitle = $stripeIdentityModal && (string) $customer->kyc_status !== 'verified';
 
         SeoHelper::setTitle($useStripeIdentityTitle ? __('Verify your identity') : __('KYC Verification'));
+        Theme::set('breadcrumbEnabled', false);
 
         Theme::breadcrumb()
             ->add(__('KYC Verification'), route('customer.kyc'));
@@ -469,6 +471,50 @@ class PublicController extends BaseController
         return InvoiceHelper::downloadInvoice($invoice);
     }
 
+    public function modifyBooking(Booking $booking, string $action, Request $request)
+    {
+        abort_unless($this->canViewBooking($booking), 404);
+
+        $rules = [
+            'reason' => ['nullable', 'string', 'max:500'],
+        ];
+
+        if (in_array($action, ['extend', 'shorten'], true)) {
+            $rules['new_end_date'] = ['required', 'date'];
+        }
+
+        if ($action === 'extend') {
+            $rules['new_end_date'][] = 'after:today';
+        }
+
+        $validated = $request->validate($rules);
+
+        /** @var TripModificationService $service */
+        $service = app(TripModificationService::class);
+
+        $result = match ($action) {
+            'cancel' => $service->cancelTrip($booking, $validated['reason'] ?? '', 'customer'),
+            'extend' => $service->extendTrip($booking, (string) ($validated['new_end_date'] ?? ''), $validated['reason'] ?? ''),
+            'shorten' => $service->shortenTrip($booking, (string) ($validated['new_end_date'] ?? ''), $validated['reason'] ?? ''),
+            'early-return' => $service->earlyReturn($booking, $validated['reason'] ?? ''),
+            'late-return' => $service->lateReturn($booking, $validated['reason'] ?? ''),
+            default => ['success' => false, 'message' => __('Unsupported action.')],
+        };
+
+        if (! ($result['success'] ?? false)) {
+            return response()->json([
+                'error' => true,
+                'message' => $result['message'] ?? __('Unable to process booking modification.'),
+            ], 422);
+        }
+
+        return response()->json([
+            'error' => false,
+            'message' => $result['message'] ?? __('Booking updated successfully.'),
+            'data' => Arr::except($result, ['success', 'message']),
+        ]);
+    }
+
     public function printBooking(Booking $booking)
     {
         abort_unless($this->canViewBooking($booking), 404);
@@ -703,6 +749,7 @@ class PublicController extends BaseController
         }
 
         SeoHelper::setTitle(__('Upgrade to Vendor'));
+        Theme::set('breadcrumbEnabled', false);
 
         Theme::breadcrumb()
             ->add(__('Upgrade to Vendor'), route('customer.upgrade-to-vendor'));

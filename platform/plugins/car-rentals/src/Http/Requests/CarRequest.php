@@ -19,6 +19,8 @@ class CarRequest extends Request
         $this->merge([
             'rental_rate' => $this->formatPriceValue($this->input('rental_rate')),
             'sale_price' => $this->formatPriceValue($this->input('sale_price')),
+            'fuel_rate_per_liter' => $this->formatPriceValue($this->input('fuel_rate_per_liter')),
+            'late_fee_per_hour' => $this->formatPriceValue($this->input('late_fee_per_hour')),
             'is_for_sale' => $this->input('car_purpose') === 'sale',
         ]);
 

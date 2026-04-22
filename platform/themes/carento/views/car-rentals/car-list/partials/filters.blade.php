@@ -34,7 +34,7 @@
     
     This fixes the "grows one card per filter click" bug permanently.
 --}}
-<div class="filter-section filter-section--desktop"
+<div class=" filter-section--desktop"
      style="display:none!important;visibility:hidden!important;position:absolute!important;pointer-events:none!important;height:0!important;overflow:hidden!important"
      aria-hidden="true"
      data-mxcar-ajax-extract="1">
@@ -50,7 +50,7 @@
 <div class="content-left order-lg-first d-none d-lg-block car-filters-modern">
     <div class="car-filters-shell" style="background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important;">
         
-        <div class="filter-section filter-section--desktop">
+        <div class=" filter-section--desktop">
             @include(Theme::getThemeNamespace('views.car-rentals.car-list.partials.filter-form'), [
                 'layout'       => $layout,
                 'col'          => $col,
@@ -79,7 +79,7 @@
                 <p class="car-filters-shell__text mb-0">{{ __('Apply and preview results without leaving the page.') }}</p>
             </div>
 
-            <div class="filter-section filter-section--desktop filter-section--mobile">
+            <div class=" filter-section--desktop filter-section--mobile">
                 @include(Theme::getThemeNamespace('views.car-rentals.car-list.partials.filter-form'), [
                     'layout' => $layout,
                     'col' => $col,

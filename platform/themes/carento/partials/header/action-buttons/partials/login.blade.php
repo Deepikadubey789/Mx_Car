@@ -68,7 +68,7 @@
         </div>
     @endif
 
-    @if (CarRentalsHelper::isMultiVendorEnabled())
+    @if (CarRentalsHelper::isMultiVendorEnabled() && $auth->check() && $auth->user()?->is_vendor)
         <a class="btn btn-signin bg-white text-dark" href="{{ auth('customer')->check() ? route('car-rentals.vendor.cars.create') : route('customer.login') }}">{{ __('Add Listing') }}</a>
     @endif
 @endif

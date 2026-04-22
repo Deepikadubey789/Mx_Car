@@ -4,6 +4,91 @@
     $displayBookingStatus ??= true;
 @endphp
 
+<style>
+    .booking-action-btn {
+        --bs-btn-color: #fff;
+        --bs-btn-hover-color: #fff;
+        --bs-btn-active-color: #fff;
+        --bs-btn-disabled-color: #fff;
+        color: #fff !important;
+    }
+    .booking-action-btn,
+    a.booking-action-btn,
+    button.booking-action-btn,
+    .booking-action-btn.btn,
+    .booking-action-btn:hover,
+    .booking-action-btn:focus,
+    .booking-action-btn:active,
+    .booking-action-btn span {
+        color: #fff !important;
+    }
+    .booking-action-btn * {
+        color: #fff !important;
+    }
+
+    .booking-action-btn .icon,
+    .booking-action-btn i {
+        color: #fff !important;
+    }
+
+    .booking-action-btn svg {
+        width: 18px;
+        height: 18px;
+        color: #fff !important;
+        stroke: currentColor !important;
+        fill: none !important;
+    }
+
+    .booking-action-btn svg * {
+        stroke: currentColor !important;
+        fill: none !important;
+    }
+
+    .booking-action-btn--view {
+        background-color: #c2410c !important;
+        border-color: #c2410c !important;
+    }
+
+    .booking-action-btn--download {
+        background-color: #ea580c !important;
+        border-color: #ea580c !important;
+    }
+
+    .booking-action-btn--shorten {
+        background-color: #d97706 !important;
+        border-color: #d97706 !important;
+    }
+
+    .booking-action-btn--cancel {
+        background-color: #dc2626 !important;
+        border-color: #dc2626 !important;
+    }
+
+    .booking-action-btn--late {
+        background-color: #7c3aed !important;
+        border-color: #7c3aed !important;
+    }
+
+    .booking-status-chip {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 6px;
+    }
+
+    .booking-status-chip .badge,
+    .booking-status-chip .label,
+    .booking-status-chip .status-label,
+    .booking-status-chip [class*="status"] {
+        padding: 4px 10px !important;
+        border-radius: 999px !important;
+        line-height: 1.2 !important;
+        font-size: 12px !important;
+        font-weight: 600 !important;
+        display: inline-flex;
+        align-items: center;
+    }
+</style>
+
 @if ($booking)
     <div class="row">
         <div class="col-lg-4">
@@ -205,7 +290,9 @@
                 @endphp
                 <div class="col-lg-4">
                     <strong>{{ __('Deposit hold status') }}:</strong>
-                    <span class="badge bg-{{ $badgeColor }} ms-1">{{ $label }}</span>
+                    <span class="booking-status-chip">
+                        <span class="badge bg-{{ $badgeColor }}">{{ $label }}</span>
+                    </span>
                 </div>
             @endif
 
@@ -261,7 +348,8 @@
             </div>
 
             <div class="col-lg-4">
-                <strong>{{ __('Payment status') }}:</strong> {!! $booking->payment->status->toHtml() !!}
+                <strong>{{ __('Payment status') }}:</strong>
+                <span class="booking-status-chip">{!! $booking->payment->status->toHtml() !!}</span>
             </div>
 
             @if ($booking->payment->payment_channel == \Botble\Payment\Enums\PaymentMethodEnum::BANK_TRANSFER && $booking->payment->status == \Botble\Payment\Enums\PaymentStatusEnum::PENDING)
@@ -275,7 +363,7 @@
         @if ($displayBookingStatus)
             <div class="col-lg-4">
                 <strong>{{ __('Booking status') }}:</strong>
-                {!! BaseHelper::clean($booking->status->toHtml()) !!}
+                <span class="booking-status-chip">{!! BaseHelper::clean($booking->status->toHtml()) !!}</span>
             </div>
         @endif
     </div>
@@ -303,10 +391,10 @@
 
     <div class="d-flex flex-wrap gap-2 mt-4">
         @if ((auth()->check() || $booking->customer_id) && ($invoiceId = $booking->invoice->id) && $route)
-            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])" target="_blank" icon="ti ti-printer" :class="$buttonClass ?? ''">
+            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'print'])" target="_blank" icon="ti ti-printer" :class="($buttonClass ?? '') . ' booking-action-btn booking-action-btn--view'">
                 {{ __('View Invoice') }}
             </x-core::button>
-            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])" target="_blank" icon="ti ti-download" :class="$buttonClass ?? ''">
+            <x-core::button tag="a" :href="route($route, ['invoice' => $invoiceId, 'type' => 'download'])" target="_blank" icon="ti ti-download" :class="($buttonClass ?? '') . ' booking-action-btn booking-action-btn--download'">
                 {{ __('Download Invoice') }}
             </x-core::button>
         @endif
@@ -327,7 +415,7 @@
 
             {{-- Shorten Trip Button --}}
             @if(!$tripEnded)
-                <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#shortenTripModal" icon="ti ti-calendar-minus" color="warning">
+                <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#shortenTripModal" icon="ti ti-calendar-minus" :class="($buttonClass ?? '') . ' booking-action-btn booking-action-btn--shorten'">
                     {{ __('Shorten Trip') }}
                 </x-core::button>
             @endif
@@ -340,13 +428,13 @@
             @endif
 
             {{-- Cancel Trip Button --}}
-            <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#cancelTripModal" icon="ti ti-x" color="danger">
+            <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#cancelTripModal" icon="ti ti-x" :class="($buttonClass ?? '') . ' booking-action-btn booking-action-btn--cancel'">
                 {{ __('Cancel Trip') }}
             </x-core::button>
 
             {{-- Late Return Button --}}
             @if($tripEnded && !$booking->late_fee_charge && $canModify)
-                <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#lateReturnModal" icon="ti ti-clock-exclamation" color="danger">
+                <x-core::button type="button" data-bs-toggle="modal" data-bs-target="#lateReturnModal" icon="ti ti-clock-exclamation" :class="($buttonClass ?? '') . ' booking-action-btn booking-action-btn--late'">
                     {{ __('Late Return') }}
                 </x-core::button>
             @endif
@@ -950,12 +1038,13 @@
             btn.disabled = true;
             btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Processing...';
 
-            fetch(`/api/v1/car-rentals/bookings/${bookingId}/${type}`, {
+            fetch(`/bookings/${bookingId}/${type}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
                     'Accept': 'application/json',
+                    'X-CSRF-TOKEN': token || '',
                 },
                 body: JSON.stringify(body)
             })

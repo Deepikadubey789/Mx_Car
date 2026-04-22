@@ -11,7 +11,7 @@
                         $auth = auth('customer');
                     @endphp
 
-                    @if (CarRentalsHelper::isMultiVendorEnabled())
+                    @if (CarRentalsHelper::isMultiVendorEnabled() && $auth->check() && $auth->user()?->is_vendor)
                         <div class="mobile-add-listing-wrapper">
                             <a href="{{ $auth->check() ? route('car-rentals.vendor.cars.create') : route('customer.login') }}" class="mobile-add-listing-btn">
                                 <div class="add-listing-icon-wrapper">
