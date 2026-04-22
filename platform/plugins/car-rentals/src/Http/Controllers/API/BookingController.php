@@ -653,7 +653,7 @@ class BookingController extends BaseApiController
                   ->where(function ($q) use ($id) {
                       $q->where('id', $id)
                         ->orWhere('transaction_id', $id)
-                        ->orWhere('code', $id);
+
                   });
         } else {
             $request->validate(['email' => ['required', 'email']]);
@@ -661,7 +661,7 @@ class BookingController extends BaseApiController
                   ->where(function ($q) use ($id) {
                       $q->where('id', $id)
                         ->orWhere('transaction_id', $id)
-                        ->orWhere('code', $id);
+
                   });
         }
 
@@ -738,7 +738,7 @@ class BookingController extends BaseApiController
         ]);
 
         $car = \Botble\CarRentals\Models\Car::query()->with('deliveryLocations')->findOrFail($request->input('car_id'));
-        
+
         $startDate = $request->input('rental_start_date') ? \Carbon\Carbon::parse($request->input('rental_start_date')) : null;
         $endDate = $request->input('rental_end_date') ? \Carbon\Carbon::parse($request->input('rental_end_date')) : null;
         $guestProtectionPlanId = $request->input('guest_protection_plan_id') ? (int) $request->input('guest_protection_plan_id') : null;
@@ -752,7 +752,7 @@ class BookingController extends BaseApiController
             null,
             \Illuminate\Support\Facades\Auth::guard('sanctum')->user()
         );
-        
+
         $deliveryFee = 0.00;
         $deliveryLocationId = $request->input('delivery_location_id');
         $customAddress = $request->input('custom_delivery_address');
@@ -761,12 +761,12 @@ class BookingController extends BaseApiController
             $requestedZone = \Botble\CarRentals\Models\DeliveryLocation::find($deliveryLocationId);
 
             if ($requestedZone && $car->deliveryLocations->contains('id', $requestedZone->id)) {
-                
+
                 // 1. Verify custom distance
                 if (stripos($requestedZone->name, 'custom') !== false || stripos($requestedZone->name, 'address') !== false) {
                     if (!empty($customAddress)) {
                         $distanceCheck = $this->validateCustomDeliveryDistance($car, $customAddress);
-                        
+
                         if (!$distanceCheck['valid']) {
                             return response()->json([
                                 'error' => true,
@@ -779,7 +779,7 @@ class BookingController extends BaseApiController
                 // 2. Calculate Fee & Check Threshold
                 $deliveryFee = (float) $requestedZone->fee_amount;
                 $rentalDays = (int) $quoteData['rental_days'];
-                
+
                 if ($car->free_delivery_days_threshold && $rentalDays >= $car->free_delivery_days_threshold) {
                     $deliveryFee = 0.00;
                 }
@@ -874,7 +874,7 @@ class BookingController extends BaseApiController
             $guestLng = $data[0]['lon'];
 
             $earthRadius = 3959; 
-            
+
             $latFrom = deg2rad((float)$carLat);
             $lonFrom = deg2rad((float)$carLng);
             $latTo = deg2rad((float)$guestLat);
@@ -885,9 +885,9 @@ class BookingController extends BaseApiController
 
             $angle = 2 * asin(sqrt(pow(sin($latDelta / 2), 2) +
               cos($latFrom) * cos($latTo) * pow(sin($lonDelta / 2), 2)));
-              
+
             $distance = $angle * $earthRadius;
-            
+
             $maxDistance = $car->max_delivery_distance_miles ?? 10;
 
             if ($distance > $maxDistance) {

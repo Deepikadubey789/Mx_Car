@@ -8,6 +8,10 @@
     $isSimple = Theme::get('breadcrumb_simple') ?: theme_option('breadcrumb_simple');
     $breadcrumbDescription = Theme::get('breadcrumb_description');
     $breadcrumbEnabled = Theme::get('breadcrumbEnabled', true);
+    $currentSlug = request()->segment(count(request()->segments()));
+if (in_array($currentSlug, ['login', 'register', 'forgot-password'])) {
+    $breadcrumbEnabled = false;
+}
     $hideBreadcrumbTrail = true;
 @endphp
 
