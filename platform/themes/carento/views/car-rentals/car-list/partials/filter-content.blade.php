@@ -3,138 +3,201 @@
 @endphp
 
 <style>
-    /* =========================================
-       1. KILL THE OUTER SIDEBAR BOX
-       ========================================= */
     .car-filters-modern,
     .car-filters-shell,
     .sidebar-filter-mobile__content,
     .filter-section--desktop {
         background: transparent !important;
-        background-color: transparent !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
     }
 
-    /* =========================================
-       2. FORCE SEPARATE CARDS
-       ========================================= */
+    /* Separate light-gray blocks (reference UI) */
     .filter-widget {
-        background-color: #ffffff !important;
-        border: 1px solid #e5e7eb !important;
-        border-radius: 16px !important;
-        padding: 1.5rem !important;
-        margin-bottom: 1.5rem !important;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03) !important;
-    }
-    
-    /* Remove any lingering bottom borders between widgets */
-    .filter-widget::after, 
-    .filter-widget::before {
-        display: none !important;
-    }
-
-    /* Dark Mode Support for Cards */
-    [data-bs-theme="dark"] .filter-widget {
-        background-color: #1b2736 !important;
-        border-color: #2d3d52 !important;
+        background-color: #f4f5f7 !important;
+        border: 1px solid #e6e8ec !important;
+        border-radius: 18px !important;
+        padding: 18px 18px 16px !important;
+        margin-bottom: 18px !important;
         box-shadow: none !important;
     }
 
-    .filter-title {
-        font-weight: 700;
-        font-size: 0.95rem;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-        color: #4b5563;
-        margin: 0;
-    }
-    [data-bs-theme="dark"] .filter-title {
-        color: #e6eef8;
+    .filter-widget::before,
+    .filter-widget::after {
+        display: none !important;
     }
 
-    /* Rounded Input Groups */
+    .filter-widget-header {
+        border-bottom: 1px solid #d7dce3;
+        padding-bottom: 10px;
+        margin-bottom: 14px !important;
+    }
+
+    .filter-title {
+        font-weight: 800;
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #0f172a;
+        margin: 0;
+    }
+
     .modern-search-group {
-        border: 1px solid #e5e7eb;
-        border-radius: 50rem !important; /* Full pill shape */
-        overflow: hidden;
-        background: #fff;
-        transition: all 0.2s ease;
+        border: 1px solid #d5dbe3 !important;
+        border-radius: 12px !important;
+        background: #ffffff;
+        min-height: 46px;
+        padding: 0 8px 0 10px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
     }
-    [data-bs-theme="dark"] .modern-search-group {
-        background: #111827;
-        border-color: #374151;
-    }
+
     .modern-search-group:focus-within {
-        border-color: var(--primary-color, #0d6efd);
-        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        border-color: var(--primary-color, #0d6efd) !important;
+        box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.12);
     }
+
+    .modern-search-group__icon {
+        display: inline-flex;
+        color: #9aa5b5;
+        font-size: 18px;
+        margin-inline-end: 6px;
+    }
+
     .modern-search-group input {
         border: none !important;
         box-shadow: none !important;
         background: transparent !important;
-        font-size: 0.95rem;
+        font-size: 14px;
+        color: #0f172a;
+        padding: 10px 6px !important;
     }
-    [data-bs-theme="dark"] .modern-search-group input {
-        color: #fff;
+
+    .modern-search-group input::placeholder {
+        color: #94a3b8;
     }
-    
-    /* Smaller, Primary Color Rounded Button */
+
     .modern-search-btn {
-        border-radius: 50rem !important;
-        margin: 4px !important;
-        padding: 0.35rem 0.85rem !important;
-        background-color: var(--primary-color, #0d6efd) !important;
-        border-color: var(--primary-color, #0d6efd) !important;
-        color: #fff !important;
-        transition: transform 0.1s ease;
+        border: 0 !important;
+        background: transparent !important;
+        color: #94a3b8 !important;
+        padding: 6px !important;
+        margin: 0 !important;
+        border-radius: 8px !important;
     }
-    .modern-search-btn:active {
-        transform: scale(0.95);
+
+    .modern-search-btn:hover {
+        color: var(--primary-color, #0d6efd) !important;
+        background: rgba(13, 110, 253, 0.08) !important;
     }
-    
-    /* Soft Checkbox Options */
-    .custom-filter-label {
-        background: #f8f9fa;
-        border: 1px solid transparent !important;
-        transition: all 0.2s;
+
+    .form-select.submit-form-filter {
         border-radius: 12px !important;
-        margin-bottom: 0.5rem;
+        border: 1px solid #d5dbe3 !important;
+        background-color: #ffffff !important;
+        color: #0f172a !important;
+        min-height: 46px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        box-shadow: none !important;
     }
-    [data-bs-theme="dark"] .custom-filter-label {
-        background: #111827;
+
+    .custom-filter-label {
+        background: #ffffff !important;
+        border: 1px solid #d5dbe3 !important;
+        border-radius: 12px !important;
+        margin-bottom: 10px;
+        min-height: 44px;
     }
+
     .custom-filter-label:hover {
-        background: #fff;
-        border-color: var(--primary-color, #0d6efd) !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        border-color: #c5ccd6 !important;
+        box-shadow: none !important;
     }
-    [data-bs-theme="dark"] .custom-filter-label:hover {
-        background: #1f2937;
+
+    .custom-filter-label .filter-option-text,
+    .custom-filter-label .fw-medium {
+        color: #334155 !important;
+        font-size: 14px;
+        font-weight: 600;
     }
+
     .custom-filter-check input:checked + label {
-        background: #fff;
         border-color: var(--primary-color, #0d6efd) !important;
-        box-shadow: 0 0 0 1px var(--primary-color, #0d6efd) !important;
+        background: #f4f7ff !important;
+        box-shadow: none !important;
     }
-    [data-bs-theme="dark"] .custom-filter-check input:checked + label {
-        background: #1f2937;
+
+    .custom-filter-check input:checked + label .filter-option-text {
+        color: var(--primary-color, #0d6efd) !important;
     }
+
     .custom-filter-check input:checked + label .filter-option-count {
-        background: var(--primary-color, #0d6efd) !important;
-        color: #fff !important;
-        border-color: var(--primary-color, #0d6efd) !important;
+        background: #eef2ff !important;
+        color: var(--primary-color, #0d6efd) !important;
+        border-color: rgba(13, 110, 253, 0.35) !important;
     }
-    
-    /* Enforce Primary Color on Sliders */
-    .ui-slider-range, .noUi-connect {
+
+    .filter-option-count {
+        background: #f8fafc !important;
+        border: 1px solid #d5dbe3 !important;
+        color: #64748b !important;
+    }
+
+    .price-slider-wrapper .d-flex.justify-content-between,
+    .mileage-slider-wrapper .d-flex.justify-content-between {
+        background: #ffffff !important;
+        border: 1px solid #d5dbe3 !important;
+        border-radius: 12px !important;
+    }
+
+    .btn.filter-toggle-btn {
+        border-radius: 12px !important;
+        border: 1px solid #d5dbe3 !important;
+        background: #ffffff !important;
+        color: #475569 !important;
+    }
+
+    .ui-slider-range,
+    .noUi-connect {
         background: var(--primary-color, #0d6efd) !important;
     }
-    .ui-slider-handle, .noUi-handle {
+
+    .ui-slider-handle,
+    .noUi-handle {
         border: 2px solid var(--primary-color, #0d6efd) !important;
         background: #fff !important;
         border-radius: 50% !important;
+    }
+
+    [data-bs-theme="dark"] .filter-widget {
+        background-color: #141c27 !important;
+        border-color: #273244 !important;
+    }
+
+    [data-bs-theme="dark"] .filter-widget-header {
+        border-bottom-color: #2f3b4f;
+    }
+
+    [data-bs-theme="dark"] .filter-title {
+        color: #f1f5f9;
+    }
+
+    [data-bs-theme="dark"] .modern-search-group,
+    [data-bs-theme="dark"] .form-select.submit-form-filter,
+    [data-bs-theme="dark"] .custom-filter-label,
+    [data-bs-theme="dark"] .price-slider-wrapper .d-flex.justify-content-between,
+    [data-bs-theme="dark"] .mileage-slider-wrapper .d-flex.justify-content-between,
+    [data-bs-theme="dark"] .btn.filter-toggle-btn {
+        background: #0f172a !important;
+        border-color: #334155 !important;
+    }
+
+    [data-bs-theme="dark"] .modern-search-group input,
+    [data-bs-theme="dark"] .form-select.submit-form-filter,
+    [data-bs-theme="dark"] .custom-filter-label .filter-option-text,
+    [data-bs-theme="dark"] .custom-filter-label .fw-medium {
+        color: #e2e8f0 !important;
     }
 </style>
 
@@ -145,18 +208,18 @@
         $selectedCityId = BaseHelper::stringify(request()->input('city_id', ''));
     @endphp
     <div class="filter-widget" style="overflow: visible !important;">
-        <div class="filter-widget-header mb-3">
-            <h6 class="filter-title d-flex align-items-center gap-2">
-                <x-core::icon name="ti ti-map-pin" class="text-danger" /> {{ __('Location') }}
-            </h6>
+        <div class="filter-widget-header mb-0">
+            <h6 class="filter-title">{{ __('Location') }}</h6>
         </div>
         <div class="filter-widget-content">
             <div class="input-group modern-search-group position-relative d-flex align-items-center">
-                
+                <span class="modern-search-group__icon" aria-hidden="true">
+                    <x-core::icon name="ti ti-map-pin" />
+                </span>
                 <input
                     type="text"
-                    class="form-control custom-sidebar-loc-input px-2"
-                    placeholder="{{ __('Search location...') }}"
+                    class="form-control custom-sidebar-loc-input px-0"
+                    placeholder="{{ __('Search for location...') }}"
                     value="{{ $selectedLocation }}"
                     name="location"
                     form="{{ $formId }}"
@@ -174,17 +237,18 @@
 
 {{-- Keyword / Car Name Search Filter --}}
 <div class="filter-widget">
-    <div class="filter-widget-header mb-3">
-        <h6 class="filter-title d-flex align-items-center gap-2">
-            <x-core::icon name="ti ti-car" class="text-danger" /> {{ __('What') }}
-        </h6>
+    <div class="filter-widget-header mb-0">
+        <h6 class="filter-title">{{ __('What') }}</h6>
     </div>
     <div class="filter-widget-content">
         <div class="input-group modern-search-group d-flex align-items-center">
+            <span class="modern-search-group__icon" aria-hidden="true">
+                <x-core::icon name="ti ti-car" />
+            </span>
             <input 
                 type="text" 
                 name="keyword" 
-                class="form-control ps-4 py-2" 
+                class="form-control px-0 py-2" 
                 placeholder="{{ __('Car name or brand') }}" 
                 value="{{ BaseHelper::clean(request()->input('keyword')) }}"
                 form="{{ $formId }}"
@@ -199,13 +263,11 @@
 {{-- Vehicle Condition Filter --}}
 @if(CarRentalsHelper::isEnabledFilterCarsBy('vehicle_condition'))
     <div class="filter-widget">
-        <div class="filter-widget-header mb-3">
-            <h6 class="filter-title d-flex align-items-center gap-2">
-                <x-core::icon name="ti ti-sparkles" class="text-danger" /> {{ __('Vehicle Condition') }}
-            </h6>
+        <div class="filter-widget-header mb-0">
+            <h6 class="filter-title">{{ __('Vehicle Condition') }}</h6>
         </div>
         <div class="filter-widget-content">
-            <select name="adv_type" form="{{ $formId }}" class="form-select submit-form-filter border-0 bg-light rounded-pill px-3 fw-medium text-dark" style="box-shadow: inset 0 0 0 1px #e5e7eb; height: 40px !important; min-height: 40px !important; padding-top: 0 !important; padding-bottom: 0 !important; font-size: 0.85rem !important; line-height: 34px;">
+            <select name="adv_type" form="{{ $formId }}" class="form-select submit-form-filter w-100">
                 @php
                     $advType = request()->input('adv_type', 'all');
                     $advType = is_string($advType) ? $advType : 'all';
@@ -221,10 +283,8 @@
 {{-- Rental Type Filter --}}
 @if(!empty($rentalTypes) && CarRentalsHelper::isEnabledFilterCarsBy('rental_types') && CarRentalsHelper::isRentalBookingEnabled())
     <div class="filter-widget">
-        <div class="filter-widget-header mb-3">
-            <h6 class="filter-title d-flex align-items-center gap-2">
-                <x-core::icon name="ti ti-clock" class="text-danger" /> {{ __('Rental Period') }}
-            </h6>
+        <div class="filter-widget-header mb-0">
+            <h6 class="filter-title">{{ __('Rental Period') }}</h6>
         </div>
         <div class="filter-widget-content">
             <div class="filter-options-list">
@@ -246,10 +306,8 @@
 {{-- Price Filter --}}
 @if($carMaxRentalRate && CarRentalsHelper::isEnabledFilterCarsBy('prices'))
     <div class="filter-widget">
-        <div class="filter-widget-header mb-3">
-            <h6 class="filter-title d-flex align-items-center gap-2">
-                <x-core::icon name="ti ti-currency-dollar" class="text-danger" /> {{ __('Price Range') }}
-            </h6>
+        <div class="filter-widget-header mb-0">
+            <h6 class="filter-title">{{ __('Price Range') }}</h6>
         </div>
         <div class="filter-widget-content px-2">
             <div class="price-slider-wrapper">
@@ -274,10 +332,8 @@
 {{-- Mileage Range Filter --}}
 @if(isset($carMaxMileage) && $carMaxMileage > 0 && CarRentalsHelper::isEnabledFilterCarsBy('mileage'))
     <div class="filter-widget">
-        <div class="filter-widget-header mb-3">
-            <h6 class="filter-title d-flex align-items-center gap-2">
-                <x-core::icon name="ti ti-route" class="text-danger" /> {{ __('Mileage') }}
-            </h6>
+        <div class="filter-widget-header mb-0">
+            <h6 class="filter-title">{{ __('Mileage') }}</h6>
         </div>
         <div class="filter-widget-content px-2">
             <div class="mileage-slider-wrapper">
@@ -300,10 +356,8 @@
 {{-- Car Make/Brand Filter --}}
 @if(isset($carMakes) && $carMakes->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('makes'))
     <div class="filter-widget">
-        <div class="filter-widget-header mb-3">
-            <h6 class="filter-title d-flex align-items-center gap-2">
-                <x-core::icon name="ti ti-steering-wheel" class="text-danger" /> {{ __('Brand') }}
-            </h6>
+        <div class="filter-widget-header mb-0">
+            <h6 class="filter-title">{{ __('Brand') }}</h6>
         </div>
         <div class="filter-widget-content">
             <div class="filter-options-list">
@@ -346,10 +400,8 @@
 {{-- Review Score Filter --}}
 @if($carReviewScores->isNotEmpty() && CarRentalsHelper::isEnabledFilterCarsBy('review_scores'))
     <div class="filter-widget">
-        <div class="filter-widget-header mb-3">
-            <h6 class="filter-title d-flex align-items-center gap-2">
-                <x-core::icon name="ti ti-star-filled" class="text-danger" /> {{ __('Rating') }}
-            </h6>
+        <div class="filter-widget-header mb-0">
+            <h6 class="filter-title">{{ __('Rating') }}</h6>
         </div>
         <div class="filter-widget-content">
             <div class="filter-options-list">
@@ -373,10 +425,8 @@
 
 {{-- Host Badge Filter --}}
 <div class="filter-widget">
-    <div class="filter-widget-header mb-3">
-        <h6 class="filter-title d-flex align-items-center gap-2">
-            <x-core::icon name="ti ti-award" class="text-danger" /> {{ __('Host Quality') }}
-        </h6>
+    <div class="filter-widget-header mb-0">
+        <h6 class="filter-title">{{ __('Host Quality') }}</h6>
     </div>
     <div class="filter-widget-content">
         @php $selectedBadge = request()->input('host_badge', ''); @endphp

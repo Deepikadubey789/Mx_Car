@@ -207,13 +207,13 @@
             box-shadow: 0 4px 16px rgba(0,0,0,0.03) !important;
         }
 
-        /* Card 2 — Filter controls */
+        /* Filter controls wrapper (no parent card) */
         .filter-section.filter-section--desktop {
-            background-color: var(--bs-body-bg) !important;
-            border: 1px solid var(--bs-border-color) !important;
-            border-radius: 20px !important;
-            padding: 24px 28px !important;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.03) !important;
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            box-shadow: none !important;
         }
 
         .car-filters-shell__eyebrow {
@@ -233,53 +233,46 @@
             color: var(--bs-secondary-color) !important;
         }
 
-        /* Filter widgets inside Card 2 — AJAX-safe separator style */
-        /* NOTE: We do NOT give filter-widgets their own border/card because the AJAX handler
-           re-injects them directly into .filter-section, bypassing the shell flex wrapper.
-           Using simple dividers instead keeps appearance consistent on both initial load and AJAX. */
+        /* Filter widgets inside Card 2 — each filter is its own block card */
         .filter-section.filter-section--desktop .filter-widget {
-            background-color: transparent !important;
-            border: none !important;
-            border-radius: 0 !important;
-            border-bottom: 1px solid var(--bs-gray-200) !important;
-            padding: 16px 0 !important;
-            margin-bottom: 0 !important;
+            background-color: #f4f5f7 !important;
+            border: 1px solid #e6e8ec !important;
+            border-radius: 18px !important;
+            padding: 18px 18px 16px !important;
+            margin-bottom: 18px !important;
             box-shadow: none !important;
         }
 
-        .filter-section.filter-section--desktop .filter-widget:first-child {
-            padding-top: 8px !important;
-        }
-
-        .filter-section.filter-section--desktop .filter-widget:last-child {
-            border-bottom: none !important;
-            padding-bottom: 8px !important;
+        .filter-section.filter-section--desktop .filter-widget::before,
+        .filter-section.filter-section--desktop .filter-widget::after {
+            display: none !important;
         }
 
         .filter-section.filter-section--desktop .filter-widget-header {
-            border-bottom: none !important;
-            padding-bottom: 8px !important;
-            margin-bottom: 10px !important;
+            border-bottom: 1px solid #d7dce3 !important;
+            padding-bottom: 10px !important;
+            margin-bottom: 14px !important;
         }
 
         .filter-section.filter-section--desktop .filter-icon,
         .filter-section.filter-section--desktop .filter-widget-header .filter-icon {
-            color: var(--bs-body-color) !important;
+            display: none !important;
         }
 
         .filter-section.filter-section--desktop .filter-title {
             color: var(--bs-body-color) !important;
-            font-weight: 700 !important;
-            font-size: 0.8rem !important;
+            font-weight: 800 !important;
+            font-size: 0.75rem !important;
             text-transform: uppercase !important;
-            letter-spacing: 0.04em !important;
+            letter-spacing: 0.12em !important;
+            margin: 0 !important;
         }
 
         .filter-section.filter-section--desktop .form-control,
         .filter-section.filter-section--desktop .form-select {
-            background-color: var(--bs-gray-100) !important;
-            border-color: var(--bs-border-color) !important;
-            border-radius: 10px !important;
+            background-color: var(--bs-body-bg) !important;
+            border: 1px solid #d5dbe3 !important;
+            border-radius: 12px !important;
         }
 
         /* --- Car Cards --- */
