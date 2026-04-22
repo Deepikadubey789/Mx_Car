@@ -2,15 +2,13 @@
     $title = $shortcode->title;
     $subTitle = $shortcode->sub_title;
 @endphp
-<section {!! $shortcode->htmlAttributes() !!} class="shortcode-why-us section-box box-why-book-22 background-body">
+<section {!! $shortcode->htmlAttributes() !!} class="shortcode-why-us section-box background-body">
     <div class="container">
         <div style="
             background-color: #f8f9fa;
             border-radius: 24px;
             padding: 50px 60px;
-            max-width: 1200px;
             margin: 0 auto;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
         ">
             <div class="text-center wow fadeInUp">
                 @if($subTitle)

@@ -42,7 +42,12 @@
                 autocomplete="off"
                 class="chat-input"
             />
-            <button type="submit" class="chat-submit">Send</button>
+            <button type="submit" class="chat-submit">
+                <span>Send</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 12L20 4L14 20L11 13L4 12Z"></path>
+                </svg>
+            </button>
         </form>
     </div>
 </div>
@@ -252,7 +257,8 @@
     /* Chat Input */
     .chat-input {
         flex: 1;
-        padding: 10px 14px;
+        height: 50px;
+        padding: 0 14px;
         border: 0.5px solid #e5e7eb;
         border-radius: 24px;
         font-size: 13px;
@@ -270,31 +276,45 @@
 
     /* Submit Button */
     .chat-submit {
-        width: 40px;
-        height: 40px;
-        background: #EF9F27;
-        color: #0A0F1E;
-        border: 2px solid #EF9F27;
-        border-radius: 50%;
+        min-width: 88px;
+        height: 50px;
+        padding: 0 14px;
+        background: linear-gradient(135deg, #0A0F1E 0%, #1e293b 100%);
+        color: #ffffff;
+        border: 1px solid #0A0F1E;
+        border-radius: 12px;
         cursor: pointer;
-        font-weight: 700;
-        font-size: 14px;
+        font-weight: 600;
+        font-size: 13px;
         transition: all 0.3s ease;
         display: flex;
         align-items: center;
         justify-content: center;
+        gap: 8px;
         flex-shrink: 0;
-        box-shadow: 0 2px 8px rgba(239, 159, 39, 0.3);
-        font-family: 'Syne', sans-serif;
-        letter-spacing: 0.5px;
+        box-shadow: 0 6px 14px rgba(10, 15, 30, 0.22);
+        font-family: 'DM Sans', sans-serif;
+        letter-spacing: 0.02em;
+    }
+
+    .chat-submit svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+        transform: rotate(8deg);
+        transition: transform 0.2s ease;
     }
 
     .chat-submit:hover:not(:disabled) {
-        background: #0A0F1E;
-        color: #EF9F27;
-        border-color: #EF9F27;
-        box-shadow: 0 4px 12px rgba(239, 159, 39, 0.5);
+        background: linear-gradient(135deg, #111827 0%, #0f172a 100%);
+        border-color: #111827;
+        color: #ffffff;
+        box-shadow: 0 10px 18px rgba(10, 15, 30, 0.28);
         transform: translateY(-2px);
+    }
+
+    .chat-submit:hover:not(:disabled) svg {
+        transform: translateX(1px) rotate(8deg);
     }
 
     .chat-submit:active:not(:disabled) {
@@ -302,10 +322,12 @@
     }
 
     .chat-submit:disabled {
-        opacity: 0.5;
+        opacity: 0.7;
         cursor: not-allowed;
-        background: #EF9F27;
-        color: #0A0F1E;
+        background: #9ca3af;
+        border-color: #9ca3af;
+        color: #ffffff;
+        box-shadow: none;
     }
 
     /* Typing Bubble */

@@ -14,7 +14,7 @@
     $youtubeId = $youtubeUrl ? Youtube::getYoutubeVideoID($youtubeUrl) : null;
     $playIconRaw = ThemeHelper::getPlayVideoIconBase64();
 @endphp
-<section {!! $shortcode->htmlAttributes(['style' => ["--background-icon: url('data:image/svg+xml;base64,$playIconRaw')" => $playIconRaw]]) !!} class="shortcode-intro-video shortcode-intro-video-style-1 box-cta-1 background-100 py-96">
+<section {!! $shortcode->htmlAttributes(['style' => ["--background-icon: url('data:image/svg+xml;base64,$playIconRaw')" => $playIconRaw]]) !!} class="shortcode-intro-video shortcode-intro-video-style-1 box-cta-1 background-100 py-96 my-5">
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6 pe-lg-5 wow fadeInUp">
