@@ -15,6 +15,7 @@
     $isPricingPage = $currentPageSlug === 'pricing';
     $isLegalPage = in_array($currentPageSlug, ['terms-of-use', 'privacy-policy', 'cookie-policy']);
     $isServicesPage = $currentPageSlug === 'services';
+    $isLoginPage = in_array($currentPageSlug, ['login', 'register', 'forgot-password']);
     $contentClasses = 'ck-content page-content';
 
     if ($isPricingPage) {
@@ -25,6 +26,8 @@
         $contentClasses = 'ck-content page-content about-modern-content';
     } elseif ($isContactPage) {
         $contentClasses = 'ck-content page-content';
+    } elseif ($isLoginPage) {
+        $contentClasses = 'ck-content';
     } elseif ($isLegalPage) {
         $contentClasses = 'ck-content page-content legal-modern-content';
     }
@@ -38,6 +41,7 @@
     'page-modern--about' => $isAboutUsPage,
     'page-modern--contact' => $isContactPage,
     'page-modern--legal' => $isLegalPage,
+    'page-modern--auth' => $isLoginPage,
 ])>
 
 @if ($isAboutUsPage)
@@ -51,7 +55,7 @@
 
 @if ($isContactPage)
     <style>
-        /* 1. Strip the unwanted peach background from Contact page sections */
+        /* Strip the unwanted peach background from Contact page sections */
         .page-modern--contact,
         .page-modern--contact section,
         .page-modern--contact .background-body,
@@ -59,7 +63,22 @@
             background-color: transparent !important;
             background: none !important;
         }
+    </style>
+@endif
 
+@if ($isLoginPage)
+    <style>
+        .page-modern--auth {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        main {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .auth-split-wrapper {
+            min-height: calc(100vh - 72px) !important;
+        }
     </style>
 @endif
 
@@ -69,7 +88,7 @@
         body, .page-modern--legal, .background-body {
             background-color: var(--bs-background-body) !important;
         }
-        
+
         .legal-modern-content {
             background-color: var(--bs-color-white);
             border: 1px solid var(--bs-neutral-200);
@@ -82,8 +101,8 @@
         }
 
         /* Typography & Headings */
-        .legal-modern-content h1, 
-        .legal-modern-content h2, 
+        .legal-modern-content h1,
+        .legal-modern-content h2,
         .legal-modern-content h3 {
             color: var(--bs-neutral-1000);
             font-weight: 700;
@@ -147,7 +166,7 @@
             opacity: 1;
         }
 
-        @media (max-width: 768px) {
+        @@media (max-width: 768px) {
             .legal-modern-content {
                 margin: 30px 15px;
                 padding: 30px !important;
@@ -155,8 +174,8 @@
         }
 
         /* Dark Mode Support */
-        [data-bs-theme="dark"] body, 
-        [data-bs-theme="dark"] .page-modern--legal, 
+        [data-bs-theme="dark"] body,
+        [data-bs-theme="dark"] .page-modern--legal,
         [data-bs-theme="dark"] .background-body {
             background-color: var(--bs-body-bg) !important;
         }
@@ -165,8 +184,8 @@
             border-color: var(--bs-neutral-700);
             box-shadow: 0 10px 40px rgba(var(--bs-color-1000), 0.2);
         }
-        [data-bs-theme="dark"] .legal-modern-content h1, 
-        [data-bs-theme="dark"] .legal-modern-content h2, 
+        [data-bs-theme="dark"] .legal-modern-content h1,
+        [data-bs-theme="dark"] .legal-modern-content h2,
         [data-bs-theme="dark"] .legal-modern-content h3 {
             color: var(--bs-neutral-100);
         }
@@ -179,8 +198,6 @@
         }
     </style>
 @endif
-
-
 
     {!! apply_filters(PAGE_FILTER_FRONT_PAGE_CONTENT, Html::tag('div', BaseHelper::clean($page->content), ['class' => $contentClasses])->toHtml(), $page) !!}
 </div>
