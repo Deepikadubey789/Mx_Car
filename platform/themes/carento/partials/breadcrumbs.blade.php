@@ -8,6 +8,7 @@
     $isSimple = Theme::get('breadcrumb_simple') ?: theme_option('breadcrumb_simple');
     $breadcrumbDescription = Theme::get('breadcrumb_description');
     $breadcrumbEnabled = Theme::get('breadcrumbEnabled', true);
+    $hideBreadcrumbTrail = true;
 @endphp
 
 @if ($breadcrumbEnabled)
@@ -38,38 +39,42 @@
                     </div>
                 @endif
 
-                <div class="background-body position-absolute z-1 top-100 start-50 translate-middle px-3 py-2 rounded-12 border d-none d-md-flex gap-3">
-                    @foreach (Theme::breadcrumb()->getCrumbs() as $crumb)
-                        @if (! $loop->last)
+                @unless($hideBreadcrumbTrail)
+                    <div class="background-body position-absolute z-1 top-100 start-50 translate-middle px-3 py-2 rounded-12 border d-none d-md-flex gap-3">
+                        @foreach (Theme::breadcrumb()->getCrumbs() as $crumb)
+                            @if (! $loop->last)
 
-                            <a href="{{ $crumb['url'] }}" title="{{ $crumb['label'] }}" class="neutral-700 text-md-medium">{{ $crumb['label'] }}</a>
-                            <span>
-                        <img src="{{ Theme::asset()->url('images/icons/arrow-right.svg') }}" alt="Icon" />
-                    </span>
-                        @else
-                            <a href="#" class="neutral-1000 text-md-bold">{{ $crumb['label'] }}</a>
-                        @endif
-                    @endforeach
-                </div>
+                                <a href="{{ $crumb['url'] }}" title="{{ $crumb['label'] }}" class="neutral-700 text-md-medium">{{ $crumb['label'] }}</a>
+                                <span>
+                            <img src="{{ Theme::asset()->url('images/icons/arrow-right.svg') }}" alt="Icon" />
+                        </span>
+                            @else
+                                <a href="#" class="neutral-1000 text-md-bold">{{ $crumb['label'] }}</a>
+                            @endif
+                        @endforeach
+                    </div>
+                @endunless
             </div>
         </div>
 
     @else
         <div class="pt-30">
             <div class="text-center  mb-40">
-                <div class="background-body px-3 py-2 rounded-12 border d-flex gap-3 d-inline-flex">
-                    @foreach (Theme::breadcrumb()->getCrumbs() as $crumb)
-                        @if (! $loop->last)
+                @unless($hideBreadcrumbTrail)
+                    <div class="background-body px-3 py-2 rounded-12 border d-flex gap-3 d-inline-flex">
+                        @foreach (Theme::breadcrumb()->getCrumbs() as $crumb)
+                            @if (! $loop->last)
 
-                            <a href="{{ $crumb['url'] }}" title="{{ $crumb['label'] }}" class="neutral-700 text-md-medium">{{ $crumb['label'] }}</a>
-                            <span>
-                        <img src="{{ Theme::asset()->url('images/icons/arrow-right.svg') }}" alt="Icon" />
-                    </span>
-                        @else
-                            <a href="#" class="neutral-1000 text-md-bold">{{ $crumb['label'] }}</a>
-                        @endif
-                    @endforeach
-                </div>
+                                <a href="{{ $crumb['url'] }}" title="{{ $crumb['label'] }}" class="neutral-700 text-md-medium">{{ $crumb['label'] }}</a>
+                                <span>
+                            <img src="{{ Theme::asset()->url('images/icons/arrow-right.svg') }}" alt="Icon" />
+                        </span>
+                            @else
+                                <a href="#" class="neutral-1000 text-md-bold">{{ $crumb['label'] }}</a>
+                            @endif
+                        @endforeach
+                    </div>
+                @endunless
                 @if ($pageTitle = Theme::get('pageTitle'))
                     <h3 class="my-3 neutral-1000">{!! BaseHelper::clean($pageTitle) !!}</h3>
                 @endif

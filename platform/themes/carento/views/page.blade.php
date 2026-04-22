@@ -12,8 +12,14 @@
     $currentPageSlug = $pageSegments ? (string) end($pageSegments) : '';
     $isAboutUsPage = $currentPageSlug === 'about-us';
     $isContactPage = $currentPageSlug === 'contact';
+    $isPricingPage = $currentPageSlug === 'pricing';
     $isLegalPage = in_array($currentPageSlug, ['terms-of-use', 'privacy-policy', 'cookie-policy']);
+    $isServicesPage = $currentPageSlug === 'services';
     $contentClasses = 'ck-content page-content';
+
+    if ($isPricingPage) {
+        Theme::set('hideBreadcrumbTrail', true);
+    }
 
     if ($isAboutUsPage) {
         $contentClasses = 'ck-content page-content about-modern-content';
@@ -26,6 +32,9 @@
 
 <div @class([
     'page-modern',
+    'page-modern--homepage' => BaseHelper::isHomepage($page->getKey()),
+    'page-modern--services' => $isServicesPage,
+    'page-modern--pricing' => $isPricingPage,
     'page-modern--about' => $isAboutUsPage,
     'page-modern--contact' => $isContactPage,
     'page-modern--legal' => $isLegalPage,
