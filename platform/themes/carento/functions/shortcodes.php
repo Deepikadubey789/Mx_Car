@@ -169,13 +169,20 @@ app()->booted(function (): void {
 
         foreach ($tabs as $key => $item) {
             if ($features = Arr::get($item, 'features')) {
-                $tabs[$key]['features'] = collect(explode(PHP_EOL, $features))
+                $normalizedFeatures = str_replace(['\\n', "\r\n", "\r"], "\n", (string) $features);
+
+                $tabs[$key]['features'] = collect(preg_split('/\n+/', $normalizedFeatures) ?: [])
+                    ->filter(fn ($feature) => trim((string) $feature) !== '')
                     ->map(function ($feature) {
+                        $trimmedFeature = ltrim((string) $feature);
+
                         return [
-                            'value' => trim($feature, '+- '),
-                            'is_available' => str_starts_with($feature, '+') || str_starts_with($feature, ' +'),
+                            'value' => trim($trimmedFeature, '+- '),
+                            'is_available' => str_starts_with($trimmedFeature, '+'),
                         ];
-                    })->all();
+                    })
+                    ->values()
+                    ->all();
             }
         }
 

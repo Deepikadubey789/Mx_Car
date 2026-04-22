@@ -33,11 +33,12 @@
                                     {{ get_application_currency()->symbol }}{{ number_format($location->fee_amount, 2) }}
                                 </td>
                                 <td class="text-end">
-                                    <form action="{{ route('car-rentals.vendor.delivery-locations.destroy', $location->id) }}" method="POST" onsubmit="return confirm('{{ __('Are you sure you want to delete this delivery zone?') }}');">
+                                    <form action="{{ route('car-rentals.vendor.delivery-locations.destroy', $location->id) }}" method="POST" class="js-delete-location-form">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-light text-danger border" style="border-radius: 6px;">
-                                            <i class="ti ti-trash"></i>
+                                        <button type="button" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 js-delete-location-btn" style="border-radius: 6px;" data-location-name="{{ $location->name }}">
+                                            <i class="ti ti-trash-x"></i>
+                                            <span>{{ __('Delete') }}</span>
                                         </button>
                                     </form>
                                 </td>
@@ -92,4 +93,61 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="deleteDeliveryLocationModal" tabindex="-1" aria-labelledby="deleteDeliveryLocationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteDeliveryLocationModalLabel">{{ __('Confirm delete') }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ __('Close') }}"></button>
+            </div>
+            <div class="modal-body">
+                {{ __('Are you sure you want to delete this delivery zone?') }}
+                <strong id="deleteDeliveryLocationName" class="d-block mt-2 text-dark"></strong>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">{{ __('Cancel') }}</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteDeliveryLocation">
+                    <i class="ti ti-trash me-1"></i>{{ __('Delete') }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modalElement = document.getElementById('deleteDeliveryLocationModal');
+
+        if (!modalElement || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = new bootstrap.Modal(modalElement);
+        const nameElement = document.getElementById('deleteDeliveryLocationName');
+        const confirmButton = document.getElementById('confirmDeleteDeliveryLocation');
+        let selectedForm = null;
+
+        document.querySelectorAll('.js-delete-location-btn').forEach((button) => {
+            button.addEventListener('click', function () {
+                selectedForm = this.closest('form');
+                const locationName = this.getAttribute('data-location-name') || '';
+
+                if (nameElement) {
+                    nameElement.textContent = locationName ? `"${locationName}"` : '';
+                }
+
+                modal.show();
+            });
+        });
+
+        if (confirmButton) {
+            confirmButton.addEventListener('click', function () {
+                if (selectedForm) {
+                    selectedForm.submit();
+                }
+            });
+        }
+    });
+</script>
 @stop

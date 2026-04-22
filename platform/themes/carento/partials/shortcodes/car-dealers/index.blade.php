@@ -3,6 +3,15 @@
     $subtitle = $shortcode->subtitle;
     $buttonLabel = $shortcode->button_label;
     $buttonUrl = $shortcode->button_url;
+    $normalizedCurrentUrl = rtrim(url()->current(), '/');
+    $normalizedButtonUrl = $buttonUrl ? rtrim(url($buttonUrl), '/') : null;
+    $isSelfReferencingButton = $normalizedButtonUrl && $normalizedButtonUrl === $normalizedCurrentUrl;
+    $isShowingAllDealers = request()->boolean('show_all_dealers');
+    $resolvedButtonUrl = $buttonUrl;
+
+    if ($isSelfReferencingButton) {
+        $resolvedButtonUrl = request()->fullUrlWithQuery(['show_all_dealers' => 1]);
+    }
     $showCarCount = $shortcode->show_car_count !== 'no';
 
     $showPhone = ! get_car_rentals_setting('hide_owner_phone', false);
@@ -21,6 +30,7 @@
     padding: 24px;
     display: flex;
     flex-direction: column;
+    align-items: flex-start;
     height: 100%;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
@@ -30,35 +40,21 @@
 @media (min-width: 768px) {
     .mxcar-dealer-card {
         flex-direction: row;
-        align-items: center;
-        gap: 24px;
+        align-items: flex-start;
+        gap: 20px;
     }
 }
 .mxcar-dealer-card:hover {
-    border-color: #B03A2E;
-    box-shadow: 0 12px 30px rgba(176, 58, 46, 0.08);
-    transform: translateY(-4px);
-}
-.mxcar-dealer-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 6px;
-    height: 100%;
-    background-color: #B03A2E;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-}
-.mxcar-dealer-card:hover::before {
-    opacity: 1;
+    border-color: #E9ECEF;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    transform: none;
 }
 
 /* Avatar Styling */
 .mxcar-dealer-avatar {
     flex-shrink: 0;
-    width: 100px;
-    height: 100px;
+    width: 124px;
+    height: 124px;
     border-radius: 20px; /* Squircle style instead of circle */
     overflow: hidden;
     background-color: #F8F9FA;
@@ -72,29 +68,43 @@
     height: 100%;
     object-fit: cover;
 }
+.mxcar-dealer-avatar.avatar-fallback {
+    background: #f8f9fa;
+}
+.mxcar-dealer-avatar.avatar-fallback::before {
+    content: attr(data-initial);
+    font-size: 36px;
+    font-weight: 700;
+    color: #b03a2e;
+}
 
 /* Details Section */
 .mxcar-dealer-details {
     flex-grow: 1;
+    min-width: 0;
 }
 .mxcar-dealer-name {
     font-size: 1.25rem;
     font-weight: 700;
     color: #111111;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
+    line-height: 1.25;
 }
 .mxcar-dealer-contact {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
+    margin-top: 10px;
 }
-@media (min-width: 1200px) {
+@media (min-width: 992px) {
     .mxcar-dealer-contact {
         flex-direction: row;
         gap: 20px;
+        flex-wrap: wrap;
     }
 }
 .mxcar-dealer-contact a {
@@ -105,6 +115,10 @@
     gap: 6px;
     text-decoration: none;
     transition: color 0.2s ease;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 .mxcar-dealer-contact a:hover {
     color: #B03A2E;
@@ -120,23 +134,6 @@
     margin-bottom: 3rem;
 }
 
-/* Actions Section */
-.mxcar-dealer-actions {
-    flex-shrink: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    margin-top: 16px;
-}
-@media (min-width: 768px) {
-    .mxcar-dealer-actions {
-        align-items: flex-end;
-        margin-top: 0;
-        border-left: 1px dashed #E9ECEF;
-        padding-left: 24px;
-    }
-}
 .mxcar-car-count {
     background: rgba(176, 58, 46, 0.08);
     color: #B03A2E;
@@ -159,9 +156,6 @@
 }
 [data-bs-theme="dark"] .mxcar-dealer-name {
     color: #f1f1f1;
-}
-[data-bs-theme="dark"] .mxcar-dealer-actions {
-    border-color: #333333;
 }
 [data-bs-theme="dark"] .mxcar-dealer-avatar {
     border-color: #2e2e2e;
@@ -192,9 +186,9 @@
                     <div class="col-lg-6 col-md-12 wow fadeIn" data-wow-delay="{{ $loop->index * 0.1 }}s">
                         <div class="mxcar-dealer-card">
                             <!-- Left: Avatar -->
-                            <div class="mxcar-dealer-avatar">
+                            <div class="mxcar-dealer-avatar" data-initial="{{ strtoupper(mb_substr($dealer->name, 0, 1)) }}">
                                 @if($dealer->avatar_url)
-                                    <img src="{{ $dealer->avatar_url }}" alt="{{ $dealer->name }}">
+                                    <img src="{{ $dealer->avatar_url }}" alt="{{ $dealer->name }}" loading="lazy" onerror="this.style.display='none'; this.parentElement.classList.add('avatar-fallback');">
                                 @else
                                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                         <path d="M12 12C14.7614 12 17 9.76142 17 7C17 4.23858 14.7614 2 12 2C9.23858 2 7 4.23858 7 7C7 9.76142 9.23858 12 12 12Z" stroke="#B03A2E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -247,19 +241,15 @@
                                 @endif
                             </div>
 
-                            <!-- Right: Actions -->
-                            <div class="mxcar-dealer-actions">
-                                {{-- reserved for CTA buttons or links --}}
-                            </div>
                         </div>
                     </div>
                 @endforeach
             </div>
 
-            @if($buttonLabel && $buttonUrl)
+            @if($buttonLabel && $resolvedButtonUrl && ! $isShowingAllDealers)
                 <div class="row mt-5" style="margin-top: 5rem;">
                     <div class="col-12 text-center">
-                        <a href="{{ $buttonUrl }}" class="btn btn-primary" style="background-color: #B03A2E; border-color: #B03A2E;">
+                        <a href="{{ $resolvedButtonUrl }}" class="btn btn-primary" style="background-color: #B03A2E; border-color: #B03A2E; color: #fff !important;">
                             {{ $buttonLabel }}
                             <svg class="ms-2" width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M8 15L15 8L8 1M15 8L1 8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>

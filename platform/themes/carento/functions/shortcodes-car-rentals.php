@@ -724,17 +724,22 @@ app()->booted(function (): void {
                 function (ShortcodeCompiler $shortcode): ?string {
                     $limit = $shortcode->limit ?: 12;
                     $dealerIds = Shortcode::fields()->getIds('dealer_ids', $shortcode);
+                    $showAllDealers = request()->boolean('show_all_dealers');
 
-                    $dealers = Customer::query()
+                    $dealersQuery = Customer::query()
                         ->where('is_vendor', true)
                         ->withCount([
                             'cars' => function ($query): void {
                                 $query->where('status', CarStatusEnum::AVAILABLE);
                             },
                         ])
-                        ->when(count($dealerIds), fn ($builder) => $builder->whereIn('id', $dealerIds))
-                        ->limit($limit)
-                        ->get();
+                        ->when(count($dealerIds), fn ($builder) => $builder->whereIn('id', $dealerIds));
+
+                    if (! $showAllDealers) {
+                        $dealersQuery->limit($limit);
+                    }
+
+                    $dealers = $dealersQuery->get();
 
                     return Theme::partial('shortcodes.car-dealers.index', compact('shortcode', 'dealers'));
                 }

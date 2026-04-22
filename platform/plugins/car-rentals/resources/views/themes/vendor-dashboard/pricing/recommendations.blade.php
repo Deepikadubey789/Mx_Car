@@ -158,27 +158,46 @@
                 @endif
 
                 <!-- Info Section -->
-                <div class="row mt-4">
+                <div class="row mt-4 g-3">
                     <div class="col-md-6">
-                        <div class="alert alert-info">
-                            <h5 class="alert-heading">
-                                <i class="ti ti-bulb me-2"></i> How It Works
-                            </h5>
-                            <p class="mb-0">
-                                Our AI analyzes real-time demand signals (views, bookings, supply pressure, weekends) to suggest optimal prices.
-                                Each recommendation shows confidence level based on data strength.
-                            </p>
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start gap-3">
+                                    <span class="badge bg-info-lt text-info p-2">
+                                        <i class="ti ti-bulb"></i>
+                                    </span>
+                                    <div>
+                                        <h4 class="mb-1">{{ __('How it works') }}</h4>
+                                        <p class="text-muted mb-2">
+                                            {{ __('Our AI analyzes demand signals such as views, bookings, supply pressure, and weekends to suggest better prices.') }}
+                                        </p>
+                                        <small class="text-secondary">
+                                            {{ __('Confidence score indicates how strong the underlying data is for each recommendation.') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="col-md-6">
-                        <div class="alert alert-warning">
-                            <h5 class="alert-heading">
-                                <i class="ti ti-clock me-2"></i> Time Limit
-                            </h5>
-                            <p class="mb-0">
-                                Recommendations expire after 24 hours. Act quickly to capture the demand opportunity!
-                            </p>
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start gap-3">
+                                    <span class="badge bg-warning-lt text-warning p-2">
+                                        <i class="ti ti-clock-hour-4"></i>
+                                    </span>
+                                    <div>
+                                        <h4 class="mb-1">{{ __('Time limit') }}</h4>
+                                        <p class="text-muted mb-2">
+                                            {{ __('Recommendations expire after 24 hours. Apply or adjust promptly to capture demand opportunities.') }}
+                                        </p>
+                                        <small class="text-secondary">
+                                            {{ __('Expired recommendations are kept for history but can no longer be applied.') }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

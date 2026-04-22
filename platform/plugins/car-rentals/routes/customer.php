@@ -80,6 +80,9 @@ Theme::registerRoutes(function (): void {
         Route::post('upgrade-to-vendor', 'PublicController@postUpgradeToVendor')->name('upgrade-to-vendor.post');
 
         Route::post('bookings/{booking}/upload-after-photos', 'PublicController@uploadAfterPhotos')->name('bookings.upload-after-photos');
+        Route::post('bookings/{booking}/{action}', 'PublicController@modifyBooking')
+            ->where('action', 'cancel|extend|shorten|early-return|late-return')
+            ->name('bookings.modify');
 
     });
 });
