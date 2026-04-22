@@ -79,10 +79,6 @@ class HookServiceProvider extends ServiceProvider
                 $cache->put('unread-contacts', $contacts, 60 * 60 * 24);
             }
 
-            if ($contacts->total() == 0) {
-                return $options;
-            }
-
             return $options . view('plugins/contact::partials.notification', compact('contacts'))->render();
         }
 

@@ -7,7 +7,7 @@
         tabindex="-1"
     >
         <x-core::icon name="ti ti-mail" />
-        <span class="badge bg-red text-red-fg badge-pill">{{ number_format($contacts->count()) }}</span>
+        <span class="badge bg-red badge-pill" style="color: #fff !important;">{{ number_format($contacts->count()) }}</span>
     </button>
     <div class="dropdown-menu dropdown-menu-arrow dropdown-menu-end dropdown-menu-card">
         <x-core::card>
